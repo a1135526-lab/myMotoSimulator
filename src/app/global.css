@@ -1,0 +1,75 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d0f12;
+  --surface: #161a20;
+  --surface-2: #1e232b;
+  --border: #2a313b;
+  --text: #e8ebef;
+  --text-muted: #8b94a1;
+  --accent: #ff7a1a;
+  --accent-soft: rgb(255 122 26 / 0.15);
+  --danger: #ff4d4f;
+  --ok: #3ccf91;
+  --warn: #f5b942;
+  --series-stock: #8b94a1;
+  --series-current: #ff7a1a;
+  --series-compare: #3fb6ff;
+  --radius: 12px;
+  --gap: 16px;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Noto Sans TC',
+    sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+select,
+input[type='number'],
+input[type='text'] {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+select:focus-visible,
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
+  width: 100%;
+}
+
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}

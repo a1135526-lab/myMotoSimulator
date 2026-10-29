@@ -1,0 +1,11 @@
+{
+  "//": "Domain purity guard: no DOM lib and no ambient types, so any use of window/document/requestAnimationFrame fails typecheck.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "jsx": "preserve",
+    "types": []
+  },
+  "include": ["src/domain"],
+  "exclude": ["src/domain/**/*.test.ts"]
+}

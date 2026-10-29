@@ -1,0 +1,160 @@
+.barRow {
+  display: grid;
+  grid-template-columns: 3em 1fr 3.5em;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.barLabel {
+  color: var(--text-muted);
+}
+
+.barTrack {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFillAccent,
+.barFillDanger {
+  height: 100%;
+}
+
+.barFillAccent {
+  background: var(--accent);
+}
+
+.barFillDanger {
+  background: var(--danger);
+}
+
+.barValue {
+  text-align: right;
+}
+
+.clutchRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.chip {
+  font-size: 0.8rem;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.clutchOff {
+  composes: chip;
+  color: var(--text-muted);
+}
+
+.clutchSlip {
+  composes: chip;
+  color: var(--warn);
+}
+
+.clutchLock {
+  composes: chip;
+  color: var(--ok);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.stat {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.statValue {
+  margin: 2px 0 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.statValue small {
+  font-size: 0.7rem;
+  margin-left: 3px;
+  color: var(--text-muted);
+}
+
+.timerButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.timerButton kbd {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 0 4px;
+  opacity: 0.7;
+}
+
+.phase {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.phase[data-phase='armed'],
+.phase[data-phase='running'] {
+  color: var(--accent);
+}
+
+.phase[data-phase='finished'] {
+  color: var(--ok);
+}
+
+.splits {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.split {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 4px;
+}
+
+.split dt {
+  color: var(--text-muted);
+}
+
+.split dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.barFillInfo {
+  height: 100%;
+  background: var(--series-compare);
+}

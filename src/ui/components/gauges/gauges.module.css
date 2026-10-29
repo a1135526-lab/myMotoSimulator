@@ -1,0 +1,35 @@
+.limiter {
+  margin-top: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--danger);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.gear {
+  font-family: var(--font-mono);
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  min-width: 1.6em;
+  padding: 2px 6px;
+  text-align: center;
+}
+
+.gearNeutral {
+  composes: gear;
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+.stalled {
+  composes: limiter;
+  background: var(--warn);
+  color: #000;
+}

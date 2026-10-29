@@ -1,0 +1,66 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  min-width: 0;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.badgeEstimate {
+  composes: badge;
+  color: var(--warn);
+  background: rgb(245 185 66 / 0.12);
+  border: 1px solid rgb(245 185 66 / 0.35);
+}
+
+.badgeVerified {
+  composes: badge;
+  color: var(--ok);
+  background: rgb(60 207 145 / 0.12);
+  border: 1px solid rgb(60 207 145 / 0.35);
+}
+
+.resetButton {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.resetButton:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.resetButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

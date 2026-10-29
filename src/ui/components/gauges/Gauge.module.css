@@ -1,0 +1,106 @@
+.gauge {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+}
+
+.gauge svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.track,
+.redzone,
+.progress,
+.progressRed {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.track {
+  stroke: var(--surface-2);
+}
+
+.redzone {
+  stroke: rgb(255 77 79 / 0.55);
+}
+
+.progress {
+  stroke: var(--accent);
+}
+
+.progressRed {
+  stroke: var(--danger);
+}
+
+.major {
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.minor {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+
+.tickLabel {
+  fill: var(--text-muted);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.needle {
+  stroke: var(--accent);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+
+.hub {
+  fill: var(--surface-2);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Below the end-of-scale tick labels (≈69 %) so the readout never overlaps them. */
+  top: 72%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  pointer-events: none;
+}
+
+.readout {
+  font-size: clamp(1.3rem, 5vw, 2rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.unit {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 30%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
