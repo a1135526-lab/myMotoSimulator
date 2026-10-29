@@ -21,6 +21,7 @@ export const YAMAHA_MT_09: ManualSpec = {
   modelYear: 2024,
   engine: {
     displacementCc: 890,
+    cylinders: 3,
     compressionRatio: 11.5,
     peakPower,
     peakTorque,

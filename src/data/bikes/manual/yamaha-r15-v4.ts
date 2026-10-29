@@ -17,6 +17,7 @@ export const YAMAHA_R15_V4: ManualSpec = {
   model: 'YZF-R15 V4',
   engine: {
     displacementCc: 155,
+    cylinders: 1,
     compressionRatio: 11.6,
     peakPower,
     peakTorque,

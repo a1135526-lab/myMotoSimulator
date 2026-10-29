@@ -17,6 +17,7 @@ export const YAMAHA_MT_15: ManualSpec = {
   model: 'MT-15 V2',
   engine: {
     displacementCc: 155,
+    cylinders: 1,
     compressionRatio: 11.6,
     peakPower,
     peakTorque,

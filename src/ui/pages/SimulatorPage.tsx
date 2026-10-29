@@ -1,12 +1,15 @@
 import {
   useCurrentBike,
+  readSimulatorSound,
   useGaugeScale,
   useSimulationController,
   useTelemetry,
   useTimerView,
 } from '@/application';
+import { useEngineAudio } from '../audio/useEngineAudio';
 import { ModeTabs } from '../components/common/ModeTabs';
 import { Panel } from '../components/common/Panel';
+import { SoundToggle } from '../components/common/SoundToggle';
 import { BikeSelector } from '../components/config/BikeSelector';
 import { PartsPanel } from '../components/config/PartsPanel';
 import { SpecSheet } from '../components/config/SpecSheet';
@@ -27,12 +30,14 @@ export function SimulatorPage() {
   const scale = useGaugeScale();
   const manual = useCurrentBike().kind === 'manual';
   const stalled = telemetry !== null && !telemetry.engineRunning;
+  useEngineAudio(readSimulatorSound);
 
   return (
     <AppLayout
       toolbar={
         <>
           <ModeTabs />
+          <SoundToggle />
           <BikeSelector />
           <KeyHints manual={manual} />
         </>

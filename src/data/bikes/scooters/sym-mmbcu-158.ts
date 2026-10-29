@@ -17,6 +17,7 @@ export const SYM_MMBCU_158: ScooterSpec = {
   modelYear: 2026,
   engine: {
     displacementCc: 158,
+    cylinders: 1,
     compressionRatio: 11.5,
     peakPower: { ps: 15.8, rpm: 8000 },
     peakTorque: { nm: 15.1, rpm: 6500 },

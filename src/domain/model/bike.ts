@@ -8,6 +8,8 @@ export interface TorquePoint {
 
 export interface EngineSpec {
   readonly displacementCc: number;
+  /** Number of cylinders; sets the exhaust firing frequency (and the sound). */
+  readonly cylinders: number;
   readonly compressionRatio: number;
   readonly peakPower: { readonly ps: number; readonly rpm: number };
   readonly peakTorque: { readonly nm: number; readonly rpm: number };

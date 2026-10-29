@@ -19,6 +19,7 @@ export const KYMCO_KRV_180: ScooterSpec = {
   model: 'KRV 180 TCS',
   engine: {
     displacementCc: 175.1,
+    cylinders: 1,
     compressionRatio: 11.3,
     peakPower,
     peakTorque,

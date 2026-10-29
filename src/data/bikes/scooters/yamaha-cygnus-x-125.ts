@@ -17,6 +17,7 @@ export const YAMAHA_CYGNUS_X_125: ScooterSpec = {
   modelYear: 2026,
   engine: {
     displacementCc: 125,
+    cylinders: 1,
     compressionRatio: 11.2,
     peakPower,
     peakTorque,

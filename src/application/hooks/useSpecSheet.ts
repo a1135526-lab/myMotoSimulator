@@ -60,7 +60,7 @@ export function useBikeSpecSheet(): { title: string; subtitle: string; sections:
           title: '引擎',
           provenance: engine.provenance,
           rows: [
-            { label: '排氣量', value: `${engine.displacementCc} cc` },
+            { label: '排氣量', value: `${engine.displacementCc} cc・${engine.cylinders} 缸` },
             { label: '最大馬力', value: `${engine.peakPower.ps} ps / ${engine.peakPower.rpm} rpm` },
             {
               label: '最大扭力',

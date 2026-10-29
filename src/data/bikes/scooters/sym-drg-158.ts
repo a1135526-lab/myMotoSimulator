@@ -17,6 +17,7 @@ export const SYM_DRG_158: ScooterSpec = {
   modelYear: 2026,
   engine: {
     displacementCc: 158,
+    cylinders: 1,
     compressionRatio: 11.5,
     peakPower: { ps: 16, rpm: 8000 },
     peakTorque: { nm: 15.1, rpm: 6500 },

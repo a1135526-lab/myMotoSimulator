@@ -17,6 +17,7 @@ export const SYM_JET_SL_125: ScooterSpec = {
   model: 'JET SL 125',
   engine: {
     displacementCc: 124.6,
+    cylinders: 1,
     compressionRatio: 11.5,
     peakPower: { ps: 13, rpm: 8000 },
     peakTorque: { nm: 11.46, rpm: 6000 },

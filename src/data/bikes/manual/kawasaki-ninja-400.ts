@@ -16,6 +16,7 @@ export const KAWASAKI_NINJA_400: ManualSpec = {
   model: 'Ninja 400',
   engine: {
     displacementCc: 399,
+    cylinders: 2,
     compressionRatio: 11.5,
     peakPower,
     peakTorque,

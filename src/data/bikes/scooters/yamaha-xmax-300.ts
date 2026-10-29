@@ -16,6 +16,7 @@ export const YAMAHA_XMAX_300: ScooterSpec = {
   model: 'XMAX 300',
   engine: {
     displacementCc: 292,
+    cylinders: 1,
     compressionRatio: 10.9,
     peakPower,
     peakTorque,

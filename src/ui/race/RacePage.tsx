@@ -1,5 +1,7 @@
-import { useCurrentBike, useRaceController, useRaceStore } from '@/application';
+import { readRaceSound, useCurrentBike, useRaceController, useRaceStore } from '@/application';
+import { useEngineAudio } from '../audio/useEngineAudio';
 import { ModeTabs } from '../components/common/ModeTabs';
+import { SoundToggle } from '../components/common/SoundToggle';
 import { KeyHints } from '../components/controls/KeyHints';
 import { TouchControls } from '../components/controls/TouchControls';
 import { AppLayout } from '../layouts/AppLayout';
@@ -14,12 +16,14 @@ export function RacePage() {
   const view = useRaceStore((s) => s.view);
   const manual = useCurrentBike().kind === 'manual';
   const live = view?.phase === 'countdown' || view?.phase === 'racing';
+  useEngineAudio(readRaceSound);
 
   return (
     <AppLayout
       toolbar={
         <>
           <ModeTabs />
+          <SoundToggle />
           <KeyHints manual={manual} spaceLabel="起跑 / 再比" />
         </>
       }

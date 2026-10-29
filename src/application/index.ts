@@ -46,3 +46,4 @@ export {
 } from './race/opponentSetup';
 export type { RaceView, RacerView } from './viewModels/race';
 export type { AppMode } from './stores/uiStore';
+export { readRaceSound, readSimulatorSound, type SoundFrame } from './viewModels/sound';

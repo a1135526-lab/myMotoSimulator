@@ -25,6 +25,7 @@ export interface RacerView {
   readonly throttlePct: number;
   readonly clutchLeverPct: number;
   readonly manual: boolean;
+  readonly cylinders: number;
   readonly finished: boolean;
 }
 
@@ -59,6 +60,7 @@ function racerView(racer: RacerState, models: RaceModels, side: keyof RaceModels
     throttlePct: sim.throttle * PERCENT,
     clutchLeverPct: sim.clutchLever * PERCENT,
     manual: bike.kind === 'manual',
+    cylinders: bike.engine.cylinders,
     finished: racer.finishedAtS !== null,
   };
 }

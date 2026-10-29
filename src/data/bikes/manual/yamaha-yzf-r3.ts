@@ -17,6 +17,7 @@ export const YAMAHA_YZF_R3: ManualSpec = {
   model: 'YZF-R3',
   engine: {
     displacementCc: 321,
+    cylinders: 2,
     compressionRatio: 11.2,
     peakPower,
     peakTorque,

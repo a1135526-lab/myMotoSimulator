@@ -20,6 +20,7 @@ export const YAMAHA_FORCE_2_155: ScooterSpec = {
   modelYear: 2022,
   engine: {
     displacementCc: 155,
+    cylinders: 1,
     compressionRatio: 11.6,
     peakPower,
     peakTorque,

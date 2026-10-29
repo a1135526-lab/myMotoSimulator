@@ -17,6 +17,7 @@ export const KAWASAKI_Z900: ManualSpec = {
   modelYear: 2023,
   engine: {
     displacementCc: 948,
+    cylinders: 4,
     compressionRatio: 11.8,
     peakPower,
     peakTorque,

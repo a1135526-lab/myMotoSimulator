@@ -12,6 +12,7 @@ export const TEST_BIKE: ScooterSpec = {
   model: 'Scooter 150',
   engine: {
     displacementCc: 150,
+    cylinders: 1,
     compressionRatio: 11,
     peakPower: { ps: 15, rpm: 8000 },
     peakTorque: { nm: 14, rpm: 6500 },

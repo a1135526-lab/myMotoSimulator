@@ -15,6 +15,7 @@ export function licenseClassFor(displacementCc: number): LicenseClass {
 
 const EngineSchema = z.object({
   displacementCc: positive(),
+  cylinders: z.number().int().min(1).max(6),
   compressionRatio: z.number().min(6).max(16),
   peakPower: z.object({ ps: positive(), rpm: rpm() }),
   peakTorque: z.object({ nm: positive(), rpm: rpm() }),

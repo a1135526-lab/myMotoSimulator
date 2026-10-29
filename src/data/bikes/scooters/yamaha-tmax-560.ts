@@ -19,6 +19,7 @@ export const YAMAHA_TMAX_560: ScooterSpec = {
   model: 'TMAX 560',
   engine: {
     displacementCc: 562,
+    cylinders: 2,
     compressionRatio: 10.9,
     peakPower,
     peakTorque,
