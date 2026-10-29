@@ -14,14 +14,20 @@ const MANUAL = [
   ['Enter', '發動'],
 ] as const;
 
-export function KeyHints({ manual }: { manual: boolean }) {
+interface KeyHintsProps {
+  manual: boolean;
+  /** Overrides the Space label (the race uses Space to start the tree). */
+  spaceLabel?: string;
+}
+
+export function KeyHints({ manual, spaceLabel }: KeyHintsProps) {
   const hints = manual ? [...COMMON.slice(0, 2), ...MANUAL, ...COMMON.slice(2)] : COMMON;
   return (
     <ul className={styles.hints} aria-label="鍵盤操作">
       {hints.map(([key, label]) => (
         <li key={key}>
           <kbd>{key}</kbd>
-          {label}
+          {key === 'Space' && spaceLabel ? spaceLabel : label}
         </li>
       ))}
     </ul>

@@ -5,6 +5,16 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // Third-party vendor chunks (recharts, three) are ~500 kB raw / ~150 kB gzip.
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        // Charting is large and changes rarely; keep it in its own cacheable chunk.
+        manualChunks: { charts: ['recharts'] },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

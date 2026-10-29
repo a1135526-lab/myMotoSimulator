@@ -116,3 +116,40 @@ test.describe('manual bike', () => {
     await expect(page.getByTestId('stall-banner')).toHaveCount(0);
   });
 });
+
+test.describe('drag race', () => {
+  test.skip(({ isMobile }) => isMobile, 'keyboard flow');
+
+  test('stage → tree → launch on green → result', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('mode-race').click();
+    await expect(page.getByTestId('race-canvas')).toBeVisible();
+    await page.getByTestId('race-distance').fill('201');
+    await page.getByTestId('opponent-skill').selectOption('novice');
+    await page.locator('h1').click();
+
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('race-hint')).toHaveText('注意燈號…');
+    await expect(page.getByTestId('race-hint')).toHaveCount(0, { timeout: 6000 });
+    await page.keyboard.down('ArrowUp');
+
+    await expect(page.getByTestId('race-result')).toBeVisible({ timeout: 30_000 });
+    await page.keyboard.up('ArrowUp');
+    await expect(page.getByTestId('race-result')).toContainText('SYM JET SL 125');
+
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('race-result')).toHaveCount(0);
+    await expect(page.getByTestId('race-hint')).toHaveText('已就位。按 Space 開始倒數');
+  });
+
+  test('jumping the start is a red-light loss', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('mode-race').click();
+    await page.getByTestId('race-distance').fill('100');
+    await page.locator('h1').click();
+    await page.keyboard.press('Space');
+    await page.keyboard.down('ArrowUp');
+    await expect(page.getByTestId('race-result')).toContainText('搶跑', { timeout: 30_000 });
+    await page.keyboard.up('ArrowUp');
+  });
+});

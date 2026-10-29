@@ -5,6 +5,7 @@ import {
   useTelemetry,
   useTimerView,
 } from '@/application';
+import { ModeTabs } from '../components/common/ModeTabs';
 import { Panel } from '../components/common/Panel';
 import { BikeSelector } from '../components/config/BikeSelector';
 import { PartsPanel } from '../components/config/PartsPanel';
@@ -31,6 +32,7 @@ export function SimulatorPage() {
     <AppLayout
       toolbar={
         <>
+          <ModeTabs />
           <BikeSelector />
           <KeyHints manual={manual} />
         </>

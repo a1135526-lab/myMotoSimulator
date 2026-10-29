@@ -51,6 +51,19 @@ sequenceDiagram
 - **設定變更**：`configStore`（車款 id + `TuneSelection`）→ `useSimConfig()` 用 `resolveTune()` 轉成 domain 的 `TuneSetup` → `controller.setConfig()` 重建 `SimModel`，物理狀態不中斷。換車款才會重置。
 - **馬力機**：`dynoService.computeDyno(config)` 跑引擎掃描 + 全油門底盤測試（約 2 萬個物理步，數毫秒），結果以設定為 key 快取。
 
+## 直線加速賽
+
+```
+domain/race/      tree（燈樹時序）· racer（起步/終點偵測）· opponent（AI 騎士）· race（狀態機 + 雙車固定步長）· result（勝負）
+application/race/ RaceController（擁有兩台車的模型與比賽狀態）· opponentSetup（改裝等級 → 零件選擇）
+ui/race/          RaceScene + scene/*（Three.js，命令式）· RaceHud · RaceSetupPanel · RaceResultCard
+```
+
+- 比賽狀態機：`staged → countdown → racing → finished`。兩台車共用一個比賽時鐘，同一個 1/240 秒步長一起前進，所以結果與畫面幀率無關。
+- 隨機性（燈樹延遲、對手反應誤差）由 application 層注入，domain 保持可重現，方便測試。
+- 3D 場景每一幀直接從 `raceStore` 讀最新狀態並自行渲染，不經過 React 重新渲染。
+- 同一時間只掛載一種模式（模擬器或比賽），所以只有一個控制器在接鍵盤和動畫迴圈。
+
 ## 主要概念
 
 | 名稱               | 所在層      | 說明                                                                                                                               |

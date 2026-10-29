@@ -89,3 +89,26 @@ describe('App (manual bikes)', () => {
     expect(screen.getByTestId('gear-indicator')).toHaveTextContent('1');
   });
 });
+
+describe('App (race mode)', () => {
+  it('switches to the race page with setup, HUD and a WebGL fallback', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByTestId('mode-race'));
+    expect(await screen.findByTestId('race-canvas')).toBeInTheDocument();
+    expect(await screen.findByText(/不支援 WebGL/)).toBeInTheDocument();
+    expect(screen.getByTestId('race-hint')).toHaveTextContent('按 Space 開始倒數');
+    expect(screen.getByTestId('opponent-bike')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId('race-distance'), { target: { value: '1000' } });
+    expect(screen.getByTestId('race-distance')).toHaveValue(1000);
+
+    act(() => {
+      fireEvent.click(screen.getByTestId('race-go'));
+    });
+    expect(screen.getByTestId('race-hint')).toHaveTextContent('注意燈號');
+    expect(screen.getByTestId('race-go')).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId('mode-simulator'));
+    expect(await screen.findByTestId('tachometer')).toBeInTheDocument();
+  });
+});

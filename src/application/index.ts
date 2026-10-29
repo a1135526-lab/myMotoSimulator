@@ -35,3 +35,14 @@ export type {
   SeriesKey,
 } from './viewModels/dynoCharts';
 export type { GaugeScale, TelemetryView, TimerView } from './viewModels/telemetry';
+export { RaceProvider } from './hooks/RaceProvider';
+export { useRaceController } from './hooks/raceContext';
+export { DISTANCE_PRESETS_M, useRaceStore } from './stores/raceStore';
+export {
+  SKILL_LABELS,
+  TUNE_LEVEL_LABELS,
+  type OpponentSetup,
+  type TuneLevel,
+} from './race/opponentSetup';
+export type { RaceView, RacerView } from './viewModels/race';
+export type { AppMode } from './stores/uiStore';

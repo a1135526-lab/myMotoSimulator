@@ -16,3 +16,8 @@ export * from './vehicle/tire';
 export type * from './dyno/types';
 export * from './dyno/dynoRun';
 export * from './dyno/autoRider';
+export * from './race/tree';
+export * from './race/racer';
+export * from './race/opponent';
+export * from './race/race';
+export * from './race/result';
