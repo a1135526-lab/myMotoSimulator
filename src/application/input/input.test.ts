@@ -11,13 +11,17 @@ describe('KeyboardInputSource', () => {
     const target = new EventTarget();
     const kb = new KeyboardInputSource(target, vi.fn());
     target.dispatchEvent(key('keydown', 'ArrowUp'));
-    expect(kb.read()).toEqual({ throttlePressed: true, brakePressed: false, clutchPressed: false });
+    expect(kb.read()).toMatchObject({
+      throttlePressed: true,
+      brakePressed: false,
+      clutchPressed: false,
+    });
     target.dispatchEvent(key('keydown', 'ArrowDown'));
     expect(kb.read().brakePressed).toBe(true);
     target.dispatchEvent(key('keyup', 'ArrowUp'));
     expect(kb.read().throttlePressed).toBe(false);
     target.dispatchEvent(new Event('blur'));
-    expect(kb.read()).toEqual({
+    expect(kb.read()).toMatchObject({
       throttlePressed: false,
       brakePressed: false,
       clutchPressed: false,
@@ -71,14 +75,14 @@ describe('TouchInputSource + CompositeInputSource', () => {
 
     b.press('throttle');
     a.press('brake');
-    expect(composite.read()).toEqual({
+    expect(composite.read()).toMatchObject({
       throttlePressed: true,
       brakePressed: true,
       clutchPressed: false,
     });
 
     removeB();
-    expect(composite.read()).toEqual({
+    expect(composite.read()).toMatchObject({
       throttlePressed: false,
       brakePressed: true,
       clutchPressed: false,
@@ -127,5 +131,38 @@ describe('KeyboardInputSource (manual controls)', () => {
     expect(touch.read().clutchPressed).toBe(true);
     touch.release('clutch');
     expect(touch.read().clutchPressed).toBe(false);
+  });
+});
+
+describe('KeyboardInputSource (circuit layout)', () => {
+  it('←/→ and A/D steer; E/Q shift; V toggles the camera', () => {
+    const target = new EventTarget();
+    const onAction = vi.fn();
+    const kb = new KeyboardInputSource(target, onAction, 'circuit');
+    target.dispatchEvent(key('keydown', 'ArrowLeft'));
+    expect(kb.read().steerLeftPressed).toBe(true);
+    target.dispatchEvent(key('keyup', 'ArrowLeft'));
+    target.dispatchEvent(key('keydown', 'KeyD'));
+    expect(kb.read().steerRightPressed).toBe(true);
+    for (const code of ['KeyE', 'KeyQ', 'KeyV', 'ArrowRight']) {
+      target.dispatchEvent(key('keydown', code));
+    }
+    // ArrowRight steers here, so it is not a shift.
+    expect(onAction.mock.calls.flat()).toEqual(['shiftUp', 'shiftDown', 'toggleCamera']);
+  });
+
+  it('the standard layout still shifts on the arrows and never steers', () => {
+    const target = new EventTarget();
+    const onAction = vi.fn();
+    const kb = new KeyboardInputSource(target, onAction);
+    target.dispatchEvent(key('keydown', 'ArrowLeft'));
+    expect(kb.read().steerLeftPressed).toBe(false);
+    expect(onAction).toHaveBeenCalledWith('shiftDown');
+  });
+
+  it('touch steering buttons', () => {
+    const touch = new TouchInputSource();
+    touch.press('steerRight');
+    expect(touch.read().steerRightPressed).toBe(true);
   });
 });

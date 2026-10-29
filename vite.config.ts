@@ -29,6 +29,8 @@ export default defineConfig({
       ['src/app/**', 'jsdom'],
     ],
     setupFiles: ['./src/test/setup.ts'],
+    // Circuit tests simulate whole laps; give them headroom under coverage instrumentation.
+    testTimeout: 15_000,
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',

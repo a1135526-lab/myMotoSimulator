@@ -4,6 +4,8 @@ import styles from './controls.module.css';
 
 interface TouchControlsProps {
   manual: boolean;
+  /** Circuit racing: add lean-left / lean-right buttons. */
+  steering?: boolean;
   onPress: (control: TouchControl) => void;
   onRelease: (control: TouchControl) => void;
   onReset: () => void;
@@ -14,6 +16,7 @@ interface TouchControlsProps {
 /** Hold-to-press buttons; pointer capture keeps them held while the finger drifts. */
 export function TouchControls({
   manual,
+  steering = false,
   onPress,
   onRelease,
   onReset,
@@ -46,6 +49,16 @@ export function TouchControls({
           </button>
           <button type="button" className={styles.start} onClick={onStart}>
             發動
+          </button>
+        </div>
+      )}
+      {steering && (
+        <div className={styles.steerRow}>
+          <button type="button" className={styles.steer} {...bind('steerLeft')}>
+            ◀ 左傾
+          </button>
+          <button type="button" className={styles.steer} {...bind('steerRight')}>
+            右傾 ▶
           </button>
         </div>
       )}

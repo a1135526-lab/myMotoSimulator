@@ -1,22 +1,62 @@
-import type { ControlCommand } from '@/domain';
-import type { ActionListener, InputAction, InputSource } from './InputSource';
+import {
+  RELEASED,
+  type ActionListener,
+  type InputAction,
+  type InputCommand,
+  type InputSource,
+} from './InputSource';
 
-/** Held controls. */
-const THROTTLE_KEYS = new Set(['ArrowUp', 'KeyW']);
-const BRAKE_KEYS = new Set(['ArrowDown', 'KeyS']);
-const CLUTCH_KEYS = new Set(['ShiftLeft', 'ShiftRight', 'KeyC']);
-const HELD_KEYS = new Set([...THROTTLE_KEYS, ...BRAKE_KEYS, ...CLUTCH_KEYS]);
+/**
+ * Key layouts.
+ *  standard (simulator / drag race):
+ *    ↑/W throttle, ↓/S brake, Shift/C clutch, →/E up, ←/Q down,
+ *    Enter start, R reset, Space start/timer.
+ *  circuit (road racing): ←/→ and A/D steer, so shifting moves to E/Q only;
+ *    V switches first / third person.
+ */
+export type KeyLayout = 'standard' | 'circuit';
 
-/** One-shot actions; the browser default is suppressed for these codes. */
-const ACTION_KEYS: ReadonlyMap<string, InputAction> = new Map([
+type Held = keyof InputCommand;
+
+interface LayoutSpec {
+  readonly held: ReadonlyMap<string, Held>;
+  readonly actions: ReadonlyMap<string, InputAction>;
+}
+
+const COMMON_HELD: [string, Held][] = [
+  ['ArrowUp', 'throttlePressed'],
+  ['KeyW', 'throttlePressed'],
+  ['ArrowDown', 'brakePressed'],
+  ['KeyS', 'brakePressed'],
+  ['ShiftLeft', 'clutchPressed'],
+  ['ShiftRight', 'clutchPressed'],
+  ['KeyC', 'clutchPressed'],
+];
+
+const COMMON_ACTIONS: [string, InputAction][] = [
   ['KeyR', 'reset'],
   ['Space', 'toggleTimer'],
-  ['ArrowRight', 'shiftUp'],
   ['KeyE', 'shiftUp'],
-  ['ArrowLeft', 'shiftDown'],
   ['KeyQ', 'shiftDown'],
   ['Enter', 'startEngine'],
-]);
+];
+
+const LAYOUTS: Readonly<Record<KeyLayout, LayoutSpec>> = {
+  standard: {
+    held: new Map(COMMON_HELD),
+    actions: new Map([...COMMON_ACTIONS, ['ArrowRight', 'shiftUp'], ['ArrowLeft', 'shiftDown']]),
+  },
+  circuit: {
+    held: new Map([
+      ...COMMON_HELD,
+      ['ArrowLeft', 'steerLeftPressed'],
+      ['KeyA', 'steerLeftPressed'],
+      ['ArrowRight', 'steerRightPressed'],
+      ['KeyD', 'steerRightPressed'],
+    ]),
+    actions: new Map([...COMMON_ACTIONS, ['KeyV', 'toggleCamera']]),
+  },
+};
 
 /** Form controls keep their own arrow/space behaviour. */
 const isEditable = (target: EventTarget | null): boolean => {
@@ -33,31 +73,31 @@ const isButton = (target: EventTarget | null): boolean =>
   String(target.tagName).toUpperCase() === 'BUTTON';
 
 /**
- * ↑ / W throttle, ↓ / S brake, Shift / C clutch (hold),
- * → / E upshift, ← / Q downshift, Enter start engine,
- * R reset, Space start/stop timer.
- * All keys are released when the window loses focus so the bike never
- * "sticks" at full throttle.
+ * Keyboard input. All keys are released when the window loses focus so the
+ * bike never "sticks" at full throttle.
  */
 export class KeyboardInputSource implements InputSource {
   private readonly held = new Set<string>();
+  private readonly layout: LayoutSpec;
 
   constructor(
     private readonly target: Pick<Window, 'addEventListener' | 'removeEventListener'>,
     private readonly onAction: ActionListener,
+    layout: KeyLayout = 'standard',
   ) {
+    this.layout = LAYOUTS[layout];
     target.addEventListener('keydown', this.handleDown);
     target.addEventListener('keyup', this.handleUp);
     target.addEventListener('blur', this.releaseAll);
   }
 
-  read(): ControlCommand {
-    const has = (keys: Set<string>) => [...keys].some((k) => this.held.has(k));
-    return {
-      throttlePressed: has(THROTTLE_KEYS),
-      brakePressed: has(BRAKE_KEYS),
-      clutchPressed: has(CLUTCH_KEYS),
-    };
+  read(): InputCommand {
+    const out = { ...RELEASED };
+    for (const code of this.held) {
+      const field = this.layout.held.get(code);
+      if (field) out[field] = true;
+    }
+    return out;
   }
 
   dispose(): void {
@@ -70,12 +110,12 @@ export class KeyboardInputSource implements InputSource {
   private readonly handleDown = (event: Event): void => {
     const e = event as KeyboardEvent;
     if (isEditable(e.target)) return;
-    if (HELD_KEYS.has(e.code)) {
+    if (this.layout.held.has(e.code)) {
       e.preventDefault();
       this.held.add(e.code);
       return;
     }
-    const action = ACTION_KEYS.get(e.code);
+    const action = this.layout.actions.get(e.code);
     if (!action) return;
     if ((e.code === 'Enter' || e.code === 'Space') && isButton(e.target)) return;
     e.preventDefault();

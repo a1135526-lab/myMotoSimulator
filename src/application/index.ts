@@ -37,7 +37,22 @@ export type {
 export type { GaugeScale, TelemetryView, TimerView } from './viewModels/telemetry';
 export { RaceProvider } from './hooks/RaceProvider';
 export { useRaceController } from './hooks/raceContext';
-export { DISTANCE_PRESETS_M, useRaceStore } from './stores/raceStore';
+export {
+  DISTANCE_PRESETS_M,
+  RACE_STEP_LABELS,
+  RACE_STEPS,
+  useRaceStore,
+  type RaceStep,
+} from './stores/raceStore';
+export {
+  useActiveTrack,
+  useBikeCards,
+  useGarageEstimate,
+  useMatchupEstimate,
+  useTracks,
+  type BikeCardView,
+} from './hooks/useRaceSetup';
+export { selectionForLevel } from './race/opponentSetup';
 export {
   SKILL_LABELS,
   TUNE_LEVEL_LABELS,
@@ -47,3 +62,11 @@ export {
 export type { RaceView, RacerView } from './viewModels/race';
 export type { AppMode } from './stores/uiStore';
 export { readRaceSound, readSimulatorSound, type SoundFrame } from './viewModels/sound';
+export { CircuitProvider } from './hooks/CircuitProvider';
+export { useCircuitController } from './hooks/circuitContext';
+export { useCircuitStore, type CameraMode } from './stores/circuitStore';
+export { readCircuitSound } from './viewModels/sound';
+export type { CircuitView, CircuitRiderView, CircuitPlayerView } from './viewModels/circuit';
+export { MAX_CIRCUIT_OPPONENTS, MAX_LAPS, type Discipline } from './stores/raceStore';
+export { useActiveCircuit, useCircuits, useVenue, type Estimate } from './hooks/useRaceSetup';
+export { circuitGeometry } from './services/lapService';

@@ -2,11 +2,11 @@ import { clamp, percentToFraction, STANDARD_GRAVITY } from '../units';
 
 /** Peak deceleration with full brake input, m/s² (~0.8 g, ABS-limited). */
 export const MAX_BRAKE_DECEL_MPS2 = 8;
-/** Launch acceleration ceiling from rear grip / wheelie, in g. */
-export const MAX_TRACTION_G = 1.0;
-
-export const tractionLimitN = (body: { readonly massKg: number }): number =>
-  MAX_TRACTION_G * body.massKg * STANDARD_GRAVITY;
+/** Drive-force ceiling from rear grip / wheelie: tractionG × m·g. */
+export const tractionLimitN = (body: {
+  readonly massKg: number;
+  readonly tractionG: number;
+}): number => body.tractionG * body.massKg * STANDARD_GRAVITY;
 
 export interface VehicleBody {
   /** Bike + rider + extra, kg. */
@@ -18,6 +18,8 @@ export interface VehicleBody {
   readonly rollingResistanceCoeff: number;
   readonly airDensity: number;
   readonly gradePercent: number;
+  /** Grip limit in g; see {@link tractionLimitN}. */
+  readonly tractionG: number;
 }
 
 /** Equivalent linear mass of a rotating part: I / r², scaled by its gear ratio². */
@@ -45,7 +47,7 @@ const gradeAngle = (body: VehicleBody): number => Math.atan(percentToFraction(bo
  * Rolling resistance and brakes only oppose motion: with the bike stopped
  * they can hold it but never push it backwards (no reverse in this model).
  *
- * Drive force is capped at {@link MAX_TRACTION_G} × m·g: beyond that a real
+ * Drive force is capped at `tractionG` × m·g: beyond that a real
  * bike spins the rear tyre or lifts the front wheel. The excess engine
  * torque is simply lost (tyre slip / wheelie are not modelled separately).
  */

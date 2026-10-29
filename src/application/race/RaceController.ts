@@ -110,6 +110,8 @@ export class RaceController {
         return this.shift(-1);
       case 'startEngine':
         return this.startEngine();
+      case 'toggleCamera':
+        return;
     }
   };
 

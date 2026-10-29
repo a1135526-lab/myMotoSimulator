@@ -1,4 +1,10 @@
-import { readRaceSound, useCurrentBike, useRaceController, useRaceStore } from '@/application';
+import {
+  readRaceSound,
+  useActiveTrack,
+  useCurrentBike,
+  useRaceController,
+  useRaceStore,
+} from '@/application';
 import { useEngineAudio } from '../audio/useEngineAudio';
 import { ModeTabs } from '../components/common/ModeTabs';
 import { SoundToggle } from '../components/common/SoundToggle';
@@ -8,15 +14,24 @@ import { AppLayout } from '../layouts/AppLayout';
 import { RaceHud } from './RaceHud';
 import { RaceResultCard } from './RaceResultCard';
 import { RaceScene } from './RaceScene';
-import { RaceSetupPanel } from './RaceSetupPanel';
 import styles from './race.module.css';
 
 export function RacePage() {
   const controller = useRaceController();
   const view = useRaceStore((s) => s.view);
-  const manual = useCurrentBike().kind === 'manual';
+  const setStep = useRaceStore((s) => s.setStep);
+  const bike = useCurrentBike();
+  const { track, distanceM } = useActiveTrack();
+  const manual = bike.kind === 'manual';
   const live = view?.phase === 'countdown' || view?.phase === 'racing';
   useEngineAudio(readRaceSound);
+
+  const theme = {
+    sky: track.sky,
+    scenery: track.scenery,
+    rain: track.rain,
+    gradePercent: track.environment.gradePercent,
+  };
 
   return (
     <AppLayout
@@ -28,10 +43,31 @@ export function RacePage() {
         </>
       }
     >
+      <div className={styles.raceBar}>
+        <button
+          type="button"
+          className={styles.garageButton}
+          onClick={() => setStep('tune')}
+          disabled={live}
+          data-testid="back-to-garage"
+        >
+          ← 返回車庫
+        </button>
+        <p className={styles.raceTitle}>
+          {track.rain ? '🌧 ' : ''}
+          {track.name}・{distanceM} m · {bike.brand} {bike.model} vs {view?.opponent.label ?? ''}
+        </p>
+      </div>
       <div className={styles.stage}>
-        <RaceScene />
+        <RaceScene theme={theme} />
         {view && <RaceHud view={view} />}
-        {view?.result && <RaceResultCard view={view} onRematch={() => controller.go()} />}
+        {view?.result && (
+          <RaceResultCard
+            view={view}
+            onRematch={() => controller.go()}
+            onGarage={() => setStep('tune')}
+          />
+        )}
       </div>
       <div className={styles.controls}>
         <button
@@ -52,7 +88,6 @@ export function RacePage() {
           onStart={() => controller.startEngine()}
         />
       </div>
-      <RaceSetupPanel locked={live} />
     </AppLayout>
   );
 }

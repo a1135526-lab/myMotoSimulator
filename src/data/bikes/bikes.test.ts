@@ -21,7 +21,7 @@ import { BIKES, DEFAULT_BIKE_ID, getBike } from './index';
 const stockConfig = (bike: BikeSpec) => ({
   bike,
   tune: createStockTune(bike),
-  environment: { airDensity: AIR_DENSITY_SEA_LEVEL, gradePercent: 0 },
+  environment: { airDensity: AIR_DENSITY_SEA_LEVEL, gradePercent: 0, tractionG: 1 },
   timestepS: DEFAULT_TIMESTEP_S,
 });
 

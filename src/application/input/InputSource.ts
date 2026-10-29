@@ -1,7 +1,11 @@
-import type { ControlCommand } from '@/domain';
+import type { CircuitCommand } from '@/domain';
+
+/** Everything a device can hold down; steering is only used on circuits. */
+export type InputCommand = CircuitCommand;
 
 /** One-shot actions triggered by the rider (not held). */
-export type InputAction = 'reset' | 'toggleTimer' | 'shiftUp' | 'shiftDown' | 'startEngine';
+export type InputAction =
+  'reset' | 'toggleTimer' | 'shiftUp' | 'shiftDown' | 'startEngine' | 'toggleCamera';
 export type ActionListener = (action: InputAction) => void;
 
 /**
@@ -9,14 +13,16 @@ export type ActionListener = (action: InputAction) => void;
  * buttons, a gamepad later. The controller polls `read()` every frame.
  */
 export interface InputSource {
-  read(): ControlCommand;
+  read(): InputCommand;
   dispose(): void;
 }
 
-export const RELEASED: ControlCommand = {
+export const RELEASED: InputCommand = {
   throttlePressed: false,
   brakePressed: false,
   clutchPressed: false,
+  steerLeftPressed: false,
+  steerRightPressed: false,
 };
 
 /** OR-combines several sources so keyboard and touch work together. */
@@ -31,17 +37,13 @@ export class CompositeInputSource implements InputSource {
     };
   }
 
-  read(): ControlCommand {
-    let throttlePressed = false;
-    let brakePressed = false;
-    let clutchPressed = false;
+  read(): InputCommand {
+    const out = { ...RELEASED };
     for (const source of this.sources) {
       const c = source.read();
-      throttlePressed ||= c.throttlePressed;
-      brakePressed ||= c.brakePressed;
-      clutchPressed ||= c.clutchPressed;
+      for (const key of Object.keys(out) as (keyof InputCommand)[]) out[key] ||= c[key];
     }
-    return { throttlePressed, brakePressed, clutchPressed };
+    return out;
   }
 
   dispose(): void {

@@ -112,3 +112,24 @@
   padding: 1px 6px;
   color: var(--text);
 }
+
+.steerRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.steer {
+  border-radius: var(--radius);
+  border: 1px solid var(--series-compare);
+  background: rgb(30 136 229 / 0.12);
+  color: var(--series-compare);
+  font-weight: 700;
+  padding: 16px 8px;
+  cursor: pointer;
+}
+
+.steer:active {
+  background: var(--series-compare);
+  color: #000;
+}

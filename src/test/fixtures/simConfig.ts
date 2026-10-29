@@ -15,7 +15,7 @@ export function makeConfig(
   return {
     bike,
     tune: patch(createStockTune(bike)),
-    environment: { airDensity: AIR_DENSITY_SEA_LEVEL, gradePercent: 0 },
+    environment: { airDensity: AIR_DENSITY_SEA_LEVEL, gradePercent: 0, tractionG: 1 },
     timestepS: DEFAULT_TIMESTEP_S,
   };
 }

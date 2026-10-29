@@ -1,17 +1,18 @@
-import type { ControlCommand } from '@/domain';
-import { RELEASED, type InputSource } from './InputSource';
+import { RELEASED, type InputCommand, type InputSource } from './InputSource';
 
-export type TouchControl = 'throttle' | 'brake' | 'clutch';
+export type TouchControl = 'throttle' | 'brake' | 'clutch' | 'steerLeft' | 'steerRight';
 
-const FIELD: Record<TouchControl, keyof ControlCommand> = {
+const FIELD: Record<TouchControl, keyof InputCommand> = {
   throttle: 'throttlePressed',
   brake: 'brakePressed',
   clutch: 'clutchPressed',
+  steerLeft: 'steerLeftPressed',
+  steerRight: 'steerRightPressed',
 };
 
 /** Backs the on-screen buttons; UI calls press/release from pointer events. */
 export class TouchInputSource implements InputSource {
-  private state: ControlCommand = RELEASED;
+  private state: InputCommand = RELEASED;
 
   press(control: TouchControl): void {
     this.state = { ...this.state, [FIELD[control]]: true };
@@ -21,7 +22,7 @@ export class TouchInputSource implements InputSource {
     this.state = { ...this.state, [FIELD[control]]: false };
   }
 
-  read(): ControlCommand {
+  read(): InputCommand {
     return this.state;
   }
 

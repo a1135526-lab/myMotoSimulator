@@ -29,7 +29,13 @@ function Row({ label, r }: { label: string; r: RacerResult }) {
   );
 }
 
-export function RaceResultCard({ view, onRematch }: { view: RaceView; onRematch: () => void }) {
+interface RaceResultCardProps {
+  view: RaceView;
+  onRematch: () => void;
+  onGarage: () => void;
+}
+
+export function RaceResultCard({ view, onRematch, onGarage }: RaceResultCardProps) {
   const result = view.result;
   if (!result) return null;
   const won = result.winner === 'player';
@@ -63,9 +69,14 @@ export function RaceResultCard({ view, onRematch }: { view: RaceView; onRematch:
         <p className={styles.legend}>
           反應：綠燈到起步；ET：起步到終點；總時間 = 反應 + ET，決定勝負。
         </p>
-        <button type="button" className={styles.primary} onClick={onRematch} autoFocus>
-          再比一場 <kbd>Space</kbd>
-        </button>
+        <div className={styles.resultActions}>
+          <button type="button" className={styles.secondary} onClick={onGarage}>
+            換車 / 改裝
+          </button>
+          <button type="button" className={styles.primary} onClick={onRematch} autoFocus>
+            再比一場 <kbd>Space</kbd>
+          </button>
+        </div>
       </section>
     </div>
   );

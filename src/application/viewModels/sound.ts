@@ -2,6 +2,7 @@ import { getBike } from '@/data';
 import { mpsToKmh } from '@/domain';
 import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
+import { useCircuitStore } from '../stores/circuitStore';
 import { useSimStore } from '../stores/simStore';
 
 /** What the audio layer needs to voice one engine. */
@@ -55,5 +56,33 @@ export function readRaceSound(): SoundFrame | null {
   return {
     player: { ...voice(view.player), speedKmh: view.player.speedKmh },
     opponent: { ...voice(view.opponent), gapM: -view.gapM },
+  };
+}
+
+export function readCircuitSound(): SoundFrame | null {
+  const view = useCircuitStore.getState().view;
+  const player = view?.riders[0];
+  if (!view || !player) return null;
+  // Voice the closest rival — the one you'd actually hear.
+  const rival = view.riders
+    .slice(1)
+    .reduce<(typeof view.riders)[number] | null>(
+      (best, r) =>
+        !best ||
+        Math.abs(r.progressM - player.progressM) < Math.abs(best.progressM - player.progressM)
+          ? r
+          : best,
+      null,
+    );
+  const voice = (r: typeof player): EngineSoundState => ({
+    rpm: r.rpm,
+    throttle: r.throttle,
+    running: r.engineRunning,
+    limiter: r.revLimiter,
+    cylinders: r.cylinders,
+  });
+  return {
+    player: { ...voice(player), speedKmh: player.speedKmh },
+    ...(rival && { opponent: { ...voice(rival), gapM: rival.progressM - player.progressM } }),
   };
 }

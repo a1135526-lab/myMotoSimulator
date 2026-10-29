@@ -9,7 +9,11 @@ export interface Environment {
   readonly airDensity: number;
   /** Road grade, % (positive = uphill). */
   readonly gradePercent: number;
+  /** Tyre grip limit for drive force, in g (dry ≈ 1.0, wet ≈ 0.6). */
+  readonly tractionG: number;
 }
+
+export const DEFAULT_TRACTION_G = 1.0;
 
 export interface SimConfig {
   readonly bike: BikeSpec;

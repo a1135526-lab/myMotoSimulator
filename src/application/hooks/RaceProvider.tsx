@@ -7,31 +7,32 @@ import { useRaceStore } from '../stores/raceStore';
 import { toRaceView } from '../viewModels/race';
 import { RaceContext } from './raceContext';
 import { useKeyboardControls } from './useKeyboardControls';
+import { useActiveTrack } from './useRaceSetup';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
 import { useSimulationLoop } from './useSimulationLoop';
 
-/** Player = the bike and tune currently set up in the simulator; opponent from race setup. */
+/** Player = the garage bike and tune; opponent and venue from the race setup. */
 function useRaceConfig(): RaceConfig {
   const bike = useCurrentBike();
   const selection = useConfigStore((s) => s.selection);
-  const distanceM = useRaceStore((s) => s.distanceM);
+  const { track, distanceM } = useActiveTrack();
   const treeMode = useRaceStore((s) => s.treeMode);
   const opponent = useRaceStore((s) => s.opponent);
 
   return useMemo(() => {
     const oppBike = getBike(opponent.bikeId);
+    const env = track.environment;
     return {
-      // Drag strips are flat, whatever grade the simulator is set to.
-      player: buildSimConfig(bike, selection, 0),
+      player: buildSimConfig(bike, selection, env),
       opponent: buildSimConfig(
         oppBike,
         selectionForLevel(oppBike, opponent.tuneLevel, opponent.riderMassKg),
-        0,
+        env,
       ),
       opponentSkill: opponent.skill,
       settings: { distanceM, treeMode },
     };
-  }, [bike, selection, distanceM, treeMode, opponent]);
+  }, [bike, selection, track, distanceM, treeMode, opponent]);
 }
 
 export function RaceProvider({ children }: { children: ReactNode }) {

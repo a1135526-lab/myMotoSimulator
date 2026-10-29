@@ -9,7 +9,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   // The race page renders WebGL in software on headless runners; running many
   // of those at once starves the CPU and slows the real-time physics.
-  workers: process.env.CI ? 1 : 2,
+  workers: 1,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,

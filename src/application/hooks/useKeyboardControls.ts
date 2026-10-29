@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { KeyboardInputSource } from '../input/KeyboardInputSource';
+import { KeyboardInputSource, type KeyLayout } from '../input/KeyboardInputSource';
 import type { ActionListener, CompositeInputSource } from '../input/InputSource';
 
 export interface KeyboardDriven {
@@ -8,9 +8,12 @@ export interface KeyboardDriven {
 }
 
 /** Attaches ↑/↓/R/Space handling to the window for the controller's lifetime. */
-export function useKeyboardControls(controller: KeyboardDriven): void {
+export function useKeyboardControls(
+  controller: KeyboardDriven,
+  layout: KeyLayout = 'standard',
+): void {
   useEffect(
-    () => controller.input.add(new KeyboardInputSource(window, controller.handleAction)),
-    [controller],
+    () => controller.input.add(new KeyboardInputSource(window, controller.handleAction, layout)),
+    [controller, layout],
   );
 }

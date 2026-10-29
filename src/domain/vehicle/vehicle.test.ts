@@ -8,6 +8,7 @@ import {
   MAX_BRAKE_DECEL_MPS2,
   reflectedMassKg,
   rollingResistanceN,
+  tractionLimitN,
   type VehicleBody,
 } from './dynamics';
 import { rollingCircumferenceM, rollingRadiusM, tireRadiusM } from './tire';
@@ -20,6 +21,7 @@ const body: VehicleBody = {
   rollingResistanceCoeff: 0.015,
   airDensity: 1.2,
   gradePercent: 0,
+  tractionG: 1,
 };
 
 describe('tire', () => {
@@ -68,6 +70,16 @@ describe('dynamics', () => {
   it('extra reflected mass reduces acceleration', () => {
     expect(longitudinalAccel(body, 10, 1000, 0, 50)).toBeLessThan(
       longitudinalAccel(body, 10, 1000, 0),
+    );
+  });
+
+  it('caps drive force at the grip limit (tractionG × m·g)', () => {
+    const huge = 1e6;
+    const dry = longitudinalAccel(body, 1, huge, 0);
+    const wet = longitudinalAccel({ ...body, tractionG: 0.6 }, 1, huge, 0);
+    expect(wet).toBeLessThan(dry);
+    expect(tractionLimitN({ massKg: 200, tractionG: 0.5 })).toBeCloseTo(
+      0.5 * 200 * STANDARD_GRAVITY,
     );
   });
 

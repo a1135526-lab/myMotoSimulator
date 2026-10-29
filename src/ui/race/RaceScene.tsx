@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRaceStore } from '@/application';
 import { RaceRenderer } from './scene/RaceRenderer';
+import type { SceneTheme } from './scene/theme';
 import styles from './race.module.css';
 
 /**
@@ -8,7 +9,7 @@ import styles from './race.module.css';
  * reads the latest race view straight from the store, so the 3D scene never
  * triggers React re-renders.
  */
-export function RaceScene() {
+export function RaceScene({ theme }: { theme: SceneTheme }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [unsupported, setUnsupported] = useState(false);
 
@@ -17,7 +18,7 @@ export function RaceScene() {
     if (!canvas) return;
     let renderer: RaceRenderer;
     try {
-      renderer = new RaceRenderer(canvas);
+      renderer = new RaceRenderer(canvas, theme);
     } catch {
       setUnsupported(true);
       return;
@@ -38,6 +39,8 @@ export function RaceScene() {
       observer.disconnect();
       renderer.dispose();
     };
+    // Theme is fixed for a race; the page remounts when the track changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

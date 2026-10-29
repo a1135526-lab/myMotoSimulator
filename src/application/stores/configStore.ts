@@ -24,6 +24,8 @@ interface ConfigState {
   reset(group: ResettableGroup): void;
   resetAll(): void;
   applyPreset(preset: Preset): void;
+  /** Replace the whole tune for the current bike (garage quick presets). */
+  setSelection(selection: TuneSelection): void;
 }
 
 const stockOf = (bikeId: string) => createStockSelection(getBike(bikeId));
@@ -64,6 +66,8 @@ export const useConfigStore = create<ConfigState>()((set, get) => {
     },
 
     resetAll: () => set((state) => ({ selection: stockOf(state.bikeId), gradePercent: 0 })),
+
+    setSelection: (selection) => set({ selection }),
 
     applyPreset: (preset) => {
       const stock = stockOf(preset.bikeId);

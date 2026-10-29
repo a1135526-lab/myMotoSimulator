@@ -134,6 +134,7 @@ export function buildModel(config: SimConfig): SimModel {
       rollingResistanceCoeff: chassis.rollingResistanceCoeff,
       airDensity: environment.airDensity,
       gradePercent: environment.gradePercent,
+      tractionG: environment.tractionG,
     },
   };
 }

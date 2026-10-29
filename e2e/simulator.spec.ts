@@ -119,15 +119,27 @@ test.describe('manual bike', () => {
 
 test.describe('drag race', () => {
   test.skip(({ isMobile }) => isMobile, 'keyboard flow');
+  // Headless Chromium renders WebGL on the CPU; a smaller canvas keeps the
+  // real-time race smooth enough that UI waits don't time out.
+  test.use({ viewport: { width: 900, height: 700 } });
 
-  test('stage → tree → launch on green → result', async ({ page }) => {
+  /** Garage: custom track at `distance` m, keep the bike, stock tune, novice opponent. */
+  async function enterRace(page: Page, distance: number) {
     await page.goto('/');
     await page.getByTestId('mode-race').click();
+    await page.getByTestId('track-custom').click();
+    await page.getByTestId('race-distance').fill(String(distance));
+    await page.getByTestId('wizard-next').click(); // → bike
+    await page.getByTestId('wizard-next').click(); // → tune
+    await page.getByTestId('wizard-next').click(); // → opponent
+    await page.getByTestId('opponent-skill-novice').click();
+    await page.getByTestId('wizard-next').click(); // → race
     await expect(page.getByTestId('race-canvas')).toBeVisible();
-    await page.getByTestId('race-distance').fill('201');
-    await page.getByTestId('opponent-skill').selectOption('novice');
     await page.locator('h1').click();
+  }
 
+  test('garage → stage → tree → launch on green → result', async ({ page }) => {
+    await enterRace(page, 201);
     await page.keyboard.press('Space');
     await expect(page.getByTestId('race-hint')).toHaveText('注意燈號…');
     await expect(page.getByTestId('race-hint')).toHaveCount(0, { timeout: 6000 });
@@ -140,16 +152,50 @@ test.describe('drag race', () => {
     await page.keyboard.press('Space');
     await expect(page.getByTestId('race-result')).toHaveCount(0);
     await expect(page.getByTestId('race-hint')).toHaveText('已就位。按 Space 開始倒數');
+
+    await page.getByTestId('back-to-garage').click();
+    await expect(page.getByTestId('tune-estimate')).toBeVisible();
   });
 
   test('jumping the start is a red-light loss', async ({ page }) => {
-    await page.goto('/');
-    await page.getByTestId('mode-race').click();
-    await page.getByTestId('race-distance').fill('100');
-    await page.locator('h1').click();
+    await enterRace(page, 100);
     await page.keyboard.press('Space');
     await page.keyboard.down('ArrowUp');
     await expect(page.getByTestId('race-result')).toContainText('搶跑', { timeout: 30_000 });
+    await page.keyboard.up('ArrowUp');
+  });
+});
+
+test.describe('circuit race', () => {
+  test.skip(({ isMobile }) => isMobile, 'keyboard flow');
+  test.use({ viewport: { width: 900, height: 700 } });
+
+  test('lights out → throttle → camera toggle → steering keys lean the bike', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('mode-race').click();
+    await page.getByTestId('discipline-circuit').click();
+    await page.getByTestId('circuit-practice-park').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
+    await expect(page.getByTestId('circuit-canvas')).toBeVisible();
+    await page.locator('h1').click();
+
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('circuit-hint')).toHaveCount(0, { timeout: 12_000 });
+    await page.keyboard.down('ArrowUp');
+    const speed = async () => Number(await page.getByTestId('circuit-speed').textContent());
+    await expect.poll(speed, { timeout: 10_000 }).toBeGreaterThan(40);
+
+    await expect(page.getByTestId('camera-toggle')).toContainText('切到第一人稱');
+    await page.keyboard.press('KeyV');
+    await expect(page.getByTestId('camera-toggle')).toContainText('切到第三人稱');
+
+    await page.keyboard.down('ArrowLeft');
+    await expect
+      .poll(async () => (await page.getByLabel(/壓車角/).getAttribute('aria-label')) ?? '', {
+        timeout: 5000,
+      })
+      .not.toBe('壓車角 0 度');
+    await page.keyboard.up('ArrowLeft');
     await page.keyboard.up('ArrowUp');
   });
 });

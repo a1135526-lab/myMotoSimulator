@@ -78,12 +78,82 @@ function finishGantry(distanceM: number) {
   return group;
 }
 
+export type SceneryKind = 'stadium' | 'coast' | 'mountain';
+
+/** Glowing lamp heads on every light pole (night tracks). */
+function lamps(poles: { x: number; y: number; m: number }[]) {
+  const heads = poles.map((p) => ({ x: p.x * 0.88, y: 6.1, m: p.m }));
+  const group = new THREE.Group();
+  group.add(
+    along(
+      new THREE.SphereGeometry(0.25, 8, 6),
+      new THREE.MeshBasicMaterial({ color: '#ffe6a3' }),
+      heads,
+    ),
+  );
+  // Pools of light on the road under each lamp.
+  // No pools at the start line: they would sit right under the rider's view.
+  const pools = heads.filter((h) => h.m > 20).map((h) => ({ x: h.x * 0.6, y: 0.02, m: h.m }));
+  const pool = new THREE.CircleGeometry(4, 16).rotateX(-Math.PI / 2);
+  group.add(
+    along(
+      pool,
+      new THREE.MeshBasicMaterial({ color: '#ffd27a', transparent: true, opacity: 0.08 }),
+      pools,
+    ),
+  );
+  return group;
+}
+
+/** Roadside surroundings for each venue type. */
+function scenery(kind: SceneryKind, distanceM: number, total: number, centerM: number) {
+  const group = new THREE.Group();
+  if (kind === 'stadium') {
+    const crowd = new THREE.MeshLambertMaterial({ map: crowdTexture() });
+    for (const side of [-1, 1] as const) {
+      group.add(grandstand(side, -10, Math.min(160, distanceM * 0.6), crowd));
+      if (distanceM > 300) group.add(grandstand(side, distanceM - 80, 120, crowd));
+    }
+    return group;
+  }
+  const hillMat = new THREE.MeshLambertMaterial({
+    color: kind === 'mountain' ? '#2f4a2a' : '#6b5d4a',
+  });
+  const hills: { x: number; y: number; m: number }[] = [];
+  for (let m = -40; m < total; m += kind === 'mountain' ? 35 : 60) {
+    const spread = 30 + ((m * 7919) % 40);
+    hills.push({ x: -(ROAD_WIDTH / 2 + spread), y: 0, m });
+    if (kind === 'mountain') hills.push({ x: ROAD_WIDTH / 2 + spread, y: 0, m: m + 17 });
+  }
+  const cone = new THREE.ConeGeometry(
+    kind === 'mountain' ? 22 : 12,
+    kind === 'mountain' ? 40 : 10,
+    7,
+  ).translate(0, kind === 'mountain' ? 20 : 5, 0);
+  group.add(along(cone, hillMat, hills));
+  if (kind === 'coast') {
+    const sea = new THREE.Mesh(
+      new THREE.PlaneGeometry(600, total + 400),
+      new THREE.MeshLambertMaterial({ color: '#1d4e6f' }),
+    );
+    sea.rotation.x = -Math.PI / 2;
+    sea.position.set(ROAD_WIDTH / 2 + 310, -0.01, z(centerM));
+    group.add(sea);
+  }
+  return group;
+}
+
 export interface TrackObjects {
   readonly group: THREE.Group;
   dispose(): void;
 }
 
-export function buildTrack(distanceM: number): TrackObjects {
+export interface TrackOptions {
+  readonly scenery: SceneryKind;
+  readonly night: boolean;
+}
+
+export function buildTrack(distanceM: number, opts: TrackOptions): TrackObjects {
   const group = new THREE.Group();
   const total = RUN_UP_M + distanceM + RUN_OFF_M;
   const centerM = distanceM / 2 + (RUN_OFF_M - RUN_UP_M) / 2;
@@ -141,11 +211,8 @@ export function buildTrack(distanceM: number): TrackObjects {
     }
   }
 
-  const crowd = new THREE.MeshLambertMaterial({ map: crowdTexture() });
-  for (const side of [-1, 1] as const) {
-    group.add(grandstand(side, -10, Math.min(160, distanceM * 0.6), crowd));
-    if (distanceM > 300) group.add(grandstand(side, distanceM - 80, 120, crowd));
-  }
+  if (opts.night) group.add(lamps(poles));
+  group.add(scenery(opts.scenery, distanceM, total, centerM));
   group.add(finishGantry(distanceM));
 
   return {
