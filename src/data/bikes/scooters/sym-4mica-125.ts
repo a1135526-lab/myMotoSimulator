@@ -11,6 +11,7 @@ export const SYM_4MICA_125: ScooterSpec = {
   id: 'sym-4mica-125',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'commuter',
   brand: 'SYM',
   model: '4MICA 125',
   cluster: { layout: 'round-lcd', lcd: 'negative', accent: '#e9f3ff' },

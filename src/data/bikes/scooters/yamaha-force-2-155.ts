@@ -15,6 +15,7 @@ export const YAMAHA_FORCE_2_155: ScooterSpec = {
   id: 'yamaha-force-2-155',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'sport-scooter',
   brand: 'Yamaha',
   model: 'Force 2.0 155',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#3d8bff' },

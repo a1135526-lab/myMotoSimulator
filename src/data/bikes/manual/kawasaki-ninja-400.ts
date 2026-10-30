@@ -12,6 +12,7 @@ export const KAWASAKI_NINJA_400: ManualSpec = {
   id: 'kawasaki-ninja-400',
   kind: 'manual',
   licenseClass: 'yellow',
+  segment: 'supersport',
   brand: 'Kawasaki',
   model: 'Ninja 400',
   cluster: { layout: 'analog-lcd', lcd: 'positive', accent: '#a6e36b' },

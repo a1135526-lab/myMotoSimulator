@@ -5,76 +5,9 @@ import type { CityMap } from '@/domain';
 import { TyreSmoke } from '../../race/circuit/scene/tyreSmoke';
 import { createBikeModel, createCockpit, type BikeModel } from '../../race/scene/models';
 import { CarFleet } from './carFleet';
-import { buildCityScene, KERB_M, type CityScene } from './cityScene';
-
-/** Lighting per time of day: physical sky + sun, fog and exposure to match. */
-interface Lighting {
-  readonly elevationDeg: number;
-  readonly azimuthDeg: number;
-  readonly turbidity: number;
-  readonly rayleigh: number;
-  readonly exposure: number;
-  readonly sun: string;
-  readonly sunIntensity: number;
-  readonly hemiSky: string;
-  readonly hemiGround: string;
-  readonly hemi: number;
-  readonly fog: string;
-  readonly fogDensity: number;
-  readonly envIntensity: number;
-  readonly night: number;
-}
-
-const LIGHTING: Readonly<Record<TimeOfDay, Lighting>> = {
-  day: {
-    elevationDeg: 48,
-    azimuthDeg: 150,
-    turbidity: 2.6,
-    rayleigh: 1.6,
-    exposure: 0.58,
-    sun: '#fff3e2',
-    sunIntensity: 3.2,
-    hemiSky: '#cfe3ff',
-    hemiGround: '#5d5a52',
-    hemi: 0.7,
-    fog: '#a9c3db',
-    fogDensity: 0.00045,
-    envIntensity: 0.9,
-    night: 0,
-  },
-  dusk: {
-    elevationDeg: 3.5,
-    azimuthDeg: 250,
-    turbidity: 9,
-    rayleigh: 2.6,
-    exposure: 0.5,
-    sun: '#ffab6b',
-    sunIntensity: 2.2,
-    hemiSky: '#f0b18f',
-    hemiGround: '#3a3330',
-    hemi: 0.45,
-    fog: '#c99883',
-    fogDensity: 0.0011,
-    envIntensity: 0.7,
-    night: 0.55,
-  },
-  night: {
-    elevationDeg: -9,
-    azimuthDeg: 200,
-    turbidity: 2,
-    rayleigh: 0.5,
-    exposure: 0.85,
-    sun: '#9fb2ff',
-    sunIntensity: 0.35,
-    hemiSky: '#33406a',
-    hemiGround: '#141414',
-    hemi: 0.35,
-    fog: '#070b14',
-    fogDensity: 0.0014,
-    envIntensity: 0.25,
-    night: 1,
-  },
-};
+import { buildCityScene, ROAD_Y, type CityScene } from './cityScene';
+import { LIGHTING, type Lighting } from './lighting';
+import { RouteMarker } from './routeMarker';
 
 const PLAYER_COLOR = '#ff7a1a';
 const EYE_HEIGHT_M = 1.25;
@@ -92,6 +25,8 @@ const MS_PER_S = 1000;
 const REAR_WHEEL_M = 0.7;
 const SMOKE_MIN_DRIFT = 0.25;
 const SHADOW_HALF_M = 70;
+/** Draw distance; the haze is thick by then, so far chunks are culled unseen. */
+const FAR_M = 2400;
 const SUN_DISTANCE_M = 400;
 /** Degrees to radians. */
 const DEG = Math.PI / 180;
@@ -101,7 +36,7 @@ const yawFor = (heading: number) => Math.atan2(-Math.cos(heading), -Math.sin(hea
 export class StreetRenderer {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(BASE_FOV, 16 / 9, 0.1, 7000);
+  private readonly camera = new THREE.PerspectiveCamera(BASE_FOV, 16 / 9, 0.1, FAR_M);
   private readonly cockpit = createCockpit();
   private readonly smoke = new TyreSmoke();
   private readonly sun: THREE.DirectionalLight;
@@ -109,6 +44,8 @@ export class StreetRenderer {
   private readonly city: CityScene;
   private readonly lighting: Lighting;
   private readonly envTarget: THREE.WebGLRenderTarget;
+  private readonly sky = new Sky();
+  private readonly route = new RouteMarker();
   private fleet: CarFleet | null = null;
   private fleetKey = '';
   private bike: BikeModel | null = null;
@@ -139,8 +76,9 @@ export class StreetRenderer {
 
     // Physical sky, and the same sky baked into an environment map so
     // glass, paint and chrome reflect it.
-    const sky = new Sky();
-    sky.scale.setScalar(10000);
+    const sky = this.sky;
+    // Inside the far plane; it follows the camera so it always surrounds it.
+    sky.scale.setScalar(FAR_M * 0.9);
     const u = sky.material.uniforms;
     (u.turbidity as THREE.IUniform<number>).value = light.turbidity;
     (u.rayleigh as THREE.IUniform<number>).value = light.rayleigh;
@@ -180,7 +118,7 @@ export class StreetRenderer {
 
     this.city = buildCityScene(map, time, this.renderer.capabilities.getMaxAnisotropy());
     this.scene.add(this.city.group);
-    this.scene.add(this.bikeYaw, this.smoke.group);
+    this.scene.add(this.bikeYaw, this.smoke.group, this.route.group);
     this.camera.rotation.order = 'YXZ';
     this.camera.add(this.cockpit);
     this.scene.add(this.camera);
@@ -205,7 +143,8 @@ export class StreetRenderer {
     this.ensureFleet(view);
     this.fleet?.update(view.cars);
 
-    this.bikeYaw.position.set(r.x, KERB_M * (r.offRoad ? 1 : 0), r.z);
+    this.route.update(view.nav);
+    this.bikeYaw.position.set(r.x, ROAD_Y, r.z);
     this.bikeYaw.rotation.y = yawFor(r.heading - r.slip);
     if (this.bike) {
       this.bike.group.rotation.z = r.crashed ? Math.PI / 2.2 : r.lean;
@@ -228,11 +167,13 @@ export class StreetRenderer {
     this.sun.position.set(r.x, 0, r.z).addScaledVector(this.sunDir, SUN_DISTANCE_M);
 
     this.placeCamera(r, mode, dt);
+    this.sky.position.copy(this.camera.position);
     this.renderer.render(this.scene, this.camera);
   }
 
   dispose(): void {
     this.city.dispose();
+    this.route.dispose();
     this.fleet?.dispose();
     this.smoke.dispose();
     this.envTarget.dispose();

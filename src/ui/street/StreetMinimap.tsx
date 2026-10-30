@@ -1,72 +1,75 @@
-import { useMemo } from 'react';
+import { useEffect } from 'react';
 import type { StreetView } from '@/application';
 import type { CityMap } from '@/domain';
+import { drawMap } from './map/mapDraw';
+import { useCanvas2d } from './map/useCanvas2d';
 import styles from './street.module.css';
 
-/** Metres shown across the minimap. */
-const SPAN_M = 520;
-const DISTRICT_FILL: Readonly<Record<string, string>> = {
-  downtown: '#3b4250',
-  commercial: '#3a4048',
-  residential: '#383d42',
-  industrial: '#3c3a36',
-  park: '#2f5a33',
-  waterfront: '#3a4246',
-};
+/** Pixels per metre on the minimap (≈ 450 m across). */
+const SCALE = 0.42;
 
-/** North-up map around the rider: roads, blocks, sea, traffic and the rider's arrow. */
-export function StreetMinimap({ map, view }: { map: CityMap; view: StreetView }) {
-  const base = useMemo(
-    () => (
-      <>
-        <rect
-          x={-4000}
-          y={-4000}
-          width={map.width + 8000}
-          height={map.shoreZ + 4000}
-          fill="#26292d"
-        />
-        <rect x={-4000} y={map.shoreZ} width={map.width + 8000} height={6000} fill="#1c3f52" />
-        {map.blocks.map((b, i) => (
-          <rect
-            key={i}
-            x={b.rect.x0}
-            y={b.rect.z0}
-            width={b.rect.x1 - b.rect.x0}
-            height={b.rect.z1 - b.rect.z0}
-            fill={DISTRICT_FILL[b.district]}
-          />
-        ))}
-        {map.roads.map((r) => (
-          <rect
-            key={r.id}
-            x={r.rect.x0}
-            y={r.rect.z0}
-            width={r.rect.x1 - r.rect.x0}
-            height={r.rect.z1 - r.rect.z0}
-            className={r.kind === 'street' ? styles.mapStreet : styles.mapAvenue}
-          />
-        ))}
-      </>
-    ),
-    [map],
-  );
+/**
+ * Round minimap around the rider: turns with the bike unless north-up is
+ * chosen. Click it for the big map.
+ */
+export function StreetMinimap({
+  map,
+  view,
+  northUp,
+  onOpen,
+  onToggleNorth,
+}: {
+  map: CityMap;
+  view: StreetView;
+  northUp: boolean;
+  onOpen: () => void;
+  onToggleNorth: () => void;
+}) {
+  const { ref, ctx, size } = useCanvas2d();
   const { x, z, heading } = view.rider;
-  const deg = (heading * 180) / Math.PI;
+  const rotation = northUp ? 0 : -Math.PI / 2 - heading;
+
+  useEffect(() => {
+    if (!ctx || size.width === 0) return;
+    drawMap(
+      ctx,
+      map,
+      { cx: x, cz: z, scale: SCALE, rotation, width: size.width, height: size.height },
+      { view, nav: view.nav, cars: true },
+    );
+  });
+
+  const north = (rotation * 180) / Math.PI;
   return (
-    <svg
-      className={styles.minimap}
-      viewBox={`${x - SPAN_M / 2} ${z - SPAN_M / 2} ${SPAN_M} ${SPAN_M}`}
-      aria-label="小地圖"
-      data-testid="street-minimap"
-    >
-      {base}
-      {view.cars.map((c) => (
-        <circle key={c.id} cx={c.x} cy={c.z} r={4} className={styles.mapCar} />
-      ))}
-      <g transform={`translate(${x} ${z}) rotate(${deg})`}>
-        <path d="M 14 0 L -9 -8 L -4 0 L -9 8 Z" className={styles.mapPlayer} />
-      </g>
-    </svg>
+    <div className={styles.minimapBox}>
+      <button
+        type="button"
+        className={styles.minimapButton}
+        onClick={onOpen}
+        title="打開大地圖（M）"
+        aria-label="打開大地圖"
+      >
+        <canvas
+          ref={ref}
+          className={styles.minimap}
+          aria-label="小地圖"
+          data-testid="street-minimap"
+        />
+      </button>
+      <button
+        type="button"
+        className={styles.compass}
+        onClick={onToggleNorth}
+        style={{ transform: `rotate(${north}deg)` }}
+        title={northUp ? '改成車頭朝上' : '改成北方朝上'}
+        aria-label={northUp ? '小地圖：北方朝上' : '小地圖：車頭朝上'}
+        data-testid="minimap-north"
+      >
+        N
+      </button>
+      <p className={styles.roadName} data-testid="street-road">
+        {view.place.road ?? '未命名道路'}
+      </p>
+    </div>
   );
 }

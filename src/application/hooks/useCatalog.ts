@@ -1,9 +1,16 @@
 import { useMemo } from 'react';
-import type { BikeKind, BikeSpec, LicenseClass } from '@/domain';
+import {
+  DISPLACEMENT_BANDS,
+  displacementBand,
+  type BikeKind,
+  type BikeSegment,
+  type BikeSpec,
+  type DisplacementBand,
+  type LicenseClass,
+} from '@/domain';
 import {
   BIKE_KINDS,
   BIKES,
-  LICENSE_CLASSES,
   partsFor,
   ROLLER_MASS_MAX_G,
   ROLLER_MASS_MIN_G,
@@ -42,6 +49,23 @@ export const LICENSE_LABELS: Readonly<Record<LicenseClass, string>> = {
   red: '紅牌',
 };
 
+export const SEGMENT_LABELS: Readonly<Record<BikeSegment, string>> = {
+  commuter: '通勤速克達',
+  'sport-scooter': '運動速克達',
+  'retro-scooter': '復古速克達',
+  'maxi-scooter': '大型速克達',
+  supersport: '仿賽跑車',
+  naked: '街車',
+  retro: '復古檔車',
+};
+
+export const BAND_LABELS: Readonly<Record<DisplacementBand, string>> = {
+  upTo125: '125 cc 以下',
+  to249: '126–249 cc・白牌',
+  to550: '250–550 cc・黃牌',
+  over550: '551 cc 以上・紅牌',
+};
+
 export interface PartOption {
   readonly id: string;
   readonly name: string;
@@ -60,7 +84,7 @@ export interface BikeOption {
 }
 
 export interface BikeGroup {
-  readonly licenseClass: LicenseClass;
+  readonly band: DisplacementBand;
   readonly label: string;
   readonly bikes: readonly BikeOption[];
 }
@@ -72,18 +96,29 @@ export interface KindCatalog {
   readonly groups: readonly BikeGroup[];
 }
 
-const optionOf = (b: BikeSpec): BikeOption => ({ id: b.id, label: `${b.brand} ${b.model}` });
+const optionOf = (b: BikeSpec): BikeOption => ({
+  id: b.id,
+  label: `${b.brand} ${b.model}・${b.engine.displacementCc} cc ${SEGMENT_LABELS[b.segment]}`,
+});
 
-/** Bikes split by 速克達 / 打檔車, then grouped by 白牌 / 黃牌 / 紅牌. */
+/** Smallest engine first, then the more powerful of the same size. */
+export const bySize = (a: BikeSpec, b: BikeSpec) =>
+  a.engine.displacementCc - b.engine.displacementCc ||
+  a.engine.peakPower.ps - b.engine.peakPower.ps;
+
+/** Bikes split by 速克達 / 打檔車, then grouped by displacement band. */
 export function useBikeCatalog(): KindCatalog[] {
   return useMemo(
     () =>
       BIKE_KINDS.map((kind) => {
         const ofKind = BIKES.filter((b) => b.kind === kind);
-        const groups = LICENSE_CLASSES.map((licenseClass) => ({
-          licenseClass,
-          label: LICENSE_LABELS[licenseClass],
-          bikes: ofKind.filter((b) => b.licenseClass === licenseClass).map(optionOf),
+        const groups = DISPLACEMENT_BANDS.map((band) => ({
+          band,
+          label: BAND_LABELS[band],
+          bikes: ofKind
+            .filter((b) => displacementBand(b.engine.displacementCc) === band)
+            .sort(bySize)
+            .map(optionOf),
         })).filter((g) => g.bikes.length > 0);
         return { kind, label: KIND_LABELS[kind], firstBikeId: ofKind[0]?.id ?? '', groups };
       }).filter((k) => k.firstBikeId !== ''),

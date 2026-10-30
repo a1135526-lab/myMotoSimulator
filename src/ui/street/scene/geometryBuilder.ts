@@ -1,6 +1,11 @@
 import * as THREE from 'three';
 
 type Vec3 = readonly [number, number, number];
+type UV = readonly [number, number];
+export interface P2 {
+  readonly x: number;
+  readonly z: number;
+}
 
 /**
  * Accumulates quads into one BufferGeometry (positions, normals, UVs and
@@ -34,6 +39,72 @@ export class QuadBuilder {
     this.uvs.push(u0, v0, u1, v0, u1, v1, u0, v1);
     if (color) for (let i = 0; i < 4; i++) this.colors.push(color.r, color.g, color.b);
     this.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  }
+
+  /** Triangle with its own UVs (a, b, c counter-clockwise seen from the front). */
+  tri(
+    a: Vec3,
+    b: Vec3,
+    c: Vec3,
+    normal: Vec3,
+    uv: readonly [UV, UV, UV],
+    color: THREE.Color | null = null,
+  ) {
+    const base = this.positions.length / 3;
+    this.positions.push(...a, ...b, ...c);
+    for (let i = 0; i < 3; i++) this.normals.push(...normal);
+    for (const [u, v] of uv) this.uvs.push(u, v);
+    if (color) for (let i = 0; i < 3; i++) this.colors.push(color.r, color.g, color.b);
+    this.indices.push(base, base + 1, base + 2);
+  }
+
+  /** Flat quad with per-corner world UVs (metres / tile), facing up. */
+  flatQuad(a: P2, b: P2, c: P2, d: P2, y: number, tile: number, color: THREE.Color | null = null) {
+    const uv = (p: P2): UV => [p.x / tile, -p.z / tile];
+    const up: Vec3 = [0, 1, 0];
+    this.tri([a.x, y, a.z], [b.x, y, b.z], [c.x, y, c.z], up, [uv(a), uv(b), uv(c)], color);
+    this.tri([a.x, y, a.z], [c.x, y, c.z], [d.x, y, d.z], up, [uv(a), uv(c), uv(d)], color);
+  }
+
+  /** Flat polygon (any simple ring, either winding), facing up. */
+  polygon(ring: readonly P2[], y: number, tile: number, color: THREE.Color | null = null) {
+    if (ring.length < 3) return;
+    const contour = ring.map((p) => new THREE.Vector2(p.x, p.z));
+    const up: Vec3 = [0, 1, 0];
+    const uv = (p: P2): UV => [p.x / tile, -p.z / tile];
+    for (const [i = 0, j = 0, k = 0] of THREE.ShapeUtils.triangulateShape(contour, [])) {
+      const a = ring[i] as P2;
+      let b = ring[j] as P2;
+      let c = ring[k] as P2;
+      // Facing up means clockwise in x/z (z points south).
+      if ((b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x) > 0) [b, c] = [c, b];
+      this.tri([a.x, y, a.z], [b.x, y, b.z], [c.x, y, c.z], up, [uv(a), uv(b), uv(c)], color);
+    }
+  }
+
+  /** Outward-facing walls around a ring (any winding); u runs on around the ring. */
+  ringWalls(
+    ring: readonly P2[],
+    y0: number,
+    y1: number,
+    tileW: number,
+    tileH: number,
+    uOffset = 0,
+    color: THREE.Color | null = null,
+  ) {
+    let area = 0;
+    ring.forEach((p, i) => {
+      const q = ring[(i + 1) % ring.length] as P2;
+      area += p.x * q.z - q.x * p.z;
+    });
+    // wall() faces outward when the ring runs this way round (negative area).
+    const pts = area > 0 ? [...ring].reverse() : ring;
+    let u = uOffset;
+    pts.forEach((a, i) => {
+      const b = pts[(i + 1) % pts.length] as P2;
+      this.wall(a.x, a.z, b.x, b.z, y0, y1, tileW, tileH, u, color);
+      u += Math.hypot(b.x - a.x, b.z - a.z) / tileW;
+    });
   }
 
   /** Flat rectangle facing up at height y; UVs in world metres / tile. */

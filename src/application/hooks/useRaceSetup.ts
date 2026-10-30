@@ -1,5 +1,13 @@
 import { useMemo } from 'react';
-import { engineSweep, wattsToPs, type BikeSpec, type Environment, type SimConfig } from '@/domain';
+import {
+  displacementBand,
+  engineSweep,
+  wattsToPs,
+  type BikeSpec,
+  type DisplacementBand,
+  type Environment,
+  type SimConfig,
+} from '@/domain';
 import {
   BIKES,
   CIRCUITS,
@@ -15,7 +23,7 @@ import { circuitEnvironment, computeLapEstimate } from '../services/lapService';
 import { useConfigStore } from '../stores/configStore';
 import { activeTrack, useRaceStore, type ActiveTrack, type Discipline } from '../stores/raceStore';
 import { createStockSelection } from '../tuning/selection';
-import { KIND_LABELS, LICENSE_LABELS } from './useCatalog';
+import { bySize, LICENSE_LABELS, SEGMENT_LABELS } from './useCatalog';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
 
 export function useActiveTrack(): ActiveTrack {
@@ -81,6 +89,8 @@ export interface BikeCardView {
   readonly id: string;
   readonly name: string;
   readonly kind: BikeSpec['kind'];
+  readonly segment: BikeSpec['segment'];
+  readonly band: DisplacementBand;
   readonly badge: string;
   readonly ps: number;
   readonly massKg: number;
@@ -97,14 +107,16 @@ export function useBikeCards(): BikeCardView[] {
   const venue = useVenue();
   return useMemo(
     () =>
-      BIKES.map((bike) => {
+      [...BIKES].sort(bySize).map((bike) => {
         const rider = bike.chassis.defaultRiderMassKg;
         const config = buildSimConfig(bike, createStockSelection(bike), venue.environment);
         return {
           id: bike.id,
           name: `${bike.brand} ${bike.model}`,
           kind: bike.kind,
-          badge: `${LICENSE_LABELS[bike.licenseClass]}${KIND_LABELS[bike.kind]}`,
+          segment: bike.segment,
+          band: displacementBand(bike.engine.displacementCc),
+          badge: `${SEGMENT_LABELS[bike.segment]}・${LICENSE_LABELS[bike.licenseClass]}`,
           ps: bike.engine.peakPower.ps,
           massKg: bike.chassis.curbMassKg,
           psPer100Kg: (bike.engine.peakPower.ps / (bike.chassis.curbMassKg + rider)) * 100,

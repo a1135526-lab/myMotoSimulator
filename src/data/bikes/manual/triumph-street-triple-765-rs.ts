@@ -11,6 +11,7 @@ export const TRIUMPH_STREET_TRIPLE_765_RS: ManualSpec = {
   id: 'triumph-street-triple-765-rs',
   kind: 'manual',
   licenseClass: 'red',
+  segment: 'naked',
   brand: 'Triumph',
   model: 'Street Triple 765 RS',
   cluster: { layout: 'tft', accent: '#ffd23f' },

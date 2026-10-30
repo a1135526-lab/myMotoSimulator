@@ -11,6 +11,7 @@ export const BMW_S_1000_RR: ManualSpec = {
   id: 'bmw-s-1000-rr',
   kind: 'manual',
   licenseClass: 'red',
+  segment: 'supersport',
   brand: 'BMW',
   model: 'S 1000 RR',
   cluster: { layout: 'tft', accent: '#2f8fff' },

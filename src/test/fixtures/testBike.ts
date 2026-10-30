@@ -8,6 +8,7 @@ export const TEST_BIKE: ScooterSpec = {
   id: 'test-scooter-150',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'sport-scooter',
   brand: 'Test',
   model: 'Scooter 150',
   engine: {

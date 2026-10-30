@@ -5,3 +5,6 @@ package-lock.json
 playwright-report
 test-results
 PROMPT.md
+
+# Generated map data (scripts/osm)
+src/data/cities/nanzih/nanzih.json

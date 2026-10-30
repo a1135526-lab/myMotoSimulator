@@ -11,6 +11,7 @@ export const YAMAHA_AUGUR_155: ScooterSpec = {
   id: 'yamaha-augur-155',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'maxi-scooter',
   brand: 'Yamaha',
   model: 'AUGUR 155',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#9ad1ff' },

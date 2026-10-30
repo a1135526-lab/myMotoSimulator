@@ -121,6 +121,15 @@ export type LicenseClass = 'white' | 'yellow' | 'red';
 export type BikeKind = 'scooter' | 'manual';
 
 /**
+ * 車種 — body style, the way riders shop for a bike:
+ *   scooters  commuter 通勤 · sport-scooter 運動 · retro-scooter 復古 · maxi-scooter 大型（跨騎）
+ *   manuals   supersport 仿賽跑車 · naked 街車 · retro 復古檔車
+ */
+export type ScooterSegment = 'commuter' | 'sport-scooter' | 'retro-scooter' | 'maxi-scooter';
+export type ManualSegment = 'supersport' | 'naked' | 'retro';
+export type BikeSegment = ScooterSegment | ManualSegment;
+
+/**
  * Instrument cluster, so the HUD can look like the bike's real dash.
  *   lcd-bar     monochrome LCD: segment tach bar across the top, big digits
  *   round-lcd   round retro LCD with a ring of tach segments
@@ -151,6 +160,7 @@ interface BikeBase {
   readonly model: string;
   readonly modelYear?: number;
   readonly licenseClass: LicenseClass;
+  readonly segment: BikeSegment;
   readonly engine: EngineSpec;
   readonly chassis: ChassisSpec;
   readonly referencePerformance?: ReferencePerformance;
@@ -159,11 +169,13 @@ interface BikeBase {
 
 export interface ScooterSpec extends BikeBase {
   readonly kind: 'scooter';
+  readonly segment: ScooterSegment;
   readonly cvt: CvtSpec;
 }
 
 export interface ManualSpec extends BikeBase {
   readonly kind: 'manual';
+  readonly segment: ManualSegment;
   readonly gearbox: GearboxSpec;
 }
 

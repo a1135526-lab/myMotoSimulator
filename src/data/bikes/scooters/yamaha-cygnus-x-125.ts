@@ -12,6 +12,7 @@ export const YAMAHA_CYGNUS_X_125: ScooterSpec = {
   id: 'yamaha-cygnus-x-125',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'sport-scooter',
   brand: 'Yamaha',
   model: '勁戰七代 Cygnus X 125',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#4fc3ff' },

@@ -11,6 +11,7 @@ export const HONDA_FORZA_350: ScooterSpec = {
   id: 'honda-forza-350',
   kind: 'scooter',
   licenseClass: 'yellow',
+  segment: 'maxi-scooter',
   brand: 'Honda',
   model: 'Forza 350',
   cluster: { layout: 'twin-analog', accent: '#e9eef5', speedMaxKmh: 180 },

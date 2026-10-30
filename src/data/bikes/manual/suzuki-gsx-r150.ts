@@ -11,6 +11,7 @@ export const SUZUKI_GSX_R150: ManualSpec = {
   id: 'suzuki-gsx-r150',
   kind: 'manual',
   licenseClass: 'white',
+  segment: 'supersport',
   brand: 'Suzuki',
   model: 'GSX-R150',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#4fd0ff' },

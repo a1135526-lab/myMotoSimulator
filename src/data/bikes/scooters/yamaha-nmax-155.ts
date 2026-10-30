@@ -11,6 +11,7 @@ export const YAMAHA_NMAX_155: ScooterSpec = {
   id: 'yamaha-nmax-155',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'maxi-scooter',
   brand: 'Yamaha',
   model: 'NMAX 155',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#e8f1ff' },

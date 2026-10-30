@@ -11,6 +11,7 @@ export const VESPA_SPRINT_150: ScooterSpec = {
   id: 'vespa-sprint-150',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'retro-scooter',
   brand: 'Vespa',
   model: 'Sprint 150',
   cluster: { layout: 'twin-analog', accent: '#f1ece2', speedMaxKmh: 140 },

@@ -15,6 +15,7 @@ export const KYMCO_KRV_180: ScooterSpec = {
   id: 'kymco-krv-180',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'sport-scooter',
   brand: 'Kymco',
   model: 'KRV 180 TCS',
   cluster: { layout: 'tft', accent: '#19d3c5' },

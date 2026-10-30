@@ -1,6 +1,7 @@
 export * from './units';
 export type * from './model/provenance';
 export type * from './model/bike';
+export * from './model/bikeClass';
 export * from './model/tune';
 export * from './simulation/types';
 export * from './simulation/model';
@@ -33,7 +34,22 @@ export * from './circuit/drift';
 export * from './circuit/circuitRace';
 export * from './circuit/lapEstimate';
 export * from './street/city';
+export {
+  boundsOf,
+  closestOnSegment,
+  dist,
+  inBounds,
+  insidePolygon,
+  signedArea,
+  wrapAngle,
+  type Bounds,
+} from './street/geometry2d';
+export * from './street/cityBuild';
 export * from './street/cityQueries';
+export * from './street/roadNetwork';
+export * from './street/routing';
+export * from './street/maneuvers';
+export * from './street/navigation';
 export * from './street/trafficRoutes';
 export * from './street/freeRide';
 export * from './street/traffic';

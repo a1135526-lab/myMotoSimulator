@@ -12,6 +12,7 @@ export const KAWASAKI_Z900: ManualSpec = {
   id: 'kawasaki-z900',
   kind: 'manual',
   licenseClass: 'red',
+  segment: 'naked',
   brand: 'Kawasaki',
   model: 'Z900',
   cluster: { layout: 'tft', accent: '#7ee03a' },

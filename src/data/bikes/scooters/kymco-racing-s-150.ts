@@ -11,6 +11,7 @@ export const KYMCO_RACING_S_150: ScooterSpec = {
   id: 'kymco-racing-s-150',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'sport-scooter',
   brand: 'KYMCO',
   model: 'Racing S 150',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#ff3d2e' },

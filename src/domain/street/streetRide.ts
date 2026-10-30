@@ -15,6 +15,7 @@ import {
   type FreeRideContext,
   type FreeRider,
 } from './freeRide';
+import { startNavigation, updateNavigation, type Destination, type NavState } from './navigation';
 import { createTraffic, hitCar, stepTraffic, type TrafficState } from './traffic';
 
 /**
@@ -39,9 +40,13 @@ export interface StreetState {
   readonly steer: number;
   readonly playerInput: SimInput;
   readonly accumulatorS: number;
+  /** Sat-nav, when a destination is set. */
+  readonly nav: NavState | null;
 }
 
 const TRAFFIC_EVERY = 4;
+/** Re-check position on the route this often (steps). */
+const NAV_EVERY = 12;
 /** A car moving faster than this, or a rider faster than BUMP, means a crash. */
 const CAR_HIT_MPS = 3;
 const RIDER_BUMP_MPS = 1.5;
@@ -63,6 +68,7 @@ export function createStreetRide(
     steer: 0,
     playerInput: { throttle: 0, brake: 0, clutchLever: 0 },
     accumulatorS: 0,
+    nav: null,
   };
 }
 
@@ -95,8 +101,13 @@ export function stepStreet(
           dt * TRAFFIC_EVERY,
           rider.crashedUntilS === null ? rider : null,
           timed.steps,
+          rider,
         )
       : state.traffic;
+  const nav =
+    state.nav && timed.steps % NAV_EVERY === 0
+      ? updateNavigation(map, state.nav, rider.x, rider.z)
+      : state.nav;
 
   if (rider.crashedUntilS === null) {
     const car = hitCar(traffic, rider.x, rider.z);
@@ -104,7 +115,7 @@ export function stepStreet(
       rider = crashRider(ctx, rider);
     }
   }
-  return { ...timed, rider, traffic };
+  return { ...timed, rider, traffic, nav };
 }
 
 const approach = (value: number, target: number, dt: number) => {
@@ -144,3 +155,12 @@ export const startStreetEngine = (model: SimModel, state: StreetState) =>
 /** R: back on the nearest road. */
 export const resetStreetRider = (map: CityMap, model: SimModel, state: StreetState) =>
   withRider(state, respawnRider(context(map, model, state), state.rider));
+
+/** Plan a route from where the rider is; null nav if there's no way there. */
+export function setStreetDestination(map: CityMap, state: StreetState, destination: Destination) {
+  const { x, z } = state.rider;
+  return { ...state, nav: startNavigation(map, { x, z }, destination) };
+}
+
+export const clearStreetDestination = (state: StreetState): StreetState =>
+  state.nav ? { ...state, nav: null } : state;

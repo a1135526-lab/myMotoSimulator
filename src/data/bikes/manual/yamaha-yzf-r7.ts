@@ -11,6 +11,7 @@ export const YAMAHA_YZF_R7: ManualSpec = {
   id: 'yamaha-yzf-r7',
   kind: 'manual',
   licenseClass: 'red',
+  segment: 'supersport',
   brand: 'Yamaha',
   model: 'YZF-R7',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#3aa0ff' },

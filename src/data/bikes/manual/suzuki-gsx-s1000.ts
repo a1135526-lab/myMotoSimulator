@@ -11,6 +11,7 @@ export const SUZUKI_GSX_S1000: ManualSpec = {
   id: 'suzuki-gsx-s1000',
   kind: 'manual',
   licenseClass: 'red',
+  segment: 'naked',
   brand: 'Suzuki',
   model: 'GSX-S1000',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#4fc3ff' },

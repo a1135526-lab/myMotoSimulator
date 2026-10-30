@@ -9,6 +9,7 @@ export const MANUAL_TEST_BIKE: ManualSpec = {
   id: 'test-manual-150',
   kind: 'manual',
   licenseClass: 'white',
+  segment: 'naked',
   brand: 'Test',
   model: 'Manual 150',
   engine: { ...TEST_BIKE.engine, idleRpm: 1400 },

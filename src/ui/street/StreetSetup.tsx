@@ -18,7 +18,7 @@ const TIMES = Object.keys(TIME_OF_DAY_LABELS) as TimeOfDay[];
 const TRAFFIC = Object.keys(TRAFFIC_LABELS) as TrafficLevel[];
 
 /** Before riding: bike, time of day, traffic and aids. */
-export function StreetSetup() {
+export function StreetSetup({ ready }: { ready: boolean }) {
   const bike = useCurrentBike();
   const selectBike = useConfigStore((s) => s.selectBike);
   const s = useStreetStore();
@@ -35,10 +35,13 @@ export function StreetSetup() {
     >
       <section className={setup.panel}>
         <header className={setup.panelHeader}>
-          <h2>街景模式・港灣市</h2>
+          <h2>街景模式・高雄市楠梓區</h2>
           <p className={setup.summary}>
-            在城市裡自由騎乘：市中心、商業區、住宅區、港區和濱海快速道路。改裝沿用車庫設定。
+            依 OpenStreetMap
+            真實路網重建的楠梓：從楠梓火車站出發，德民路、高楠公路、右昌、後勁、楠梓科技園區都騎得到。按
+            M 打開大地圖搜尋地點並導航。改裝沿用車庫設定。
           </p>
+          <p className={styles.attribution}>地圖資料 © OpenStreetMap 貢獻者（ODbL）</p>
         </header>
         <div className={styles.setup}>
           <BikeGrid selectedId={bike.id} onSelect={selectBike} testIdPrefix="street-bike" />
@@ -109,7 +112,7 @@ export function StreetSetup() {
           onClick={() => s.setStage('ride')}
           data-testid="street-go"
         >
-          出發 🏙️
+          {ready ? '出發 🏙️' : '出發（地圖載入中…）'}
         </button>
       </footer>
     </AppLayout>

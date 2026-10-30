@@ -13,6 +13,7 @@ export const YAMAHA_R15_V4: ManualSpec = {
   id: 'yamaha-r15-v4',
   kind: 'manual',
   licenseClass: 'white',
+  segment: 'supersport',
   brand: 'Yamaha',
   model: 'YZF-R15 V4',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#3aa0ff' },

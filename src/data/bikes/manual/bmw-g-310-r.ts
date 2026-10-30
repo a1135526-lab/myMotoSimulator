@@ -11,6 +11,7 @@ export const BMW_G_310_R: ManualSpec = {
   id: 'bmw-g-310-r',
   kind: 'manual',
   licenseClass: 'yellow',
+  segment: 'naked',
   brand: 'BMW',
   model: 'G 310 R',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#e8f1ff' },

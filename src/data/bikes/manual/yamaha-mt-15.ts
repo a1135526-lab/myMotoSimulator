@@ -13,6 +13,7 @@ export const YAMAHA_MT_15: ManualSpec = {
   id: 'yamaha-mt-15',
   kind: 'manual',
   licenseClass: 'white',
+  segment: 'naked',
   brand: 'Yamaha',
   model: 'MT-15 V2',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#7fd6ff' },

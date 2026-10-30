@@ -1,11 +1,14 @@
 import {
   advanceStreet,
   buildModel,
+  clearStreetDestination,
   createStreetRide,
   resetStreetRider,
+  setStreetDestination,
   shiftStreetRider,
   startStreetEngine,
   type CityMap,
+  type Destination,
   type SimConfig,
   type SimModel,
   type StreetSettings,
@@ -33,11 +36,14 @@ export class StreetController {
   private model!: SimModel;
   private state!: StreetState;
   private config: StreetConfig;
+  /** While the big map is open the ride is frozen. */
+  private paused = false;
 
   constructor(
     config: StreetConfig,
     private readonly publish: (snapshot: StreetSnapshot) => void,
     private readonly onToggleCamera: () => void = () => undefined,
+    private readonly onToggleMap: () => void = () => undefined,
   ) {
     this.config = config;
     this.input.add(this.touch);
@@ -56,6 +62,7 @@ export class StreetController {
   }
 
   tick(elapsedS: number): void {
+    if (this.paused) return;
     this.state = advanceStreet(
       this.config.map,
       this.model,
@@ -66,7 +73,24 @@ export class StreetController {
     this.emit();
   }
 
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+  }
+
+  /** Plan a route; false if there's no way there. */
+  setDestination(destination: Destination): boolean {
+    this.update(setStreetDestination(this.config.map, this.state, destination));
+    return this.state.nav !== null;
+  }
+
+  clearDestination(): void {
+    this.update(clearStreetDestination(this.state));
+  }
+
   handleAction = (action: InputAction): void => {
+    if (action === 'toggleMap') return this.onToggleMap();
+    // Riding controls do nothing on a frozen ride.
+    if (this.paused && action !== 'toggleCamera') return;
     switch (action) {
       case 'reset':
         return this.update(resetStreetRider(this.config.map, this.model, this.state));

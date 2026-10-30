@@ -1,12 +1,17 @@
 import {
-  districtAt,
   DRIFT_SLIP_RAD,
   mpsToKmh,
+  nextStep,
+  placeAt,
   type CarKind,
   type CityMap,
+  type ManeuverKind,
+  type PlaceName,
+  type Route,
   type SimModel,
   type StreetState,
 } from '@/domain';
+import { maneuverText } from '../street/places';
 import { dashboardModel, type DashboardModel } from './dashboard';
 import { gearLabelOf } from './telemetry';
 
@@ -44,15 +49,60 @@ export interface StreetRiderView {
   readonly distanceM: number;
 }
 
+export interface NavView {
+  readonly label: string;
+  readonly destination: { readonly x: number; readonly z: number };
+  /** Same object until the route is re-planned, so drawings can be cached. */
+  readonly route: Route;
+  readonly next: {
+    readonly kind: ManeuverKind;
+    readonly text: string;
+    readonly distanceM: number;
+    readonly x: number;
+    readonly z: number;
+  };
+  readonly remainingM: number;
+  /** At typical town speed, or faster if the rider is. */
+  readonly etaS: number;
+  readonly arrived: boolean;
+}
+
 export interface StreetView {
   readonly clockS: number;
   readonly rider: StreetRiderView;
   readonly cars: readonly StreetCarView[];
-  readonly district: string;
+  readonly place: PlaceName;
   readonly cityName: string;
+  readonly attribution: string;
+  readonly nav: NavView | null;
   readonly tripKm: number;
   readonly topSpeedKmh: number;
   readonly dash: DashboardModel;
+}
+
+/** Average town riding speed for arrival estimates, m/s (≈ 30 km/h). */
+const TOWN_MPS = 8.3;
+
+function navView(state: StreetState): NavView | null {
+  const nav = state.nav;
+  if (!nav) return null;
+  const step = nextStep(nav);
+  const m = step.maneuver;
+  return {
+    label: nav.destination.label,
+    destination: { x: nav.destination.x, z: nav.destination.z },
+    route: nav.route,
+    next: {
+      kind: m.kind,
+      text: maneuverText(m.kind, m.road),
+      distanceM: step.distanceM,
+      x: m.x,
+      z: m.z,
+    },
+    remainingM: step.remainingM,
+    etaS: step.remainingM / Math.max(TOWN_MPS, state.rider.sim.speedMps),
+    arrived: nav.arrived,
+  };
 }
 
 export function toStreetView(state: StreetState, model: SimModel, map: CityMap): StreetView {
@@ -89,8 +139,10 @@ export function toStreetView(state: StreetState, model: SimModel, map: CityMap):
       heading: c.heading,
       speedKmh: mpsToKmh(c.speedMps),
     })),
-    district: map.spec.districtNames[districtAt(map, r.x, r.z)],
-    cityName: map.spec.name,
+    place: placeAt(map, r.x, r.z),
+    cityName: map.name,
+    attribution: map.attribution,
+    nav: navView(state),
     tripKm: r.distanceM / 1000,
     topSpeedKmh: r.topSpeedKmh,
     dash: dashboardModel(bike, model.engine.revLimitRpm),

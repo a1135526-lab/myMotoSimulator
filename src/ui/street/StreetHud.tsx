@@ -1,6 +1,7 @@
 import type { CameraMode, StreetView } from '@/application';
 import type { CityMap } from '@/domain';
 import { BikeDashboard } from '../components/dashboard/BikeDashboard';
+import { NavCard } from './NavCard';
 import { StreetMinimap } from './StreetMinimap';
 import styles from './street.module.css';
 
@@ -17,36 +18,60 @@ function alertFor(view: StreetView): { text: string; tone: 'info' | 'warn' | 'da
 const clock = (d = new Date()) =>
   `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
+export interface StreetHudProps {
+  view: StreetView;
+  map: CityMap;
+  camera: CameraMode;
+  northUp?: boolean;
+  onOpenMap?: () => void;
+  onToggleNorth?: () => void;
+  onCancelNav?: () => void;
+}
+
 export function StreetHud({
   view,
   map,
   camera,
-}: {
-  view: StreetView;
-  map: CityMap;
-  camera: CameraMode;
-}) {
+  northUp = false,
+  onOpenMap = () => undefined,
+  onToggleNorth = () => undefined,
+  onCancelNav = () => undefined,
+}: StreetHudProps) {
   const r = view.rider;
   const alert = alertFor(view);
   const lean = Math.round(Math.abs(r.lean) * RAD_TO_DEG);
+  const { place } = view;
   return (
     <div className={styles.hud}>
       <div className={styles.topLeft}>
         <p className={styles.city}>{view.cityName}</p>
         <p className={styles.district} data-testid="street-district">
-          {view.district}
+          {place.village ?? place.suburb ?? view.cityName}
         </p>
+        {place.suburb && <p className={styles.place}>{place.suburb}</p>}
         <p className={styles.clock}>{clock()}</p>
       </div>
 
+      {view.nav && <NavCard nav={view.nav} onCancel={onCancelNav} />}
       {alert && (
-        <p className={styles.alert} data-tone={alert.tone} data-testid="street-alert">
+        <p
+          className={styles.alert}
+          data-tone={alert.tone}
+          data-testid="street-alert"
+          style={view.nav ? { top: 130 } : undefined}
+        >
           {alert.text}
         </p>
       )}
 
       <div className={styles.topRight}>
-        <StreetMinimap map={map} view={view} />
+        <StreetMinimap
+          map={map}
+          view={view}
+          northUp={northUp}
+          onOpen={onOpenMap}
+          onToggleNorth={onToggleNorth}
+        />
       </div>
 
       <div className={styles.bottomLeft}>
@@ -68,7 +93,7 @@ export function StreetHud({
           </div>
         </dl>
         <span className={styles.camera}>
-          {camera === 'first' ? '第一人稱' : '第三人稱'} <kbd>V</kbd>
+          {camera === 'first' ? '第一人稱' : '第三人稱'} <kbd>V</kbd> · 地圖 <kbd>M</kbd>
         </span>
       </div>
 

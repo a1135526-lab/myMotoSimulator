@@ -1,7 +1,7 @@
 import { useBikeCatalog, useConfigStore, useCurrentBike } from '@/application';
 import styles from './config.module.css';
 
-/** 速克達 / 打檔車 toggle, then a model picker grouped by 白牌 / 黃牌 / 紅牌. */
+/** 速克達 / 打檔車 toggle, then a model picker grouped by displacement band. */
 export function BikeSelector() {
   const catalog = useBikeCatalog();
   const bike = useCurrentBike();
@@ -33,7 +33,7 @@ export function BikeSelector() {
           data-testid="bike-select"
         >
           {current?.groups.map((g) => (
-            <optgroup key={g.licenseClass} label={g.label}>
+            <optgroup key={g.band} label={g.label}>
               {g.bikes.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.label}

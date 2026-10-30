@@ -231,11 +231,16 @@ test.describe('street mode', () => {
   test('pick a bike and conditions, ride off into the city', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('mode-street').click();
+    // Bikes are grouped by body style and displacement.
+    await page.getByTestId('style-maxi-scooter').click();
+    await page.getByTestId('band-to249').click();
+    await page.getByTestId('street-bike-yamaha-nmax-155').click();
     await page.getByTestId('time-dusk').click();
     await page.getByTestId('traffic-none').click();
     await page.getByTestId('street-go').click();
     await expect(page.getByTestId('street-canvas')).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId('street-district')).not.toBeEmpty({ timeout: 30_000 });
+    await expect(page.getByTestId('street-road')).toHaveText('建楠路');
     await page.locator('h1').click();
     await page.keyboard.down('ArrowUp');
     const speed = async () => Number(await page.getByTestId('street-speed').textContent());
@@ -243,5 +248,25 @@ test.describe('street mode', () => {
     await page.keyboard.up('ArrowUp');
     await page.getByTestId('street-back').click();
     await expect(page.getByTestId('street-go')).toBeVisible();
+  });
+
+  test('open the big map, search a landmark and navigate there', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('mode-street').click();
+    await page.getByTestId('traffic-none').click();
+    await page.getByTestId('street-go').click();
+    await expect(page.getByTestId('street-road')).toHaveText('建楠路', { timeout: 30_000 });
+    await page.locator('h1').click();
+    await page.keyboard.press('KeyM');
+    await expect(page.getByTestId('street-map')).toBeVisible();
+    await page.getByTestId('map-search').fill('右昌國民中學');
+    await page.getByTestId('map-results').getByText('高雄市立右昌國民中學').click();
+    await expect(page.getByTestId('map-route')).toContainText('km');
+    await page.getByTestId('map-start').click();
+    await expect(page.getByTestId('street-map')).toBeHidden();
+    await expect(page.getByTestId('nav-card')).toBeVisible();
+    await expect(page.getByTestId('nav-text')).not.toBeEmpty();
+    await page.getByTestId('nav-cancel').click();
+    await expect(page.getByTestId('nav-card')).toBeHidden();
   });
 });

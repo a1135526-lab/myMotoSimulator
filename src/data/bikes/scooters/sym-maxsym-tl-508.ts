@@ -11,6 +11,7 @@ export const SYM_MAXSYM_TL_508: ScooterSpec = {
   id: 'sym-maxsym-tl-508',
   kind: 'scooter',
   licenseClass: 'yellow',
+  segment: 'maxi-scooter',
   brand: 'SYM',
   model: 'MAXSYM TL 508',
   cluster: { layout: 'tft', accent: '#4fc3ff' },

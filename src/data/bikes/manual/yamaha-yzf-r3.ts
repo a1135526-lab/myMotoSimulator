@@ -13,6 +13,7 @@ export const YAMAHA_YZF_R3: ManualSpec = {
   id: 'yamaha-yzf-r3',
   kind: 'manual',
   licenseClass: 'yellow',
+  segment: 'supersport',
   brand: 'Yamaha',
   model: 'YZF-R3',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#3aa0ff' },

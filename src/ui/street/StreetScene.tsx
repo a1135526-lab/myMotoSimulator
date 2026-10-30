@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { cityMap, useStreetStore, type TimeOfDay } from '@/application';
+import { useStreetStore, type TimeOfDay } from '@/application';
+import type { CityMap } from '@/domain';
 import { StreetRenderer } from './scene/StreetRenderer';
 import styles from '../race/race.module.css';
 
 /** Hosts the city canvas; renders on its own frame loop straight from the store. */
-export function StreetScene({ timeOfDay }: { timeOfDay: TimeOfDay }) {
+export function StreetScene({ map, timeOfDay }: { map: CityMap; timeOfDay: TimeOfDay }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [unsupported, setUnsupported] = useState(false);
 
@@ -13,7 +14,7 @@ export function StreetScene({ timeOfDay }: { timeOfDay: TimeOfDay }) {
     if (!canvas) return;
     let renderer: StreetRenderer;
     try {
-      renderer = new StreetRenderer(canvas, cityMap(), timeOfDay);
+      renderer = new StreetRenderer(canvas, map, timeOfDay);
     } catch {
       setUnsupported(true);
       return;
@@ -32,7 +33,7 @@ export function StreetScene({ timeOfDay }: { timeOfDay: TimeOfDay }) {
       observer.disconnect();
       renderer.dispose();
     };
-  }, [timeOfDay]);
+  }, [map, timeOfDay]);
 
   return (
     <>

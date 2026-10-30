@@ -11,6 +11,7 @@ export const KYMCO_MANY_110: ScooterSpec = {
   id: 'kymco-many-110',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'commuter',
   brand: 'KYMCO',
   model: 'Many 110',
   cluster: { layout: 'round-lcd', lcd: 'positive', accent: '#f6d9a8' },

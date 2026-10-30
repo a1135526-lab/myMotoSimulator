@@ -11,6 +11,7 @@ export const KAWASAKI_NINJA_ZX_6R: ManualSpec = {
   id: 'kawasaki-ninja-zx-6r',
   kind: 'manual',
   licenseClass: 'red',
+  segment: 'supersport',
   brand: 'Kawasaki',
   model: 'Ninja ZX-6R',
   cluster: { layout: 'tft', accent: '#7ee03a' },

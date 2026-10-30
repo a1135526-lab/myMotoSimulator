@@ -31,6 +31,10 @@ interface StreetStoreState {
   readonly autoShift: boolean;
   readonly autoClutch: boolean;
   readonly camera: CameraMode;
+  /** Big map open (the ride is paused under it). */
+  readonly mapOpen: boolean;
+  /** Minimap fixed north-up, or turning with the bike. */
+  readonly northUp: boolean;
   /** Latest frame for the HUD / 3D scene. Written every frame. */
   readonly view: StreetView | null;
   setStage(stage: 'setup' | 'ride'): void;
@@ -39,6 +43,8 @@ interface StreetStoreState {
   setAutoShift(on: boolean): void;
   setAutoClutch(on: boolean): void;
   toggleCamera(): void;
+  setMapOpen(open: boolean): void;
+  toggleNorthUp(): void;
   publish(view: StreetView): void;
 }
 
@@ -50,12 +56,16 @@ export const useStreetStore = create<StreetStoreState>()((set) => ({
   autoShift: false,
   autoClutch: false,
   camera: 'third',
+  mapOpen: false,
+  northUp: false,
   view: null,
-  setStage: (stage) => set({ stage, ...(stage === 'setup' && { view: null }) }),
+  setStage: (stage) => set({ stage, mapOpen: false, ...(stage === 'setup' && { view: null }) }),
   setTimeOfDay: (timeOfDay) => set({ timeOfDay }),
   setTraffic: (traffic) => set({ traffic }),
   setAutoShift: (autoShift) => set({ autoShift }),
   setAutoClutch: (autoClutch) => set({ autoClutch }),
   toggleCamera: () => set((s) => ({ camera: s.camera === 'first' ? 'third' : 'first' })),
+  setMapOpen: (mapOpen) => set({ mapOpen }),
+  toggleNorthUp: () => set((s) => ({ northUp: !s.northUp })),
   publish: (view) => set({ view }),
 }));

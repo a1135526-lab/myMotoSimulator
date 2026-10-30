@@ -1,31 +1,29 @@
-import type { CitySpec } from '@/domain';
+import type { CityData, CityOptions } from '@/domain';
+import { parseCityData } from '../schemas/cityData.schema';
 
 /**
- * 港灣市 — an original harbour city for free riding: towers in the middle,
- * shops around them, homes to the north, the port in the south-east, a
- * seafront promenade and an expressway along the shore.
+ * 高雄市楠梓區 — central Nanzih from OpenStreetMap: 楠梓 station and the old
+ * town, 右昌, 後勁, the 德民路 shops, the science park and the rivers.
+ * Map data © OpenStreetMap contributors (ODbL); see scripts/osm/README.md.
  */
-export const HARBOR_CITY: CitySpec = {
-  name: '港灣市',
-  seed: 20261030,
-  blocksX: 10,
-  blocksZ: 9,
-  blockM: 130,
-  streetWidthM: 10,
-  avenueWidthM: 18,
-  avenueEvery: 3,
-  sidewalkM: 4,
-  expresswayWidthM: 26,
-  promenadeM: 30,
-  seaM: 600,
-  districtNames: {
-    downtown: '市中心',
-    commercial: '商業區',
-    residential: '住宅區',
-    industrial: '港區工業區',
-    park: '公園',
-    waterfront: '濱海區',
+export interface CitySource {
+  readonly id: string;
+  readonly name: string;
+  readonly options: CityOptions;
+  /** The map data is big, so it is only downloaded when the street mode opens. */
+  load(): Promise<CityData>;
+}
+
+export const NANZIH: CitySource = {
+  id: 'nanzih',
+  name: '高雄市楠梓區',
+  options: {
+    seed: 20261031,
+    // On 建楠路 in front of 楠梓 railway station.
+    spawnNear: { x: 1450, z: -237 },
+    spawnRoad: '建楠路',
   },
+  load: async () => parseCityData((await import('./nanzih/nanzih.json')).default),
 };
 
 /** Dry city tarmac, g. */

@@ -11,6 +11,7 @@ export const KAWASAKI_NINJA_ZX_25R: ManualSpec = {
   id: 'kawasaki-ninja-zx-25r',
   kind: 'manual',
   licenseClass: 'white',
+  segment: 'supersport',
   brand: 'Kawasaki',
   model: 'Ninja ZX-25R',
   cluster: { layout: 'analog-lcd', lcd: 'negative', accent: '#a6e36b' },

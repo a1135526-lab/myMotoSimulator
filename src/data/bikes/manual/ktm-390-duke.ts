@@ -11,6 +11,7 @@ export const KTM_390_DUKE: ManualSpec = {
   id: 'ktm-390-duke',
   kind: 'manual',
   licenseClass: 'yellow',
+  segment: 'naked',
   brand: 'KTM',
   model: '390 Duke',
   cluster: { layout: 'tft', accent: '#ff8a00' },

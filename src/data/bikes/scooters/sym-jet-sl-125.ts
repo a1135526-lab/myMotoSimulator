@@ -13,6 +13,7 @@ export const SYM_JET_SL_125: ScooterSpec = {
   id: 'sym-jet-sl-125',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'sport-scooter',
   brand: 'SYM',
   model: 'JET SL 125',
   cluster: { layout: 'tick-ring', lcd: 'negative', accent: '#d6ff3c', tachMaxRpm: 12000 },

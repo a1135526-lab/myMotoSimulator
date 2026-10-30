@@ -11,6 +11,7 @@ export const HONDA_CBR500R: ManualSpec = {
   id: 'honda-cbr500r',
   kind: 'manual',
   licenseClass: 'yellow',
+  segment: 'supersport',
   brand: 'Honda',
   model: 'CBR500R',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#ff4a3d' },

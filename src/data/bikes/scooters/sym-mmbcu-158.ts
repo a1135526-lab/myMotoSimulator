@@ -12,6 +12,7 @@ export const SYM_MMBCU_158: ScooterSpec = {
   id: 'sym-mmbcu-158',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'retro-scooter',
   brand: 'SYM',
   model: 'MMBCU 158',
   cluster: { layout: 'round-lcd', lcd: 'positive', accent: '#f3c46e' },

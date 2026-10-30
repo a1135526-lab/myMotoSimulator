@@ -54,6 +54,7 @@
 .alert {
   position: absolute;
   top: 18px;
+  z-index: 1;
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
@@ -77,6 +78,22 @@
   right: 16px;
 }
 
+.minimapBox {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.minimapButton {
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
 .minimap {
   display: block;
   width: clamp(130px, 18vw, 210px);
@@ -86,23 +103,118 @@
   box-shadow: 0 6px 18px rgb(0 0 0 / 50%);
 }
 
-.mapStreet {
-  fill: #6d737b;
+.compass {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #c62f2f;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.75rem;
+  cursor: pointer;
 }
 
-.mapAvenue {
-  fill: #c9b26b;
+.roadName {
+  margin: 0;
+  max-width: 220px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgb(8 10 14 / 72%);
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.mapCar {
-  fill: #e6eef8;
+.place {
+  margin: 0;
+  font-size: 0.85rem;
   opacity: 0.85;
 }
 
-.mapPlayer {
-  fill: var(--accent);
-  stroke: #fff;
-  stroke-width: 2.5;
+/* ---- Sat-nav card ---- */
+.navCard {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 32px));
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgb(10 12 16 / 82%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  pointer-events: auto;
+  text-shadow: none;
+}
+
+.navMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #1f7a45;
+}
+
+.navCard[data-arrived='true'] .navMain {
+  background: #2b5fb3;
+}
+
+.navIcon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  color: #fff;
+}
+
+.navDistance {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.navText {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.navFoot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.navTarget {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+.navCancel {
+  padding: 3px 10px;
+  border: 1px solid rgb(255 255 255 / 40%);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.mapLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
 }
 
 .bottomLeft {
@@ -195,4 +307,10 @@
     white-space: normal;
     text-align: center;
   }
+}
+
+.attribution {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }

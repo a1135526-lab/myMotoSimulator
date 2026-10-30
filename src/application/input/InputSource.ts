@@ -5,7 +5,7 @@ export type InputCommand = CircuitCommand;
 
 /** One-shot actions triggered by the rider (not held). */
 export type InputAction =
-  'reset' | 'toggleTimer' | 'shiftUp' | 'shiftDown' | 'startEngine' | 'toggleCamera';
+  'reset' | 'toggleTimer' | 'shiftUp' | 'shiftDown' | 'startEngine' | 'toggleCamera' | 'toggleMap';
 export type ActionListener = (action: InputAction) => void;
 
 /**

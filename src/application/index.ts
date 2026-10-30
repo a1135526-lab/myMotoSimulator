@@ -11,9 +11,11 @@ export {
   useTimerView,
 } from './hooks/useViewModels';
 export {
+  BAND_LABELS,
   CATEGORY_LABELS,
   KIND_LABELS,
   LICENSE_LABELS,
+  SEGMENT_LABELS,
   ROLLER_LIMITS,
   useBikeCatalog,
   usePartCategories,
@@ -22,6 +24,15 @@ export {
   type KindCatalog,
   type PartOption,
 } from './hooks/useCatalog';
+export {
+  BAND_CHIPS,
+  groupBikes,
+  STYLE_CHIPS,
+  type BandFilter,
+  type BandGroup,
+  type FilterChip,
+  type StyleFilter,
+} from './catalog/bikeFilter';
 export { useBikeSpecSheet, type SpecSection } from './hooks/useSpecSheet';
 export { useConfigStore, type ResettableGroup } from './stores/configStore';
 export { usePresetStore } from './stores/presetStore';
@@ -75,6 +86,7 @@ export { circuitGeometry } from './services/lapService';
 /** Fastest believable reaction to a start light, s (shown in race rules). */
 export { MIN_HUMAN_REACTION_S } from '@/domain';
 export { StreetProvider } from './hooks/StreetProvider';
+export { useCityMap } from './hooks/useCityMap';
 export { useStreetController } from './hooks/streetContext';
 export {
   TIME_OF_DAY_LABELS,
@@ -83,6 +95,19 @@ export {
   type TimeOfDay,
   type TrafficLevel,
 } from './stores/streetStore';
-export { cityMap } from './street/city';
+export { cityMap, loadCityMap } from './street/city';
+/** Map lookups the 3D city needs to lay out its meshes. */
+export { citySurfaceAt, insidePolygon, pointAlong, roadAt, signedArea } from '@/domain';
+export {
+  formatDistance,
+  maneuverText,
+  namedRoads,
+  placesOfKind,
+  pointLabel,
+  POI_ICONS,
+  POI_LABELS,
+  searchPlaces,
+  type PlaceResult,
+} from './street/places';
 export { readStreetSound } from './viewModels/sound';
-export type { StreetView, StreetCarView, StreetRiderView } from './viewModels/street';
+export type { NavView, StreetView, StreetCarView, StreetRiderView } from './viewModels/street';

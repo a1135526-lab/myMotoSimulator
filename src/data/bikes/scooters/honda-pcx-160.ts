@@ -11,6 +11,7 @@ export const HONDA_PCX_160: ScooterSpec = {
   id: 'honda-pcx-160',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'maxi-scooter',
   brand: 'Honda',
   model: 'PCX 160',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#bfe3ff' },

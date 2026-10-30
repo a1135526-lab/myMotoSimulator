@@ -16,6 +16,7 @@ export const YAMAHA_MT_09: ManualSpec = {
   id: 'yamaha-mt-09',
   kind: 'manual',
   licenseClass: 'red',
+  segment: 'naked',
   brand: 'Yamaha',
   model: 'MT-09',
   cluster: { layout: 'tft', accent: '#20b6ff' },

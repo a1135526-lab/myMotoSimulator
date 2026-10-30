@@ -13,8 +13,9 @@ import {
  *    Enter start, R reset, Space start/timer.
  *  circuit (road racing): ←/→ and A/D steer, so shifting moves to E/Q only;
  *    V switches first / third person.
+ *  street (free ride): the circuit keys plus M for the big map.
  */
-export type KeyLayout = 'standard' | 'circuit';
+export type KeyLayout = 'standard' | 'circuit' | 'street';
 
 type Held = keyof InputCommand;
 
@@ -41,21 +42,23 @@ const COMMON_ACTIONS: [string, InputAction][] = [
   ['Enter', 'startEngine'],
 ];
 
+const CIRCUIT_HELD = new Map<string, Held>([
+  ...COMMON_HELD,
+  ['ArrowLeft', 'steerLeftPressed'],
+  ['KeyA', 'steerLeftPressed'],
+  ['ArrowRight', 'steerRightPressed'],
+  ['KeyD', 'steerRightPressed'],
+]);
+const CIRCUIT_ACTIONS: [string, InputAction][] = [...COMMON_ACTIONS, ['KeyV', 'toggleCamera']];
+
 const LAYOUTS: Readonly<Record<KeyLayout, LayoutSpec>> = {
   standard: {
     held: new Map(COMMON_HELD),
     actions: new Map([...COMMON_ACTIONS, ['ArrowRight', 'shiftUp'], ['ArrowLeft', 'shiftDown']]),
   },
-  circuit: {
-    held: new Map([
-      ...COMMON_HELD,
-      ['ArrowLeft', 'steerLeftPressed'],
-      ['KeyA', 'steerLeftPressed'],
-      ['ArrowRight', 'steerRightPressed'],
-      ['KeyD', 'steerRightPressed'],
-    ]),
-    actions: new Map([...COMMON_ACTIONS, ['KeyV', 'toggleCamera']]),
-  },
+  circuit: { held: CIRCUIT_HELD, actions: new Map(CIRCUIT_ACTIONS) },
+  // The city adds M for the big map.
+  street: { held: CIRCUIT_HELD, actions: new Map([...CIRCUIT_ACTIONS, ['KeyM', 'toggleMap']]) },
 };
 
 /** Form controls keep their own arrow/space behaviour. */

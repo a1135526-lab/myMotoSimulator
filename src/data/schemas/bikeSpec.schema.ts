@@ -152,8 +152,18 @@ function checkGearbox(bike: Extract<BikeSpec, { kind: 'manual' }>, issue: Issue)
 
 export const BikeSpecSchema: z.ZodType<BikeSpec> = z
   .discriminatedUnion('kind', [
-    z.object({ ...base, kind: z.literal('scooter'), cvt: CvtSchema }),
-    z.object({ ...base, kind: z.literal('manual'), gearbox: GearboxSchema }),
+    z.object({
+      ...base,
+      kind: z.literal('scooter'),
+      segment: z.enum(['commuter', 'sport-scooter', 'retro-scooter', 'maxi-scooter']),
+      cvt: CvtSchema,
+    }),
+    z.object({
+      ...base,
+      kind: z.literal('manual'),
+      segment: z.enum(['supersport', 'naked', 'retro']),
+      gearbox: GearboxSchema,
+    }),
   ])
   .superRefine((bike, ctx) => {
     const issue: Issue = (path, message) =>

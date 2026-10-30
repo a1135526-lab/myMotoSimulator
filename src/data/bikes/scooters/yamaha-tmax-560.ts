@@ -15,6 +15,7 @@ export const YAMAHA_TMAX_560: ScooterSpec = {
   id: 'yamaha-tmax-560',
   kind: 'scooter',
   licenseClass: 'red',
+  segment: 'maxi-scooter',
   brand: 'Yamaha',
   model: 'TMAX 560',
   cluster: { layout: 'twin-analog', accent: '#e9eef5', speedMaxKmh: 200 },

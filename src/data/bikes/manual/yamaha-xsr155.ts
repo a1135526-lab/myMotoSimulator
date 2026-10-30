@@ -11,6 +11,7 @@ export const YAMAHA_XSR155: ManualSpec = {
   id: 'yamaha-xsr155',
   kind: 'manual',
   licenseClass: 'white',
+  segment: 'retro',
   brand: 'Yamaha',
   model: 'XSR155',
   cluster: { layout: 'round-lcd', lcd: 'negative', accent: '#e9f1ff' },

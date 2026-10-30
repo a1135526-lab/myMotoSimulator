@@ -11,6 +11,7 @@ export const DUCATI_PANIGALE_V2: ManualSpec = {
   id: 'ducati-panigale-v2',
   kind: 'manual',
   licenseClass: 'red',
+  segment: 'supersport',
   brand: 'Ducati',
   model: 'Panigale V2',
   cluster: { layout: 'tft', accent: '#ff2d2d' },

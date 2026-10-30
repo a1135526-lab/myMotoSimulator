@@ -12,6 +12,7 @@ export const SYM_DRG_158: ScooterSpec = {
   id: 'sym-drg-158',
   kind: 'scooter',
   licenseClass: 'white',
+  segment: 'sport-scooter',
   brand: 'SYM',
   model: 'DRGBT 158',
   cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#ff4a3d' },

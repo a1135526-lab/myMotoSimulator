@@ -1,15 +1,19 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import type { TimeOfDay } from '@/application';
-import type { CityMap } from '@/domain';
+import { citySurfaceAt, insidePolygon, pointAlong, roadAt, type TimeOfDay } from '@/application';
+import type { CityMap, RoadClass, RoadEdge } from '@/domain';
 import { signTexture } from './cityTextures';
-import { alongRoads, hash, instanced, instancedChunks, KERB_M, matrix } from './roadLayout';
+import { hash, instanced, instancedChunks, matrix } from './roadLayout';
+import { SIDEWALK_Y } from './roadMeshes';
 
-/** Street furniture and scenery, all instanced: lamps, trees, signals, signs, roof kit, hills. */
+/** Street furniture, all instanced: lamps, trees, signs and roof kit. */
 
-const LAMP_EVERY_M = 32;
-const TREE_EVERY_M = 20;
-const SIGNAL_CYCLE_S = 30;
+const LAMP_EVERY_M = 35;
+const TREE_EVERY_M = 14;
+const LIT: ReadonlySet<RoadClass> = new Set(['primary', 'secondary', 'tertiary', 'link']);
+/** At most this many trees per park, and one per this many m². */
+const PARK_TREES_MAX = 160;
+const PARK_M2_PER_TREE = 260;
 
 /** How much the city glows, by time of day. */
 export const GLOW: Readonly<Record<TimeOfDay, { windows: number; lamps: number; signs: number }>> =
@@ -74,11 +78,52 @@ export function addRoofKitAndSigns(
   });
 }
 
+/**
+ * Spots along both sides of every edge passing `include`, `every` m apart and
+ * `fromKerb` m out from the carriageway, clear of junctions. `yaw` turns an
+ * instance's +x back towards the road.
+ */
+export function alongEdges(
+  map: CityMap,
+  include: (e: RoadEdge) => boolean,
+  every: number,
+  fromKerb: (e: RoadEdge) => number,
+  phase: number,
+  place: (x: number, z: number, yaw: number, e: RoadEdge) => void,
+) {
+  for (const e of map.edges) {
+    if (!include(e)) continue;
+    const t0 = (map.nodes[e.a]?.radius ?? 0) + 2 + phase;
+    const t1 = e.length - (map.nodes[e.b]?.radius ?? 0) - 2;
+    for (let s = t0; s < t1; s += every) {
+      const p = pointAlong(e, s);
+      const nx = -Math.sin(p.heading);
+      const nz = Math.cos(p.heading);
+      for (const side of [1, -1]) {
+        const o = side * (e.widthM / 2 + fromKerb(e));
+        const x = p.x + nx * o;
+        const z = p.z + nz * o;
+        // Not on another road (dual carriageways, side streets).
+        const other = roadAt(map, x, z);
+        if (other && other.edge.id !== e.id) continue;
+        place(x, z, Math.atan2(nz * side, -nx * side), e);
+      }
+    }
+  }
+}
+
 export function addStreetLights(kit: Kit, map: CityMap): void {
   const { group, keep, mat, glow } = kit;
-  // Street lights along every kerb, with pools of light at night.
+  // Street lights along the bigger roads, with pools of light at night.
   const lamps: THREE.Matrix4[] = [];
-  alongRoads(map, LAMP_EVERY_M, 0.9, 0, (x, z, yaw) => lamps.push(matrix(x, KERB_M, z, yaw)));
+  alongEdges(
+    map,
+    (e) => LIT.has(e.cls),
+    LAMP_EVERY_M,
+    () => 0.6,
+    0,
+    (x, z, yaw) => lamps.push(matrix(x, SIDEWALK_Y, z, yaw)),
+  );
   const poleMat = mat({ color: '#5c6166', roughness: 0.5, metalness: 0.6 });
   const pole = keep(new THREE.CylinderGeometry(0.07, 0.11, 8, 8).translate(0, 4, 0));
   const arm = keep(new THREE.BoxGeometry(2.4, 0.1, 0.1).translate(1.2, 7.9, 0));
@@ -93,7 +138,7 @@ export function addStreetLights(kit: Kit, map: CityMap): void {
   group.add(instancedChunks(headGeo, headMat, lamps, false));
   if (glow.lamps > 0) {
     const pool = keep(
-      new THREE.CircleGeometry(7, 28).rotateX(-Math.PI / 2).translate(2.2, 0.03 - KERB_M, 0),
+      new THREE.CircleGeometry(7, 28).rotateX(-Math.PI / 2).translate(2.2, 0.08 - SIDEWALK_Y, 0),
     );
     const poolMat = keep(
       new THREE.MeshBasicMaterial({
@@ -109,16 +154,41 @@ export function addStreetLights(kit: Kit, map: CityMap): void {
   }
 }
 
-export function addTrees(kit: Kit, map: CityMap, parkTrees: readonly THREE.Matrix4[]): void {
-  const { group, keep, mat } = kit;
-  // Street trees between the lamps, and the parks.
-  const trees: THREE.Matrix4[] = [...parkTrees];
-  alongRoads(map, TREE_EVERY_M, 2.4, TREE_EVERY_M / 2, (x, z, yaw, road) => {
-    if (road.kind === 'expressway') return;
-    const h = hash(x, z);
-    if (h < 0.35) return;
-    trees.push(matrix(x, KERB_M, z, yaw + h * 6, 1, 0.75 + h * 0.5, 1));
+/** Trees scattered over the parks, on open grass. */
+function parkTrees(map: CityMap): THREE.Matrix4[] {
+  const out: THREE.Matrix4[] = [];
+  map.areas.forEach((a, ai) => {
+    if (a.kind !== 'park' && a.kind !== 'cemetery') return;
+    const w = a.bounds.maxX - a.bounds.minX;
+    const d = a.bounds.maxZ - a.bounds.minZ;
+    const want = Math.min(PARK_TREES_MAX, Math.floor((w * d) / PARK_M2_PER_TREE));
+    for (let k = 0, n = 0; k < want * 3 && n < want; k++) {
+      const x = a.bounds.minX + hash(ai, k) * w;
+      const z = a.bounds.minZ + hash(k, ai + 0.5) * d;
+      if (!insidePolygon(a.ring, x, z) || citySurfaceAt(map, x, z) !== 'grass') continue;
+      out.push(matrix(x, 0.02, z, hash(x, z) * 6, 1, 0.8 + hash(z) * 0.6, 1));
+      n++;
+    }
   });
+  return out;
+}
+
+export function addTrees(kit: Kit, map: CityMap): void {
+  const { group, keep, mat } = kit;
+  // Street trees on wide sidewalks, and the parks.
+  const trees: THREE.Matrix4[] = parkTrees(map);
+  alongEdges(
+    map,
+    (e) => e.sidewalkM >= 3,
+    TREE_EVERY_M,
+    (e) => e.sidewalkM - 0.9,
+    TREE_EVERY_M / 2,
+    (x, z, yaw) => {
+      const h = hash(x, z);
+      if (h < 0.3) return;
+      trees.push(matrix(x, SIDEWALK_Y, z, yaw + h * 6, 1, 0.75 + h * 0.5, 1));
+    },
+  );
   const trunk = keep(new THREE.CylinderGeometry(0.12, 0.2, 3.6, 9).translate(0, 1.8, 0));
   const bark = mat({ color: '#5a4636', roughness: 0.95 });
   const leaves = mat({ map: keep(leafTexture(kit.anisotropy)), roughness: 0.85 });
@@ -192,87 +262,4 @@ function leafTexture(anisotropy: number): THREE.CanvasTexture {
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.anisotropy = anisotropy;
   return tex;
-}
-
-/** Traffic signals; returns the per-frame updater that cycles them. */
-export function addSignals(kit: Kit, map: CityMap): (clockS: number) => void {
-  const { group, keep, mat } = kit;
-  // Traffic signals where avenues meet, one per approach on its near-right corner.
-  const signals: { m: THREE.Matrix4; axis: 'x' | 'z' }[] = [];
-  for (const a of map.roads.filter((r) => r.axis === 'x' && r.kind !== 'expressway')) {
-    for (const b of map.roads.filter((r) => r.axis === 'z')) {
-      if (a.kind !== 'avenue' && b.kind !== 'avenue') continue;
-      const ex = b.widthM / 2 + 1;
-      const ez = a.widthM / 2 + 1;
-      // Lamps face the head's local −x. Eastbound traffic (south half) sees a
-      // signal on the south-west corner facing west; the others likewise.
-      signals.push({ m: matrix(b.centre - ex, KERB_M, a.centre + ez, 0), axis: 'x' });
-      signals.push({ m: matrix(b.centre + ex, KERB_M, a.centre - ez, Math.PI), axis: 'x' });
-      signals.push({ m: matrix(b.centre - ex, KERB_M, a.centre - ez, -Math.PI / 2), axis: 'z' });
-      signals.push({ m: matrix(b.centre + ex, KERB_M, a.centre + ez, Math.PI / 2), axis: 'z' });
-    }
-  }
-  const sigPole = keep(new THREE.CylinderGeometry(0.08, 0.1, 5.2, 8).translate(0, 2.6, 0));
-  const sigHead = keep(new THREE.BoxGeometry(0.3, 1.15, 0.42).translate(0, 4.7, 0));
-  const darkMetal = mat({ color: '#2b2e33', roughness: 0.55, metalness: 0.4 });
-  const sm = signals.map((s) => s.m);
-  group.add(instanced(sigPole, darkMetal, sm), instanced(sigHead, darkMetal, sm, false));
-  const lampGeo = (y: number) =>
-    keep(new THREE.CircleGeometry(0.13, 16).rotateY(-Math.PI / 2).translate(-0.16, y, 0));
-  const lights = (['#ff2a1f', '#ffb000', '#22e06b'] as const).map((color, k) => {
-    const mesh = instanced(
-      lampGeo(5.08 - k * 0.37),
-      keep(new THREE.MeshBasicMaterial({ color: '#ffffff' })),
-      sm,
-      false,
-    );
-    return { mesh, on: new THREE.Color(color), off: new THREE.Color(color).multiplyScalar(0.12) };
-  });
-  group.add(...lights.map((l) => l.mesh));
-
-  let phase = -1;
-  return (clockS) => {
-    const t = clockS % SIGNAL_CYCLE_S;
-    const next = t < 12 ? 0 : t < 15 ? 1 : t < 27 ? 2 : 3;
-    if (next === phase) return;
-    phase = next;
-    // 0: x green · 1: x amber · 2: z green · 3: z amber
-    signals.forEach((s, i) => {
-      const go = s.axis === 'x' ? phase <= 1 : phase >= 2;
-      const amber = phase === 1 || phase === 3;
-      const state = !go ? 0 : amber ? 1 : 2;
-      lights.forEach((l, k) => l.mesh.setColorAt(i, k === state ? l.on : l.off));
-    });
-    for (const l of lights) if (l.mesh.instanceColor) l.mesh.instanceColor.needsUpdate = true;
-  };
-}
-
-export function addHills(kit: Kit, map: CityMap): void {
-  const { group, keep, mat } = kit;
-  // Distant hills to close the horizon (they fade into the fog).
-  const hills: THREE.Matrix4[] = [];
-  for (let k = 0; k < 26; k++) {
-    const a = Math.PI * (1.05 + (k / 25) * 0.9) + (hash(k) - 0.5) * 0.1;
-    const r = 2300 + hash(k, 1) * 900;
-    const s = 380 + hash(k, 2) * 420;
-    hills.push(
-      matrix(
-        map.width / 2 + Math.cos(a) * r,
-        -40,
-        map.depth / 3 + Math.sin(a) * r,
-        0,
-        s,
-        s * (0.3 + hash(k, 3) * 0.25),
-        s,
-      ),
-    );
-  }
-  group.add(
-    instanced(
-      keep(new THREE.IcosahedronGeometry(1, 3)),
-      mat({ color: '#3d5a3a', roughness: 1 }),
-      hills,
-      false,
-    ),
-  );
 }

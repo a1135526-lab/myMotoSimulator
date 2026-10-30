@@ -11,6 +11,7 @@ export const KYMCO_AK_550: ScooterSpec = {
   id: 'kymco-ak-550',
   kind: 'scooter',
   licenseClass: 'red',
+  segment: 'maxi-scooter',
   brand: 'KYMCO',
   model: 'AK 550',
   cluster: { layout: 'tft', accent: '#ff9a1f' },
