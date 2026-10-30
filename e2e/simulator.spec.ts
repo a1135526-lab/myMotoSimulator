@@ -127,6 +127,7 @@ test.describe('drag race', () => {
   async function enterRace(page: Page, distance: number) {
     await page.goto('/');
     await page.getByTestId('mode-race').click();
+    await page.getByTestId('discipline-drag').click();
     await page.getByTestId('track-custom').click();
     await page.getByTestId('race-distance').fill(String(distance));
     await page.getByTestId('wizard-next').click(); // → bike

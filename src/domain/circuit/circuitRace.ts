@@ -203,7 +203,7 @@ export function stepCircuitRace(
         ? brakeAssist(geo, race.assistProfile, rider.lat.s, rider.sim.speedMps, playerInput)
         : playerInput;
       // Only the rider's own brake starts a slide, not the brake assist.
-      return stepRider(ctx, rider, input, steer, wantsDrift(playerInput.brake, steer));
+      return stepRider(ctx, rider, input, steer, wantsDrift(playerInput.brake));
     }
     const slot = race.ai[i - 1];
     if (!slot) return rider;

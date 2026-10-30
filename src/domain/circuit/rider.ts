@@ -4,7 +4,7 @@ import type { SimModel } from '../simulation/model';
 import { createInitialState, step } from '../simulation/simulator';
 import type { SimInput, SimState } from '../simulation/types';
 import { autoGearbox } from './autoGearbox';
-import { driftCurvature, stepDrift } from './drift';
+import { driftBrakeShare, driftCurvature, stepDrift } from './drift';
 import { wrapS, type CircuitGeometry } from './geometry';
 import {
   assistCurvature,
@@ -14,6 +14,7 @@ import {
   longitudinalGripShare,
   pathCurvature,
   RUNOFF_ROLLING_COEFF,
+  runoffCurvature,
   STRAIGHT_AHEAD,
   stepLean,
   surfaceAt,
@@ -141,7 +142,7 @@ export function stepRider(
   rider: CircuitRider,
   input: SimInput,
   steer: number,
-  /** Brake + steer held: let the rear slide (player only). */
+  /** Hard on the brake: start (with steer) or hold a rear slide (player only). */
   driftWanted = false,
 ): CircuitRider {
   const dt = ctx.model.timestepS;
@@ -164,11 +165,10 @@ export function stepRider(
     rider.surface === 'track'
       ? stepDrift(rider.drift, driftWanted, steer, rider.sim.speedMps, dt)
       : 0;
-  // A sliding rear brakes freely; otherwise braking shares grip with lean.
+  // Upright, braking shares grip with lean; sideways, only the sliding rear brakes.
   const brakeShare = Math.max(
     MIN_GRIP_SHARE,
-    Math.abs(drift),
-    longitudinalGripShare(rider.lat.lean, grip),
+    driftBrakeShare(drift, longitudinalGripShare(rider.lat.lean, grip)),
   );
   applied = { ...applied, brake: applied.brake * brakeShare * Math.min(1, grip) };
   sim = step(modelFor(ctx, rider.surface, rider.lat.lean), sim, applied);
@@ -179,13 +179,16 @@ export function stepRider(
   const assistSteer = steer * (1 - Math.abs(drift));
   const kDrift = ctx.assist
     ? assistedDrift(ctx.geo, rider.lat, v, assistSteer, grip, drift)
-    : driftCurvature(drift, v);
+    : driftCurvature(drift, v, steer);
   const lean = stepLean(
     rider.lat.lean,
     targetLean(ctx.geo, rider.lat, v, assistSteer, grip, ctx.assist, kDrift),
     dt,
   );
-  const kPath = pathCurvature(lean, v, steer) + kDrift;
+  const kPath =
+    pathCurvature(lean, v, steer) +
+    kDrift +
+    (rider.surface === 'track' ? 0 : runoffCurvature(steer, v));
   const moved = integrate(ctx.geo, { ...rider.lat, lean }, v, kPath, dt);
   const surface = surfaceAt(ctx.limits, moved.d);
 

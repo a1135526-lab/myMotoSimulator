@@ -14,10 +14,11 @@ import type { RaceView } from '../viewModels/race';
 export const DISTANCE_PRESETS_M = [201, 402, 1000] as const;
 
 /** Pre-race "garage" flow, then the race itself. */
-export const RACE_STEPS = ['track', 'bike', 'tune', 'opponent', 'race'] as const;
+export const RACE_STEPS = ['mode', 'track', 'bike', 'tune', 'opponent', 'race'] as const;
 export type RaceStep = (typeof RACE_STEPS)[number];
 
 export const RACE_STEP_LABELS: Readonly<Record<RaceStep, string>> = {
+  mode: '模式',
   track: '賽道',
   bike: '機車',
   tune: '配備',
@@ -68,15 +69,16 @@ interface RaceStoreState {
 }
 
 export const useRaceStore = create<RaceStoreState>()((set) => ({
-  step: 'track',
+  step: 'mode',
   discipline: 'drag',
   circuitId: DEFAULT_CIRCUIT_ID,
   laps: getCircuit(DEFAULT_CIRCUIT_ID).defaultLaps,
   opponentCount: 2,
-  assist: true,
-  brakeAssist: true,
-  autoShift: true,
-  autoClutch: true,
+  // Riding aids start off: the player opts in.
+  assist: false,
+  brakeAssist: false,
+  autoShift: false,
+  autoClutch: false,
   trackId: DEFAULT_TRACK_ID,
   customDistanceM: 402,
   treeMode: 'sportsman',

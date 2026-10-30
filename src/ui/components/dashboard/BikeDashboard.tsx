@@ -6,6 +6,7 @@ import { LcdBarCluster } from './LcdBarCluster';
 import { lampState, type LayoutProps } from './lcd';
 import { RoundLcdCluster } from './RoundLcdCluster';
 import { TftCluster } from './TftCluster';
+import { TickRingCluster } from './TickRingCluster';
 import { TwinAnalogCluster } from './TwinAnalogCluster';
 
 const LAYOUTS: Readonly<Record<DashboardModel['layout'], ComponentType<LayoutProps>>> = {
@@ -14,6 +15,7 @@ const LAYOUTS: Readonly<Record<DashboardModel['layout'], ComponentType<LayoutPro
   'analog-lcd': AnalogLcdCluster,
   'twin-analog': TwinAnalogCluster,
   tft: TftCluster,
+  'tick-ring': TickRingCluster,
 };
 
 interface BikeDashboardProps {

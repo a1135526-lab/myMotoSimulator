@@ -468,7 +468,8 @@
   width: clamp(240px, 30vw, 400px);
 }
 
-.dashSlot[data-layout='round-lcd'] {
+.dashSlot[data-layout='round-lcd'],
+.dashSlot[data-layout='tick-ring'] {
   width: clamp(170px, 19vw, 260px);
 }
 
@@ -477,7 +478,8 @@
     width: min(56vw, 230px);
   }
 
-  .dashSlot[data-layout='round-lcd'] {
+  .dashSlot[data-layout='round-lcd'],
+  .dashSlot[data-layout='tick-ring'] {
     width: min(40vw, 160px);
   }
 }

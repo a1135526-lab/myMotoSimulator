@@ -127,8 +127,10 @@ export type BikeKind = 'scooter' | 'manual';
  *   analog-lcd  needle tachometer with an LCD block for speed and gear
  *   twin-analog analog speedo and tacho either side of a centre screen
  *   tft         full-colour screen with a sweeping tach arc
+ *   tick-ring   round black LCD whose tach is a ring of tick segments (SYM JET SL)
  */
-export type ClusterLayout = 'lcd-bar' | 'round-lcd' | 'analog-lcd' | 'twin-analog' | 'tft';
+export type ClusterLayout =
+  'lcd-bar' | 'round-lcd' | 'analog-lcd' | 'twin-analog' | 'tft' | 'tick-ring';
 
 export interface ClusterSpec {
   readonly layout: ClusterLayout;

@@ -96,7 +96,7 @@ describe('App (manual bikes)', () => {
 
 describe('App (race mode)', () => {
   beforeEach(() => {
-    useRaceStore.getState().setStep('track');
+    useRaceStore.getState().setStep('mode');
     useRaceStore.getState().setTrack('central-speedway');
   });
 
@@ -105,6 +105,7 @@ describe('App (race mode)', () => {
     fireEvent.click(screen.getByTestId('mode-race'));
 
     // 1. Track
+    fireEvent.click(await screen.findByTestId('discipline-drag'));
     fireEvent.click(await screen.findByTestId('track-custom'));
     fireEvent.change(screen.getByTestId('race-distance'), { target: { value: '1000' } });
     expect(screen.getByText(/自訂賽道・1000 m/)).toBeInTheDocument();
@@ -154,7 +155,7 @@ describe('App (race mode)', () => {
 
 describe('App (circuit racing)', () => {
   beforeEach(() => {
-    useRaceStore.getState().setStep('track');
+    useRaceStore.getState().setStep('mode');
     useRaceStore.getState().setDiscipline('drag');
   });
 

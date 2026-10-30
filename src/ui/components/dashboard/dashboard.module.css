@@ -97,6 +97,49 @@
   dominant-baseline: central;
 }
 
+.ringNum,
+.ringNumRed {
+  font: 600 15px var(--font-display, sans-serif);
+  fill: #f4f6f6;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.ringNumRed {
+  fill: #ff3a24;
+}
+
+.ringUnit,
+.ringUnitLeft,
+.ringOdo,
+.ringTotal {
+  font: 600 9px var(--font-display, sans-serif);
+  fill: #e7eaec;
+  text-anchor: middle;
+}
+
+.ringUnitLeft,
+.ringOdo {
+  text-anchor: start;
+  font-size: 11px;
+}
+
+.ringOdo {
+  fill: #d6ff3c;
+}
+
+.ringTotal {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.badge {
+  font: 800 italic 15px var(--font-display, sans-serif);
+  fill: #5b6168;
+  text-anchor: middle;
+  letter-spacing: 0.05em;
+}
+
 .tftFlash {
   animation: flash 0.12s steps(2, jump-none) infinite;
 }

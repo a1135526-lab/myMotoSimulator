@@ -32,6 +32,13 @@ const LOOKAHEAD_S = 0.5;
 /** Grass / gravel: much less grip and lots of drag. */
 export const RUNOFF_GRIP_G = 0.55;
 export const RUNOFF_ROLLING_COEFF = 0.09;
+/**
+ * Off the tarmac the rider can still haul the bike round — feet out, bars
+ * turned, back wheel skating — so steer adds this much turning on top of lean.
+ */
+export const RUNOFF_STEER_G = 0.6;
+/** Turning off-track is figured at no less than this speed (walking pace still steers). */
+const RUNOFF_STEER_MIN_SPEED_MPS = 6;
 
 export type Surface = 'track' | 'runoff' | 'barrier';
 
@@ -121,6 +128,12 @@ export const stepLean = (lean: number, target: number, dtS: number): number =>
 export function pathCurvature(lean: number, speedMps: number, steer: number): number {
   if (speedMps < MIN_LEAN_SPEED_MPS) return clamp(steer, -1, 1) * LOW_SPEED_CURVATURE;
   return (STANDARD_GRAVITY * Math.tan(lean)) / (speedMps * speedMps);
+}
+
+/** Extra path curvature (+ = left) from steering on grass / gravel. */
+export function runoffCurvature(steer: number, speedMps: number): number {
+  const v = Math.max(speedMps, RUNOFF_STEER_MIN_SPEED_MPS);
+  return (clamp(steer, -1, 1) * RUNOFF_STEER_G * STANDARD_GRAVITY) / (v * v);
 }
 
 /** Advance position along / across the track for one step. */

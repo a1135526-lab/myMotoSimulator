@@ -29,7 +29,8 @@
   width: min(100%, 560px);
 }
 
-.dashSlot[data-layout='round-lcd'] {
+.dashSlot[data-layout='round-lcd'],
+.dashSlot[data-layout='tick-ring'] {
   width: min(100%, 320px);
 }
 

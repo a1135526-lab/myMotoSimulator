@@ -15,7 +15,7 @@ export const SYM_JET_SL_125: ScooterSpec = {
   licenseClass: 'white',
   brand: 'SYM',
   model: 'JET SL 125',
-  cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#dff1ff' },
+  cluster: { layout: 'tick-ring', lcd: 'negative', accent: '#d6ff3c', tachMaxRpm: 12000 },
   engine: {
     displacementCc: 124.6,
     cylinders: 1,

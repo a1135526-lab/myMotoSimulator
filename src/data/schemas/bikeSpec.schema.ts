@@ -76,7 +76,7 @@ const ReferencePerformanceSchema = z.object({
 });
 
 const ClusterSchema = z.object({
-  layout: z.enum(['lcd-bar', 'round-lcd', 'analog-lcd', 'twin-analog', 'tft']),
+  layout: z.enum(['lcd-bar', 'round-lcd', 'analog-lcd', 'twin-analog', 'tft', 'tick-ring']),
   lcd: z.enum(['positive', 'negative']).optional(),
   accent: z.string().regex(/^#[0-9a-f]{6}$/i, 'accent must be #rrggbb'),
   tachMaxRpm: positive().optional(),

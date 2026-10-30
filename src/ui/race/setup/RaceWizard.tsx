@@ -20,11 +20,59 @@ import styles from './setup.module.css';
 const SETUP_STEPS = RACE_STEPS.filter((s) => s !== 'race');
 
 const HEADINGS: Record<Exclude<RaceStep, 'race'>, string> = {
+  mode: '選擇比賽模式',
   track: '選擇賽道',
   bike: '選擇你的機車',
   tune: '改裝配備',
   opponent: '挑選對手',
 };
+
+const MODES = [
+  {
+    id: 'drag',
+    title: '直線加速賽',
+    blurb: '和一位對手比直線，看燈號起跑，比反應、起步和換檔。',
+    meta: '201 m／402 m／1 km 或自訂',
+  },
+  {
+    id: 'circuit',
+    title: '賽道繞圈',
+    blurb: '和 1～3 位 AI 跑多圈，壓車過彎、晚煞車、煞車甩尾。',
+    meta: '3 條原創賽道・MotoGP 式起跑',
+  },
+] as const;
+
+/** First step: which kind of race. Picking one moves straight on to the venue. */
+function StepMode() {
+  const discipline = useRaceStore((s) => s.discipline);
+  const setDiscipline = useRaceStore((s) => s.setDiscipline);
+  const setStep = useRaceStore((s) => s.setStep);
+  return (
+    <div className={styles.modeGrid} role="radiogroup" aria-label="比賽模式">
+      {MODES.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          role="radio"
+          aria-checked={discipline === m.id}
+          className={discipline === m.id ? styles.modeCardActive : styles.modeCard}
+          onClick={() => {
+            setDiscipline(m.id);
+            setStep('track');
+          }}
+          data-testid={`discipline-${m.id}`}
+        >
+          <span className={styles.modeIcon} aria-hidden>
+            {m.id === 'drag' ? '🚦' : '🏁'}
+          </span>
+          <strong className={styles.modeTitle}>{m.title}</strong>
+          <span className={styles.modeBlurb}>{m.blurb}</span>
+          <small className={styles.modeMeta}>{m.meta}</small>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function StepBike() {
   const bike = useCurrentBike();
@@ -38,10 +86,9 @@ export function RaceWizard() {
   const setStep = useRaceStore((s) => s.setStep);
   const venue = useVenue();
   const discipline = useRaceStore((s) => s.discipline);
-  const setDiscipline = useRaceStore((s) => s.setDiscipline);
   const bike = useCurrentBike();
   const index = SETUP_STEPS.indexOf(step as (typeof SETUP_STEPS)[number]);
-  const current = SETUP_STEPS[Math.max(0, index)] ?? 'track';
+  const current = SETUP_STEPS[Math.max(0, index)] ?? 'mode';
   const next = RACE_STEPS[RACE_STEPS.indexOf(current) + 1] ?? 'race';
   const prev = SETUP_STEPS[index - 1];
 
@@ -79,26 +126,8 @@ export function RaceWizard() {
             {venue.name}・{venue.detail} · {bike.brand} {bike.model}
           </p>
         </header>
-        {current === 'track' && (
-          <>
-            <div className={styles.disciplines} role="radiogroup" aria-label="賽事類型">
-              {(['drag', 'circuit'] as const).map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  role="radio"
-                  aria-checked={discipline === d}
-                  className={discipline === d ? styles.disciplineActive : styles.discipline}
-                  onClick={() => setDiscipline(d)}
-                  data-testid={`discipline-${d}`}
-                >
-                  {d === 'drag' ? '直線加速' : '賽道繞圈'}
-                </button>
-              ))}
-            </div>
-            {discipline === 'drag' ? <StepTrack /> : <StepCircuit />}
-          </>
-        )}
+        {current === 'mode' && <StepMode />}
+        {current === 'track' && (discipline === 'drag' ? <StepTrack /> : <StepCircuit />)}
         {current === 'bike' && <StepBike />}
         {current === 'tune' && <StepTune />}
         {current === 'opponent' && <StepOpponent />}
