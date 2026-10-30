@@ -18,6 +18,7 @@ function useRaceConfig(): RaceConfig {
   const { track, distanceM } = useActiveTrack();
   const treeMode = useRaceStore((s) => s.treeMode);
   const opponent = useRaceStore((s) => s.opponent);
+  const autoClutch = useRaceStore((s) => s.autoClutch);
 
   return useMemo(() => {
     const oppBike = getBike(opponent.bikeId);
@@ -30,9 +31,9 @@ function useRaceConfig(): RaceConfig {
         env,
       ),
       opponentSkill: opponent.skill,
-      settings: { distanceM, treeMode },
+      settings: { distanceM, treeMode, autoClutch },
     };
-  }, [bike, selection, track, distanceM, treeMode, opponent]);
+  }, [bike, selection, track, distanceM, treeMode, autoClutch, opponent]);
 }
 
 export function RaceProvider({ children }: { children: ReactNode }) {

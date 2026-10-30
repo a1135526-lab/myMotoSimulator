@@ -14,6 +14,7 @@ import {
   type RaceModels,
   type RaceState,
 } from './race';
+import { MIN_HUMAN_REACTION_S } from './reaction';
 import { STAGE_BEAM_M } from './racer';
 import { raceResult } from './result';
 import { treeLights, treeTiming } from './tree';
@@ -30,6 +31,9 @@ const setup = (skill: RiderSkill = 'average', distanceM = 201) => ({
 
 const WOT: ControlCommand = { throttlePressed: true, brakePressed: false, clutchPressed: false };
 const IDLE: ControlCommand = { throttlePressed: false, brakePressed: false, clutchPressed: false };
+/** A quick but human reaction. */
+const REACT_S = 0.2;
+const afterGreen = (r: RaceState, s = REACT_S) => r.clockS >= r.tree.greenAtS + s;
 
 /** Run until finished; the player presses `command(race)` each frame. */
 function runRace(models: RaceModels, race: RaceState, command: (r: RaceState) => ControlCommand) {
@@ -69,13 +73,12 @@ describe('race flow', () => {
   });
 
   it('goes countdown → racing → finished and records times', () => {
-    const r = runRace(models, createRace(models, setup()), (cur) =>
-      cur.clockS >= cur.tree.greenAtS ? WOT : IDLE,
-    );
+    const r = runRace(models, createRace(models, setup()), (cur) => (afterGreen(cur) ? WOT : IDLE));
     expect(r.phase).toBe('finished');
     const result = raceResult(r);
     expect(result.reason).toBe('finish');
     expect(result.player.reactionS).toBeGreaterThan(0);
+    expect(result.player.launchReactionS).toBeCloseTo(REACT_S, 1);
     expect(result.player.elapsedS).toBeGreaterThan(5);
     expect(result.player.trapSpeedKmh).toBeGreaterThan(60);
     expect(result.marginS).not.toBeNull();
@@ -91,10 +94,31 @@ describe('race flow', () => {
   });
 
   it('a faster reaction wins between identical bikes', () => {
-    const r = runRace(models, createRace(models, setup('novice')), (cur) =>
-      cur.clockS >= cur.tree.greenAtS + 0.05 ? WOT : IDLE,
-    );
+    // Both brake-stand on the line; only the reaction differs.
+    const brakeStand = (react: boolean): ControlCommand => ({ ...WOT, brakePressed: !react });
+    let r = createRace(models, setup('novice'));
+    r = advanceRace(models, r, brakeStand(false), 0.5);
+    r = runRace(models, r, (cur) => brakeStand(afterGreen(cur, 0.13)));
+    expect(raceResult(r).player.falseStart).toBe(false);
     expect(raceResult(r).winner).toBe('player');
+  });
+
+  it('calls a launch quicker than a human can react a false start, even after green', () => {
+    const r = runRace(models, createRace(models, setup()), (cur) =>
+      afterGreen(cur, 0.03) ? WOT : IDLE,
+    );
+    const result = raceResult(r);
+    expect(result.player.falseStart).toBe(true);
+    expect(result.player.launchReactionS).toBeGreaterThanOrEqual(0);
+    expect(result.player.launchReactionS).toBeLessThan(MIN_HUMAN_REACTION_S);
+    expect(result.reason).toBe('falseStart');
+  });
+
+  it('judges the hands, not the beam: a clean launch just over the limit is fine', () => {
+    const r = runRace(models, createRace(models, setup()), (cur) =>
+      afterGreen(cur, MIN_HUMAN_REACTION_S + 0.03) ? WOT : IDLE,
+    );
+    expect(raceResult(r).player.falseStart).toBe(false);
   });
 });
 
@@ -114,6 +138,14 @@ describe('opponent skill', () => {
     expect(pro.reactionS ?? Infinity).toBeLessThan(novice.reactionS ?? 0);
   });
 
+  it('reacts like a person: within human range and never under the limit', () => {
+    for (const skill of ['novice', 'average', 'pro'] as const) {
+      const t = elapsed(skill).launchReactionS ?? 0;
+      expect(t).toBeGreaterThan(MIN_HUMAN_REACTION_S);
+      expect(t).toBeLessThan(0.35);
+    }
+  });
+
   it('never false-starts', () => {
     expect(elapsed('pro').falseStart).toBe(false);
   });
@@ -129,12 +161,37 @@ describe('player on a manual bike', () => {
     expect(r.player.sim.gear).toBe(1);
 
     const finished = runRace(models, r, (cur) => {
-      const afterGreen = cur.clockS >= cur.tree.greenAtS;
-      return { throttlePressed: true, brakePressed: false, clutchPressed: !afterGreen };
+      return { throttlePressed: true, brakePressed: false, clutchPressed: !afterGreen(cur) };
     });
     const result = raceResult(finished).player;
     expect(result.falseStart).toBe(false);
     expect(result.finished).toBe(true);
+  });
+
+  it('auto clutch: brake-stand in 1st, let the brake go and it pulls away without stalling', () => {
+    const auto = { ...setup(), settings: { ...setup().settings, autoClutch: true } };
+    let r = createRace(models, auto);
+    r = shiftPlayer(models, r, 1);
+    // Already on the brake with the throttle open before the tree starts.
+    r = advanceRace(models, r, { ...WOT, brakePressed: true }, 0.5);
+    expect(r.player.sim.engineRpm).toBeGreaterThan(manual.engine.idleRpm * 2);
+    const finished = runRace(models, r, (cur) => ({
+      throttlePressed: true,
+      brakePressed: !afterGreen(cur),
+      clutchPressed: false,
+    }));
+    const result = raceResult(finished).player;
+    expect(finished.player.sim.engineRunning).toBe(true);
+    expect(result.falseStart).toBe(false);
+    expect(result.finished).toBe(true);
+  });
+
+  it('full manual: dumping into gear with no clutch stalls on the line', () => {
+    let r = createRace(models, setup());
+    r = advanceRace(models, r, { ...IDLE, clutchPressed: true }, 0.1);
+    r = shiftPlayer(models, r, 1);
+    r = advanceRace(models, r, IDLE, 1);
+    expect(r.player.sim.engineRunning).toBe(false);
   });
 
   it('times out the trailing bike as a DNF', () => {

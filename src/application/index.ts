@@ -4,6 +4,7 @@ export { useSimulationController } from './hooks/simulationContext';
 export { useCurrentBike, useSimConfig } from './hooks/useSimConfig';
 export {
   useBikeId,
+  useDashboardModel,
   useDynoCharts,
   useGaugeScale,
   useTelemetry,
@@ -60,6 +61,7 @@ export {
   type TuneLevel,
 } from './race/opponentSetup';
 export type { RaceView, RacerView } from './viewModels/race';
+export type { DashboardModel, DashboardReadings } from './viewModels/dashboard';
 export type { AppMode } from './stores/uiStore';
 export { readRaceSound, readSimulatorSound, type SoundFrame } from './viewModels/sound';
 export { CircuitProvider } from './hooks/CircuitProvider';
@@ -70,3 +72,5 @@ export type { CircuitView, CircuitRiderView, CircuitPlayerView } from './viewMod
 export { MAX_CIRCUIT_OPPONENTS, MAX_LAPS, type Discipline } from './stores/raceStore';
 export { useActiveCircuit, useCircuits, useVenue, type Estimate } from './hooks/useRaceSetup';
 export { circuitGeometry } from './services/lapService';
+/** Fastest believable reaction to a start light, s (shown in race rules). */
+export { MIN_HUMAN_REACTION_S } from '@/domain';

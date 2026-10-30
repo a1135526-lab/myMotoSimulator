@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MANUAL_TEST_BIKE } from '../../test/fixtures/manualTestBike';
 import { makeConfig } from '../../test/fixtures/simConfig';
+import { MIN_HUMAN_REACTION_S } from '../race/reaction';
 import { buildModel } from '../simulation/model';
 import { createInitialState } from '../simulation/simulator';
 import { STANDARD_GRAVITY } from '../units';
@@ -16,6 +17,7 @@ import {
 import {
   advanceCircuitRace,
   createCircuitRace,
+  JUMP_START_PENALTY_S,
   litLights,
   LIGHT_COUNT,
   resetPlayer,
@@ -166,12 +168,54 @@ describe('circuit race', () => {
     expect(LIGHT_COUNT).toBe(5);
   });
 
-  it('holds everyone on the grid until lights out', () => {
-    let race = startLights(fresh());
-    for (let i = 0; i < 4 * 240; i++) {
+  it('holds the grid until the lights start; a player who goes under the reds is stopped', () => {
+    let race = fresh();
+    for (let i = 0; i < 240; i++) {
       race = stepCircuitRace(geo, models, race, { throttle: 1, brake: 0, clutchLever: 0 }, 0);
     }
     expect(race.riders.every((r) => r.progressM < 0.5)).toBe(true);
+    expect(race.playerLaunchAtS).toBeNull();
+
+    race = startLights(race);
+    for (let i = 0; i < 4 * 240; i++) {
+      race = stepCircuitRace(geo, models, race, { throttle: 1, brake: 0, clutchLever: 0 }, 0);
+    }
+    expect(race.penaltyUntilS).toBeCloseTo(race.lightsOutAtS + JUMP_START_PENALTY_S);
+    expect(race.riders.every((r) => r.progressM < 0.5)).toBe(true);
+  });
+
+  const launchAt = (reactS: number) => {
+    let race = startLights(fresh());
+    const brakeOn: CircuitCommand = { ...idle, throttlePressed: true, brakePressed: true };
+    race = runFor(race, race.lightsOutAtS + reactS, brakeOn, models);
+    return runFor(race, 2, { ...idle, throttlePressed: true }, models);
+  };
+
+  it('a launch inside human reaction time after lights out is a jump start', () => {
+    const race = launchAt(0.04);
+    expect(race.penaltyUntilS).not.toBeNull();
+    const reaction = (race.playerLaunchAtS ?? 0) - race.lightsOutAtS;
+    expect(reaction).toBeLessThan(MIN_HUMAN_REACTION_S);
+    // Still held two seconds after lights out; the AI has gone.
+    expect(race.riders[0]?.sim.speedMps).toBeLessThan(0.5);
+    expect(race.riders[1]?.sim.speedMps).toBeGreaterThan(5);
+  });
+
+  it('a clean start records the reaction and is not penalised', () => {
+    const race = launchAt(0.25);
+    expect(race.penaltyUntilS).toBeNull();
+    expect((race.playerLaunchAtS ?? 0) - race.lightsOutAtS).toBeGreaterThan(0.25);
+    expect(race.riders[0]?.sim.speedMps).toBeGreaterThan(5);
+  });
+
+  it('AI react to the lights in a human time', () => {
+    for (const k of ['novice', 'average', 'pro'] as const) {
+      for (let i = 0; i < 4; i++) {
+        const t = riderSkill(CIRCUIT_SKILLS[k], i).reactionS;
+        expect(t).toBeGreaterThan(MIN_HUMAN_REACTION_S);
+        expect(t).toBeLessThan(0.32);
+      }
+    }
   });
 
   it('the AI completes a lap on the tarmac', () => {

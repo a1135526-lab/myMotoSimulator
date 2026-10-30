@@ -30,6 +30,7 @@ export interface CircuitConfig {
   readonly assist: boolean;
   readonly brakeAssist: boolean;
   readonly autoShift: boolean;
+  readonly autoClutch: boolean;
 }
 
 export interface CircuitSnapshot {
@@ -68,7 +69,8 @@ export class CircuitController {
   }
 
   restage(): void {
-    const { circuit, player, opponents, skill, laps, assist, brakeAssist, autoShift } = this.config;
+    const { circuit, player, opponents, skill, laps, assist, brakeAssist, autoShift, autoClutch } =
+      this.config;
     this.geo = buildCircuit(circuit.controlPoints, circuit.widthM / 2);
     this.models = [player, ...opponents].map(buildModel);
     const settings: CircuitSettings = {
@@ -76,6 +78,7 @@ export class CircuitController {
       assist,
       brakeAssist,
       autoShift,
+      autoClutch,
       limits: { halfWidth: circuit.widthM / 2, runoffM: circuit.runoffM, gripG: circuit.gripG },
     };
     const [lo, hi] = LIGHTS_HOLD_RANGE_S;

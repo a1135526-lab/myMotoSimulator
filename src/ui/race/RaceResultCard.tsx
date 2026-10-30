@@ -1,4 +1,4 @@
-import type { RaceView } from '@/application';
+import { MIN_HUMAN_REACTION_S, type RaceView } from '@/application';
 import styles from './race.module.css';
 
 type Result = NonNullable<RaceView['result']>;
@@ -17,11 +17,28 @@ function headline(result: Result): string {
   return '比賽結束';
 }
 
+/** Why a false start was called: moved before green, or "reacted" faster than a human can. */
+function falseStartNote(r: RacerResult): string | null {
+  if (!r.falseStart) return null;
+  const t = r.launchReactionS;
+  if (t !== null && t >= 0) {
+    return `起步反應 ${t.toFixed(3)} 秒，快於人體極限 ${MIN_HUMAN_REACTION_S.toFixed(1)} 秒，判定預判起步`;
+  }
+  return '綠燈亮起前就起步';
+}
+
 function Row({ label, r }: { label: string; r: RacerResult }) {
   return (
     <tr>
       <th scope="row">{label}</th>
-      <td className="tabular">{r.falseStart ? '搶跑' : fmt(r.reactionS, 3, 's')}</td>
+      <td className="tabular">
+        {r.falseStart ? (
+          <span className={styles.foul}>搶跑 {fmt(r.launchReactionS, 3, 's')}</span>
+        ) : (
+          fmt(r.launchReactionS, 3, 's')
+        )}
+      </td>
+      <td className="tabular">{fmt(r.reactionS, 3, 's')}</td>
       <td className="tabular">{fmt(r.elapsedS, 3, 's')}</td>
       <td className="tabular">{fmt(r.totalS, 3, 's')}</td>
       <td className="tabular">{fmt(r.trapSpeedKmh, 1, 'km/h')}</td>
@@ -48,6 +65,16 @@ export function RaceResultCard({ view, onRematch, onGarage }: RaceResultCardProp
         data-testid="race-result"
       >
         <h2 className={won ? styles.win : styles.lose}>{headline(result)}</h2>
+        {[result.player, result.opponent].map((r, i) => {
+          const note = falseStartNote(r);
+          return (
+            note && (
+              <p key={i} className={styles.foulNote} data-testid="false-start-note">
+                {i === 0 ? '你' : '對手'}：{note}
+              </p>
+            )
+          );
+        })}
         {result.marginS !== null && (
           <p className={styles.margin}>差距 {result.marginS.toFixed(3)} 秒</p>
         )}
@@ -55,7 +82,8 @@ export function RaceResultCard({ view, onRematch, onGarage }: RaceResultCardProp
           <thead>
             <tr>
               <th />
-              <th scope="col">反應</th>
+              <th scope="col">起步反應</th>
+              <th scope="col">RT</th>
               <th scope="col">ET</th>
               <th scope="col">總時間</th>
               <th scope="col">終點速度</th>
@@ -67,7 +95,8 @@ export function RaceResultCard({ view, onRematch, onGarage }: RaceResultCardProp
           </tbody>
         </table>
         <p className={styles.legend}>
-          反應：綠燈到起步；ET：起步到終點；總時間 = 反應 + ET，決定勝負。
+          起步反應：綠燈到你放煞車／放離合催油（低於 {MIN_HUMAN_REACTION_S}{' '}
+          秒視為預判搶跑）；RT：綠燈到車輪離開起跑光束；ET：光束到終點；總時間 = RT + ET，決定勝負。
         </p>
         <div className={styles.resultActions}>
           <button type="button" className={styles.secondary} onClick={onGarage}>

@@ -1,4 +1,5 @@
 import type { RiderSkill } from '../race/opponent';
+import { humanReaction } from '../race/reaction';
 import type { SimInput } from '../simulation/types';
 import { clamp, STANDARD_GRAVITY } from '../units';
 import { MAX_BRAKE_DECEL_MPS2 } from '../vehicle/dynamics';
@@ -21,9 +22,9 @@ export interface CircuitSkill {
 }
 
 export const CIRCUIT_SKILLS: Readonly<Record<RiderSkill, CircuitSkill>> = {
-  novice: { cornerGripUse: 0.62, brakeGripUse: 0.5, reactionS: 0.6 },
-  average: { cornerGripUse: 0.78, brakeGripUse: 0.68, reactionS: 0.35 },
-  pro: { cornerGripUse: 0.92, brakeGripUse: 0.9, reactionS: 0.2 },
+  novice: { cornerGripUse: 0.62, brakeGripUse: 0.5, reactionS: 0.27 },
+  average: { cornerGripUse: 0.78, brakeGripUse: 0.68, reactionS: 0.21 },
+  pro: { cornerGripUse: 0.92, brakeGripUse: 0.9, reactionS: 0.16 },
 };
 
 /** Grid-mates at one level aren't clones: each gets a small nudge in pace. */
@@ -35,7 +36,7 @@ export function riderSkill(base: CircuitSkill, index: number): CircuitSkill {
   return {
     cornerGripUse: Math.min(MAX_GRIP_USE, base.cornerGripUse + k),
     brakeGripUse: Math.min(MAX_GRIP_USE, base.brakeGripUse + k),
-    reactionS: Math.max(0.1, base.reactionS - k * 3),
+    reactionS: humanReaction(base.reactionS - k),
   };
 }
 

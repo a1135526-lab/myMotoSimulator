@@ -22,6 +22,7 @@ function useCircuitConfig(): CircuitConfig {
   const assist = useRaceStore((s) => s.assist);
   const brakeAssist = useRaceStore((s) => s.brakeAssist);
   const autoShift = useRaceStore((s) => s.autoShift);
+  const autoClutch = useRaceStore((s) => s.autoClutch);
   const opponent = useRaceStore((s) => s.opponent);
 
   return useMemo(() => {
@@ -44,8 +45,20 @@ function useCircuitConfig(): CircuitConfig {
       assist,
       brakeAssist,
       autoShift,
+      autoClutch,
     };
-  }, [bike, selection, circuitId, laps, count, assist, brakeAssist, autoShift, opponent]);
+  }, [
+    bike,
+    selection,
+    circuitId,
+    laps,
+    count,
+    assist,
+    brakeAssist,
+    autoShift,
+    autoClutch,
+    opponent,
+  ]);
 }
 
 export function CircuitProvider({ children }: { children: ReactNode }) {

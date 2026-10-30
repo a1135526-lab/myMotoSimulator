@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { CameraMode, CircuitView } from '@/application';
+import { MIN_HUMAN_REACTION_S, type CameraMode, type CircuitView } from '@/application';
 import { CircuitMap } from './CircuitMap';
 import { fmtLap } from './format';
 import { Cluster } from './hud/Cluster';
@@ -14,8 +14,10 @@ const PERCENT = 100;
 
 const HINTS: Partial<Record<CircuitView['phase'], string>> = {
   grid: '在起跑格上 · 按 Space 開始亮燈',
-  lights: '紅燈全亮後熄滅即起跑',
+  lights: '按住 ↓ 煞車（可同時催油）· 紅燈熄滅後放開起跑',
 };
+/** How long the reaction time stays up after the start, s. */
+const REACTION_SHOW_S = 3;
 
 type Alert = { text: string; tone: 'info' | 'warn' | 'danger' };
 
@@ -24,7 +26,20 @@ function alertFor(view: CircuitView): Alert | null {
   if (!me) return null;
   if (me.crashed) return { text: '摔車！稍後回到賽道', tone: 'danger' };
   if (!me.engineRunning) return { text: '熄火 · 空檔或拉離合後按 Enter', tone: 'warn' };
+  const { penaltyLeftS, reactionS, jumpStart } = view.player;
+  if (penaltyLeftS !== null) {
+    const why =
+      reactionS !== null && reactionS >= 0
+        ? `反應 ${reactionS.toFixed(3)} 秒，快於人體極限 ${MIN_HUMAN_REACTION_S} 秒`
+        : '紅燈熄滅前起步';
+    return { text: `偷跑！${why} · 罰停 ${penaltyLeftS.toFixed(1)} 秒`, tone: 'danger' };
+  }
   if (view.player.offTrack) return { text: '衝出賽道', tone: 'danger' };
+  if (view.phase === 'racing' && !jumpStart && reactionS !== null) {
+    if (view.raceTimeS < reactionS + REACTION_SHOW_S) {
+      return { text: `起步反應 ${reactionS.toFixed(3)} 秒`, tone: 'info' };
+    }
+  }
   const hint = HINTS[view.phase];
   return hint ? { text: hint, tone: 'info' } : null;
 }
@@ -117,11 +132,15 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
 
       <div className={styles.bottomRight}>
         <Cluster
-          speedKmh={me.speedKmh}
-          rpm={me.rpm}
-          redlineRpm={me.redlineRpm}
-          revLimiter={me.revLimiter}
-          gearLabel={player.gearLabel}
+          dash={view.dash}
+          readings={{
+            speedKmh: me.speedKmh,
+            rpm: me.rpm,
+            gearLabel: player.gearLabel,
+            engineRunning: me.engineRunning,
+            revLimiter: me.revLimiter,
+            tripKm: Math.max(0, me.progressM) / 1000,
+          }}
           throttle={player.throttlePct / PERCENT}
           brake={player.brakePct / PERCENT}
         />

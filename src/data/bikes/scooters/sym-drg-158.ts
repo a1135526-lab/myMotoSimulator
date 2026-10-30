@@ -14,6 +14,7 @@ export const SYM_DRG_158: ScooterSpec = {
   licenseClass: 'white',
   brand: 'SYM',
   model: 'DRGBT 158',
+  cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#ff4a3d' },
   modelYear: 2026,
   engine: {
     displacementCc: 158,

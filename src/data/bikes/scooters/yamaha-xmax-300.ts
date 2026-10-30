@@ -14,6 +14,7 @@ export const YAMAHA_XMAX_300: ScooterSpec = {
   licenseClass: 'yellow',
   brand: 'Yamaha',
   model: 'XMAX 300',
+  cluster: { layout: 'twin-analog', accent: '#e9eef5', speedMaxKmh: 160 },
   engine: {
     displacementCc: 292,
     cylinders: 1,

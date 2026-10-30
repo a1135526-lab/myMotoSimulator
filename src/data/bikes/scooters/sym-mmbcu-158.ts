@@ -14,6 +14,7 @@ export const SYM_MMBCU_158: ScooterSpec = {
   licenseClass: 'white',
   brand: 'SYM',
   model: 'MMBCU 158',
+  cluster: { layout: 'round-lcd', lcd: 'positive', accent: '#f3c46e' },
   modelYear: 2026,
   engine: {
     displacementCc: 158,

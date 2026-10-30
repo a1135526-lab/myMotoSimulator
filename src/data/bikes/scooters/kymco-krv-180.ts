@@ -17,6 +17,7 @@ export const KYMCO_KRV_180: ScooterSpec = {
   licenseClass: 'white',
   brand: 'Kymco',
   model: 'KRV 180 TCS',
+  cluster: { layout: 'tft', accent: '#19d3c5' },
   engine: {
     displacementCc: 175.1,
     cylinders: 1,

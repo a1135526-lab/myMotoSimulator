@@ -14,6 +14,7 @@ export const YAMAHA_CYGNUS_X_125: ScooterSpec = {
   licenseClass: 'white',
   brand: 'Yamaha',
   model: '勁戰七代 Cygnus X 125',
+  cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#4fc3ff' },
   modelYear: 2026,
   engine: {
     displacementCc: 125,

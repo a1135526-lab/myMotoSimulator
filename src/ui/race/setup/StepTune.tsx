@@ -5,6 +5,7 @@ import {
   useConfigStore,
   useCurrentBike,
   useGarageEstimate,
+  useRaceStore,
   type TuneLevel,
 } from '@/application';
 import { PartsPanel } from '../../components/config/PartsPanel';
@@ -35,6 +36,41 @@ function Delta({ before, after, unit, lowerIsBetter }: DeltaProps) {
         </small>
       )}
     </span>
+  );
+}
+
+/** Manual bikes: who works the clutch lever. */
+function ClutchMode() {
+  const autoClutch = useRaceStore((s) => s.autoClutch);
+  const setAutoClutch = useRaceStore((s) => s.setAutoClutch);
+  const modes = [
+    {
+      auto: true,
+      label: '自動半離合',
+      note: '只管換檔：起步自動半離合、停車不熄火；按住 ↓+↑ 原地拉轉速',
+    },
+    { auto: false, label: '全手動離合', note: 'Shift 拉離合、自己控制半離合，放太快會熄火' },
+  ];
+  return (
+    <div>
+      <h3 className={styles.sectionTitle}>離合器</h3>
+      <div className={styles.presetRow} role="radiogroup" aria-label="離合器模式">
+        {modes.map((m) => (
+          <button
+            key={m.label}
+            type="button"
+            role="radio"
+            aria-checked={autoClutch === m.auto}
+            className={autoClutch === m.auto ? styles.presetActive : styles.presetCard}
+            onClick={() => setAutoClutch(m.auto)}
+            data-testid={m.auto ? 'clutch-auto' : 'clutch-manual'}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+      <p className={styles.hint}>{modes.find((m) => m.auto === autoClutch)?.note}</p>
+    </div>
   );
 }
 
@@ -76,6 +112,7 @@ export function StepTune() {
           {detailed ? '收起詳細調校 ▲' : '展開詳細調校（普利珠、彈簧、ECU…）▼'}
         </button>
         {detailed && <PartsPanel />}
+        {bike.kind === 'manual' && <ClutchMode />}
       </div>
 
       <aside className={styles.estimate} aria-label="預估成績" data-testid="tune-estimate">

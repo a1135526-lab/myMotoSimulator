@@ -14,6 +14,7 @@ export const KAWASAKI_Z900: ManualSpec = {
   licenseClass: 'red',
   brand: 'Kawasaki',
   model: 'Z900',
+  cluster: { layout: 'tft', accent: '#7ee03a' },
   modelYear: 2023,
   engine: {
     displacementCc: 948,

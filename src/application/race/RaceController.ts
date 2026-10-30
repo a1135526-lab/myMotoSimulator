@@ -2,6 +2,7 @@ import {
   advanceRace,
   buildModel,
   createRace,
+  humanReaction,
   shiftPlayer,
   SKILLS,
   startCountdown,
@@ -66,8 +67,7 @@ export class RaceController {
     this.race = createRace(this.models, {
       settings,
       opponentSkill: skill,
-      opponentReactionS: Math.max(
-        0.1,
+      opponentReactionS: humanReaction(
         skill.reactionS + (this.random() * 2 - 1) * skill.reactionJitterS,
       ),
       stageDelayS: lo + this.random() * (hi - lo),

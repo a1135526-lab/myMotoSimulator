@@ -14,6 +14,7 @@ export const KAWASAKI_NINJA_400: ManualSpec = {
   licenseClass: 'yellow',
   brand: 'Kawasaki',
   model: 'Ninja 400',
+  cluster: { layout: 'analog-lcd', lcd: 'positive', accent: '#a6e36b' },
   engine: {
     displacementCc: 399,
     cylinders: 2,

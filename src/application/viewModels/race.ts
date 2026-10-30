@@ -9,6 +9,7 @@ import {
   type RaceState,
   type TreeLights,
 } from '@/domain';
+import { dashboardModel, type DashboardModel } from './dashboard';
 import { gearLabelOf } from './telemetry';
 
 const PERCENT = 100;
@@ -27,6 +28,7 @@ export interface RacerView {
   readonly manual: boolean;
   readonly cylinders: number;
   readonly finished: boolean;
+  readonly dash: DashboardModel;
 }
 
 export interface RaceView {
@@ -37,6 +39,8 @@ export interface RaceView {
   readonly distanceM: number;
   /** Seconds since green (negative before). */
   readonly raceTimeS: number;
+  /** Green → the player's launch, s; null until they go. */
+  readonly playerReactionS: number | null;
   readonly player: RacerView;
   readonly opponent: RacerView;
   /** + = player ahead. */
@@ -62,6 +66,7 @@ function racerView(racer: RacerState, models: RaceModels, side: keyof RaceModels
     manual: bike.kind === 'manual',
     cylinders: bike.engine.cylinders,
     finished: racer.finishedAtS !== null,
+    dash: dashboardModel(bike, model.engine.revLimitRpm),
   };
 }
 
@@ -75,6 +80,8 @@ export function toRaceView(race: RaceState, models: RaceModels): RaceView {
     redLights: { player: race.player.falseStart, opponent: race.opponent.falseStart },
     distanceM: race.settings.distanceM,
     raceTimeS: race.clockS - race.tree.greenAtS,
+    playerReactionS:
+      race.player.launchAtS === null ? null : race.player.launchAtS - race.tree.greenAtS,
     player: racerView(race.player, models, 'player'),
     opponent: racerView(race.opponent, models, 'opponent'),
     gapM: race.player.sim.distanceM - race.opponent.sim.distanceM,

@@ -1,9 +1,10 @@
-import type { RacerView, RaceView } from '@/application';
+import type { RaceView } from '@/application';
+import { BikeDashboard } from '../components/dashboard/BikeDashboard';
 import styles from './race.module.css';
 
 const PHASE_HINT: Record<RaceView['phase'], string> = {
   staged: '已就位。按 Space 開始倒數',
-  countdown: '注意燈號…',
+  countdown: '注意燈號… 第一顆黃燈起自己按住車（↓ 煞車或拉離合），綠燈再起步',
   racing: '',
   finished: '',
 };
@@ -23,17 +24,6 @@ function Tree({ view }: { view: RaceView }) {
   );
 }
 
-function RpmBar({ racer }: { racer: RacerView }) {
-  const pct = Math.min(100, (racer.rpm / (racer.redlineRpm * 1.08)) * 100);
-  const red = racer.rpm >= racer.redlineRpm * 0.93;
-  return (
-    <div className={styles.rpmBar}>
-      <div className={red ? styles.rpmFillRed : styles.rpmFill} style={{ width: `${pct}%` }} />
-      <span className="tabular">{Math.round(racer.rpm).toLocaleString('en-US')} rpm</span>
-    </div>
-  );
-}
-
 function Progress({ view }: { view: RaceView }) {
   const pos = (m: number) => `${Math.min(100, (m / view.distanceM) * 100)}%`;
   return (
@@ -47,7 +37,14 @@ function Progress({ view }: { view: RaceView }) {
 export function RaceHud({ view }: { view: RaceView }) {
   const { player, phase } = view;
   const gap = view.gapM;
-  const hint = !player.engineRunning ? '熄火！空檔或拉離合後按 Enter 發動' : PHASE_HINT[phase];
+  const reaction = view.playerReactionS;
+  const hint = !player.engineRunning
+    ? '熄火！空檔或拉離合後按 Enter 發動'
+    : view.redLights.player
+      ? '搶跑！紅燈犯規'
+      : phase === 'racing' && reaction !== null
+        ? `起步反應 ${reaction.toFixed(3)} 秒`
+        : PHASE_HINT[phase];
   return (
     <div className={styles.hud}>
       <div className={styles.hudTop}>
@@ -69,18 +66,21 @@ export function RaceHud({ view }: { view: RaceView }) {
         </div>
       </div>
       <div className={styles.hudBottom}>
-        {player.gearLabel !== null && (
-          <span className={styles.gear} data-testid="race-gear">
-            {player.gearLabel}
-          </span>
-        )}
-        <div className={styles.speed}>
-          <strong className="tabular" data-testid="race-speed">
-            {Math.floor(player.speedKmh)}
-          </strong>
-          <small>km/h</small>
+        <div className={styles.dashSlot} data-layout={player.dash.layout}>
+          <BikeDashboard
+            model={player.dash}
+            readings={{
+              speedKmh: player.speedKmh,
+              rpm: player.rpm,
+              gearLabel: player.gearLabel,
+              engineRunning: player.engineRunning,
+              revLimiter: player.revLimiter,
+              tripKm: player.distanceM / 1000,
+            }}
+            speedTestId="race-speed"
+            gearTestId="race-gear"
+          />
         </div>
-        <RpmBar racer={player} />
         <span className={`${styles.remaining} tabular`}>
           {Math.max(0, view.distanceM - player.distanceM).toFixed(0)} m
         </span>

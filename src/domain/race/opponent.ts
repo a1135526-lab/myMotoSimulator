@@ -10,7 +10,10 @@ import type { SimInput, SimState } from '../simulation/types';
 export type RiderSkill = 'novice' | 'average' | 'pro';
 
 export interface SkillProfile {
-  /** Mean reaction to green, s. */
+  /**
+   * Mean reaction to green, s. Real people: ~0.25 s untrained, ~0.2 s for a
+   * club racer, ~0.15 s for a sharp pro. Never under the 0.1 s human limit.
+   */
   readonly reactionS: number;
   /** ± random spread around the mean, s (applied by the caller). */
   readonly reactionJitterS: number;
@@ -28,22 +31,22 @@ export interface SkillProfile {
 
 export const SKILLS: Readonly<Record<RiderSkill, SkillProfile>> = {
   novice: {
-    reactionS: 0.55,
-    reactionJitterS: 0.15,
+    reactionS: 0.27,
+    reactionJitterS: 0.05,
     clutchReleaseS: 1.4,
     shiftStyle: 'early',
     launchRpmFactor: 0.7,
   },
   average: {
-    reactionS: 0.32,
-    reactionJitterS: 0.08,
+    reactionS: 0.21,
+    reactionJitterS: 0.035,
     clutchReleaseS: 1.0,
     shiftStyle: 'limiter',
     launchRpmFactor: 0.9,
   },
   pro: {
-    reactionS: 0.18,
-    reactionJitterS: 0.04,
+    reactionS: 0.16,
+    reactionJitterS: 0.02,
     clutchReleaseS: 0.75,
     shiftStyle: 'optimal',
     launchRpmFactor: 1,

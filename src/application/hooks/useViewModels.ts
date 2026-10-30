@@ -5,6 +5,7 @@ import { useConfigStore } from '../stores/configStore';
 import { usePresetStore } from '../stores/presetStore';
 import { useSimStore } from '../stores/simStore';
 import { useUiStore } from '../stores/uiStore';
+import { dashboardModel } from '../viewModels/dashboard';
 import { toChassisRows, toEngineRows, toSummary, type LabelledRun } from '../viewModels/dynoCharts';
 import { speedoMaxFor, toGaugeScale, toTelemetryView, toTimerView } from '../viewModels/telemetry';
 import { buildSimConfig, useSimConfig, useStockSimConfig } from './useSimConfig';
@@ -65,4 +66,10 @@ export function useGaugeScale() {
 
 export function useBikeId() {
   return useConfigStore((s) => s.bikeId);
+}
+
+/** The current bike's instrument cluster, redline from the (tuned) rev limit. */
+export function useDashboardModel() {
+  const config = useSimConfig();
+  return useMemo(() => dashboardModel(config.bike, config.tune.ecu.revLimitRpm), [config]);
 }

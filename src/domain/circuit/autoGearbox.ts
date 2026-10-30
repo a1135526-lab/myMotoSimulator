@@ -15,13 +15,20 @@ const LAUNCH_SPEED_MPS = 4;
 const STALL_GUARD = 1.5;
 const DOWNSHIFT_RPM_SHARE = 0.5;
 const DOWNSHIFT_HEADROOM_RPM = 800;
+const BRAKE_HOLD = 0.5;
+const STANDSTILL_MPS = 0.5;
 
 export interface GearboxDecision {
   readonly clutchLever: number;
   readonly shift: -1 | 0 | 1;
 }
 
-export function autoGearbox(model: SimModel, sim: SimState, throttle: number): GearboxDecision {
+export function autoGearbox(
+  model: SimModel,
+  sim: SimState,
+  throttle: number,
+  brake = 0,
+): GearboxDecision {
   const d = model.drivetrain;
   if (d.kind !== 'manual') return { clutchLever: 0, shift: 0 };
   const gear = sim.gear ?? 0;
@@ -31,6 +38,8 @@ export function autoGearbox(model: SimModel, sim: SimState, throttle: number): G
   const rpm = sim.engineRpm;
 
   if (gear === 1 && sim.speedMps < LAUNCH_SPEED_MPS) {
+    // Holding the bike on the brake: clutch out so the engine revs freely.
+    if (brake >= BRAKE_HOLD && sim.speedMps < STANDSTILL_MPS) return { clutchLever: 1, shift: 0 };
     const bite = idle * STALL_GUARD;
     const lever =
       rpm <= bite ? 1 : Math.max(0, Math.min(1, 1 - (rpm - bite) / (d.launchRpm - bite)));

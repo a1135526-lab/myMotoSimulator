@@ -41,6 +41,8 @@ interface RaceStoreState {
   readonly assist: boolean;
   readonly brakeAssist: boolean;
   readonly autoShift: boolean;
+  /** Manual bikes: automatic half-clutch, or the rider works the lever. */
+  readonly autoClutch: boolean;
   readonly trackId: string;
   /** Distance for the custom track; fixed tracks use their own. */
   readonly customDistanceM: number;
@@ -57,6 +59,7 @@ interface RaceStoreState {
   setAssist(on: boolean): void;
   setBrakeAssist(on: boolean): void;
   setAutoShift(on: boolean): void;
+  setAutoClutch(on: boolean): void;
   setTrack(id: string): void;
   setCustomDistance(m: number): void;
   setTreeMode(mode: TreeMode): void;
@@ -73,6 +76,7 @@ export const useRaceStore = create<RaceStoreState>()((set) => ({
   assist: true,
   brakeAssist: true,
   autoShift: true,
+  autoClutch: true,
   trackId: DEFAULT_TRACK_ID,
   customDistanceM: 402,
   treeMode: 'sportsman',
@@ -88,6 +92,7 @@ export const useRaceStore = create<RaceStoreState>()((set) => ({
   setAssist: (assist) => set({ assist }),
   setBrakeAssist: (brakeAssist) => set({ brakeAssist }),
   setAutoShift: (autoShift) => set({ autoShift }),
+  setAutoClutch: (autoClutch) => set({ autoClutch }),
   setCustomDistance: (m) =>
     set({ customDistanceM: Math.round(clamp(m, MIN_RACE_DISTANCE_M, MAX_RACE_DISTANCE_M)) }),
   setTreeMode: (treeMode) => set({ treeMode }),

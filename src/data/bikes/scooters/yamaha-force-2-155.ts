@@ -17,6 +17,7 @@ export const YAMAHA_FORCE_2_155: ScooterSpec = {
   licenseClass: 'white',
   brand: 'Yamaha',
   model: 'Force 2.0 155',
+  cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#3d8bff' },
   modelYear: 2022,
   engine: {
     displacementCc: 155,

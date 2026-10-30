@@ -1,4 +1,5 @@
 import { shiftGear, startEngine } from '../simulation/controls';
+import { isJumpStart, launchIntent } from '../race/reaction';
 import { MAX_STEPS_PER_ADVANCE } from '../simulation/fixedStep';
 import { shapeInput } from '../simulation/inputShaping';
 import type { SimModel } from '../simulation/model';
@@ -27,6 +28,9 @@ import {
  * Multi-lap circuit race: the player plus AI riders, MotoGP-style start.
  *   grid     → waiting for the player; everyone held on the brakes.
  *   lights   → five reds come on one per second, then go out after a random hold.
+ *              From the first red the player holds their own bike: launching before the
+ *              lights go out, or within a human reaction time of it, is a jump
+ *              start, served as a stop on the grid (JUMP_START_PENALTY_S).
  *   racing   → until the player completes the laps.
  *   finished → player done; AI keep riding briefly to settle the order.
  */
@@ -40,6 +44,8 @@ export const STEER_RETURN_PER_S = 8;
 const GRID_ROW_M = 9;
 const GRID_SIDE_M = 2.6;
 const FINISH_GRACE_S = 25;
+/** Held on the spot for this long after the lights go out, for a jump start. */
+export const JUMP_START_PENALTY_S = 3;
 
 export interface CircuitSettings {
   readonly laps: number;
@@ -48,6 +54,8 @@ export interface CircuitSettings {
   /** Player aid: brake for corners automatically when too fast. */
   readonly brakeAssist: boolean;
   readonly autoShift: boolean;
+  /** Manual bikes without auto shift: the clutch slips and bites by itself. */
+  readonly autoClutch?: boolean;
 }
 
 export interface AiSlot {
@@ -69,6 +77,10 @@ export interface CircuitRaceState {
   readonly steer: number;
   /** Player's shaped (ramped) controls, before aids and grip limits. */
   readonly playerInput: SimInput;
+  /** Race-clock time the player first asked to go, once the lights started. */
+  readonly playerLaunchAtS: number | null;
+  /** Player jumped the start: held until this race-clock time. */
+  readonly penaltyUntilS: number | null;
   readonly accumulatorS: number;
 }
 
@@ -106,6 +118,8 @@ export function createCircuitRace(
       : null,
     steer: 0,
     playerInput: { throttle: 0, brake: 0, clutchLever: 0 },
+    playerLaunchAtS: null,
+    penaltyUntilS: null,
     accumulatorS: 0,
   };
 }
@@ -181,8 +195,10 @@ export function stepCircuitRace(
     if (!model) return rider;
     const ctx = context(timed, geo, model);
     if (i === 0) {
-      // Held on the brake until the lights go out; the player can still rev.
-      if (!go) return stepRider(ctx, rider, { ...playerInput, brake: 1 }, 0);
+      // Held on the brake on the grid and while serving a penalty; the player can still rev.
+      const held = !judging(race) || (race.penaltyUntilS !== null && clockS < race.penaltyUntilS);
+      if (held) return stepRider(ctx, rider, { ...playerInput, brake: 1 }, 0);
+      if (!go) return stepRider(ctx, rider, playerInput, 0);
       const input = race.assistProfile
         ? brakeAssist(geo, race.assistProfile, rider.lat.s, rider.sim.speedMps, playerInput)
         : playerInput;
@@ -204,8 +220,30 @@ export function stepCircuitRace(
     return stepRider({ ...ctx, assist: true, autoShift: true }, rider, ai.input, ai.steer);
   });
 
-  const next = { ...timed, riders };
+  const next = { ...timed, riders, ...judgeStart(race, playerInput, clockS) };
   return { ...next, phase: nextPhase(next) };
+}
+
+/** The start is judged from the first red light; until then the bike is held for the rider. */
+const judging = (race: CircuitRaceState) =>
+  race.phase !== 'grid' && race.clockS >= LIGHT_INTERVAL_S;
+
+/** Note the player's launch once the lights are on; too early earns a stop on the grid. */
+function judgeStart(
+  race: CircuitRaceState,
+  playerInput: SimInput,
+  clockS: number,
+): Pick<CircuitRaceState, 'playerLaunchAtS' | 'penaltyUntilS'> {
+  const player = race.riders[0];
+  const unchanged = { playerLaunchAtS: race.playerLaunchAtS, penaltyUntilS: race.penaltyUntilS };
+  if (!judging(race) || race.playerLaunchAtS !== null || !player) return unchanged;
+  if (!launchIntent(playerInput, player.sim)) return unchanged;
+  return {
+    playerLaunchAtS: clockS,
+    penaltyUntilS: isJumpStart(clockS, race.lightsOutAtS)
+      ? race.lightsOutAtS + JUMP_START_PENALTY_S
+      : null,
+  };
 }
 
 const approach = (value: number, target: number, dt: number) => {

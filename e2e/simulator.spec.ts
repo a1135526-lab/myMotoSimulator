@@ -1,9 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const speed = async (page: Page) =>
-  Number(await page.getByTestId('speedometer').getAttribute('data-value'));
+  Number(await page.getByTestId('dashboard').getAttribute('data-speed'));
 const rpm = async (page: Page) =>
-  Number(await page.getByTestId('tachometer').getAttribute('data-value'));
+  Number(await page.getByTestId('dashboard').getAttribute('data-rpm'));
 
 test.describe('desktop keyboard', () => {
   test.skip(({ isMobile }) => isMobile, 'keyboard flow');
@@ -141,9 +141,12 @@ test.describe('drag race', () => {
   test('garage → stage → tree → launch on green → result', async ({ page }) => {
     await enterRace(page, 201);
     await page.keyboard.press('Space');
-    await expect(page.getByTestId('race-hint')).toHaveText('注意燈號…');
+    await expect(page.getByTestId('race-hint')).toContainText('注意燈號');
     await expect(page.getByTestId('race-hint')).toHaveCount(0, { timeout: 6000 });
+    // React like a person: under 0.1 s after green counts as a jump start.
+    await page.waitForTimeout(300);
     await page.keyboard.down('ArrowUp');
+    await expect(page.getByTestId('race-hint')).toContainText('起步反應');
 
     await expect(page.getByTestId('race-result')).toBeVisible({ timeout: 30_000 });
     await page.keyboard.up('ArrowUp');
@@ -181,7 +184,9 @@ test.describe('circuit race', () => {
 
     await page.keyboard.press('Space');
     await expect(page.getByTestId('circuit-hint')).toHaveCount(0, { timeout: 12_000 });
+    await page.waitForTimeout(300);
     await page.keyboard.down('ArrowUp');
+    await expect(page.getByTestId('circuit-hint')).toContainText('起步反應');
     const speed = async () => Number(await page.getByTestId('circuit-speed').textContent());
     await expect.poll(speed, { timeout: 10_000 }).toBeGreaterThan(40);
 
@@ -196,6 +201,23 @@ test.describe('circuit race', () => {
       })
       .not.toBe('壓車角 0 度');
     await page.keyboard.up('ArrowLeft');
+    await page.keyboard.up('ArrowUp');
+  });
+
+  test('going under the red lights is a jump start, served on the grid', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('mode-race').click();
+    await page.getByTestId('discipline-circuit').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
+    await expect(page.getByTestId('circuit-canvas')).toBeVisible();
+    await page.locator('h1').click();
+
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('start-lights')).toHaveAttribute('data-lit', '2', {
+      timeout: 5000,
+    });
+    await page.keyboard.down('ArrowUp');
+    await expect(page.getByTestId('circuit-hint')).toContainText('偷跑', { timeout: 10_000 });
     await page.keyboard.up('ArrowUp');
   });
 });

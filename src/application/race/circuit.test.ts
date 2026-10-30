@@ -22,6 +22,7 @@ const config: CircuitConfig = {
   assist: true,
   brakeAssist: true,
   autoShift: true,
+  autoClutch: true,
 };
 
 function setup() {

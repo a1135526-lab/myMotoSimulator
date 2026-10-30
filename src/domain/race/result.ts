@@ -6,6 +6,8 @@ export type Side = 'player' | 'opponent';
 export interface RacerResult {
   /** Green → leaving the stage beam. Negative on a false start. */
   readonly reactionS: number | null;
+  /** Green → the rider's launch (hands, not wheels). Under 0.1 s is a false start. */
+  readonly launchReactionS: number | null;
   /** Elapsed time: stage beam → finish line. */
   readonly elapsedS: number | null;
   /** Green → finish line (reaction + ET) — what decides the race. */
@@ -28,6 +30,7 @@ export function racerResult(racer: RacerState, greenAtS: number): RacerResult {
   const { leftAtS, finishedAtS } = racer;
   return {
     reactionS: leftAtS === null ? null : leftAtS - greenAtS,
+    launchReactionS: racer.launchAtS === null ? null : racer.launchAtS - greenAtS,
     elapsedS: leftAtS !== null && finishedAtS !== null ? finishedAtS - leftAtS : null,
     totalS: finishedAtS === null ? null : finishedAtS - greenAtS,
     trapSpeedKmh: racer.trapSpeedKmh,

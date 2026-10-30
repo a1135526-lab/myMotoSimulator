@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import {
   useCurrentBike,
+  useDashboardModel,
   readSimulatorSound,
   useGaugeScale,
   useSimulationController,
@@ -15,6 +17,7 @@ import { PartsPanel } from '../components/config/PartsPanel';
 import { SpecSheet } from '../components/config/SpecSheet';
 import { KeyHints } from '../components/controls/KeyHints';
 import { TouchControls } from '../components/controls/TouchControls';
+import { BikeDashboard } from '../components/dashboard/BikeDashboard';
 import { DynoPanel } from '../components/dyno/DynoPanel';
 import { Speedometer } from '../components/gauges/Speedometer';
 import { Tachometer } from '../components/gauges/Tachometer';
@@ -30,6 +33,8 @@ export function SimulatorPage() {
   const scale = useGaugeScale();
   const manual = useCurrentBike().kind === 'manual';
   const stalled = telemetry !== null && !telemetry.engineRunning;
+  const dash = useDashboardModel();
+  const [view, setView] = useState<'stock' | 'dials'>('stock');
   useEngineAudio(readSimulatorSound);
 
   return (
@@ -45,17 +50,56 @@ export function SimulatorPage() {
     >
       <div className={styles.top}>
         <div className={styles.cockpit}>
-          <Panel className={styles.gauges}>
-            <Tachometer
-              rpm={telemetry?.rpm ?? 0}
-              maxRpm={scale.tachMaxRpm}
-              redlineRpm={scale.redlineRpm}
-              revLimiter={telemetry?.revLimiter ?? false}
-              gearLabel={telemetry?.gearLabel ?? null}
-              engineRunning={telemetry?.engineRunning ?? true}
-            />
-            <Speedometer speedKmh={telemetry?.speedKmh ?? 0} maxKmh={scale.speedMaxKmh} />
-          </Panel>
+          <div className={styles.viewSwitch} role="radiogroup" aria-label="儀表顯示">
+            {(
+              [
+                ['stock', '原廠儀表'],
+                ['dials', '分析錶盤'],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                role="radio"
+                aria-checked={view === key}
+                className={view === key ? styles.switchOn : styles.switchOff}
+                onClick={() => setView(key)}
+                data-testid={`gauge-view-${key}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {view === 'stock' ? (
+            <Panel className={styles.dashboard}>
+              <div className={styles.dashSlot} data-layout={dash.layout}>
+                <BikeDashboard
+                  model={dash}
+                  readings={{
+                    speedKmh: telemetry?.speedKmh ?? 0,
+                    rpm: telemetry?.rpm ?? 0,
+                    gearLabel: telemetry?.gearLabel ?? null,
+                    engineRunning: telemetry?.engineRunning ?? true,
+                    revLimiter: telemetry?.revLimiter ?? false,
+                    tripKm: (telemetry?.distanceM ?? 0) / 1000,
+                  }}
+                  gearTestId="gear-indicator"
+                />
+              </div>
+            </Panel>
+          ) : (
+            <Panel className={styles.gauges}>
+              <Tachometer
+                rpm={telemetry?.rpm ?? 0}
+                maxRpm={scale.tachMaxRpm}
+                redlineRpm={scale.redlineRpm}
+                revLimiter={telemetry?.revLimiter ?? false}
+                gearLabel={telemetry?.gearLabel ?? null}
+                engineRunning={telemetry?.engineRunning ?? true}
+              />
+              <Speedometer speedKmh={telemetry?.speedKmh ?? 0} maxKmh={scale.speedMaxKmh} />
+            </Panel>
+          )}
           {stalled && (
             <p className={styles.stallBanner} role="status" data-testid="stall-banner">
               引擎熄火 — 打到空檔（或按住離合）後按 <kbd>Enter</kbd> 發動

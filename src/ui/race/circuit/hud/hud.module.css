@@ -464,154 +464,21 @@
   background: linear-gradient(#7dffaa, #10a845);
 }
 
-.dial {
-  position: relative;
-  width: clamp(170px, 24vw, 280px);
-  padding: 6px 6px 0;
-  border-radius: 50% 50% 22px 22px;
-  background: radial-gradient(circle at 50% 55%, rgb(20 24 30 / 0.85), rgb(8 10 14 / 0.6) 70%);
-  border: 1px solid var(--glass-edge);
-  backdrop-filter: blur(6px);
+.dashSlot {
+  width: clamp(240px, 30vw, 400px);
 }
 
-.dial svg {
-  display: block;
-  width: 100%;
+.dashSlot[data-layout='round-lcd'] {
+  width: clamp(170px, 19vw, 260px);
 }
 
-.dialTrack {
-  fill: none;
-  stroke: rgb(255 255 255 / 0.12);
-  stroke-width: 12;
-}
+@media (max-width: 720px) {
+  .dashSlot {
+    width: min(56vw, 230px);
+  }
 
-.dialRed {
-  fill: none;
-  stroke: var(--led-r);
-  stroke-width: 3;
-}
-
-.dialFill,
-.dialFillRed {
-  fill: none;
-  stroke: var(--hud-accent);
-  stroke-width: 12;
-  filter: drop-shadow(0 0 4px rgb(255 122 26 / 0.8));
-}
-
-.dialFillRed {
-  stroke: var(--led-r);
-  filter: drop-shadow(0 0 6px rgb(255 45 45 / 0.9));
-}
-
-.tick {
-  stroke: rgb(255 255 255 / 0.6);
-  stroke-width: 2;
-}
-
-.tickText,
-.tickRed {
-  fill: rgb(255 255 255 / 0.8);
-  font-size: 12px;
-  font-weight: 600;
-  text-anchor: middle;
-  dominant-baseline: middle;
-}
-
-.tickRed {
-  fill: var(--led-r);
-}
-
-.rpmLabel {
-  font-size: 0.6rem;
-  letter-spacing: 0.15em;
-  opacity: 0.45;
-}
-
-.readout {
-  position: absolute;
-  inset: 34% 0 auto;
-  display: grid;
-  justify-items: center;
-  line-height: 1;
-}
-
-.gearBox {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  background: #0b0d11;
-  place-items: center;
-  min-width: 1.6em;
-  padding: 0 4px;
-  border: 2px solid var(--hud-accent);
-  border-radius: 6px;
-  color: var(--hud-accent);
-  font-size: clamp(1.1rem, 2.4vw, 1.8rem);
-  font-weight: 800;
-}
-
-.speedValue {
-  margin-top: 2px;
-  font-size: clamp(2.4rem, 6vw, 4.4rem);
-  font-weight: 800;
-  font-style: italic;
-  letter-spacing: -0.02em;
-}
-
-.speedUnit {
-  font-size: 0.72rem;
-  letter-spacing: 0.25em;
-  opacity: 0.7;
-}
-
-.leds,
-.ledsFlash {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #050608;
-  border: 1px solid var(--glass-edge);
-}
-
-.led {
-  width: clamp(7px, 1.1vw, 11px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: #1b1d22;
-}
-
-.led[data-on='true'][data-zone='g'] {
-  background: var(--led-g);
-  box-shadow: 0 0 8px var(--led-g);
-}
-
-.led[data-on='true'][data-zone='y'] {
-  background: var(--led-y);
-  box-shadow: 0 0 8px var(--led-y);
-}
-
-.led[data-on='true'][data-zone='r'] {
-  background: var(--led-r);
-  box-shadow: 0 0 8px var(--led-r);
-}
-
-.ledsFlash .led[data-on='true'] {
-  background: var(--led-b);
-  box-shadow: 0 0 10px var(--led-b);
-  animation: blink 0.12s steps(2) infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0.25;
+  .dashSlot[data-layout='round-lcd'] {
+    width: min(40vw, 160px);
   }
 }
 

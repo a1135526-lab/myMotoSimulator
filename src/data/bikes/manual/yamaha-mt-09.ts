@@ -18,6 +18,7 @@ export const YAMAHA_MT_09: ManualSpec = {
   licenseClass: 'red',
   brand: 'Yamaha',
   model: 'MT-09',
+  cluster: { layout: 'tft', accent: '#20b6ff' },
   modelYear: 2024,
   engine: {
     displacementCc: 890,

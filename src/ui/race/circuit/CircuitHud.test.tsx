@@ -41,6 +41,16 @@ const view = (patch: Partial<CircuitView> = {}, driftPct = 0): CircuitView => ({
   },
   runoffM: 20,
   riders: [rider({}), rider({ name: 'Ninja #1', isPlayer: false, position: 1, progressM: 160 })],
+  dash: {
+    layout: 'tft',
+    lcd: 'negative',
+    accent: '#7ee03a',
+    tachMaxRpm: 13000,
+    redlineRpm: 12000,
+    speedMaxKmh: 260,
+    brand: 'Kawasaki',
+    manual: true,
+  },
   player: {
     lap: 2,
     currentLapS: 12.5,
@@ -54,6 +64,9 @@ const view = (patch: Partial<CircuitView> = {}, driftPct = 0): CircuitView => ({
     offTrack: false,
     driftPct,
     gapAheadM: 60,
+    reactionS: 0.21,
+    jumpStart: false,
+    penaltyLeftS: null,
   },
   ...patch,
 });

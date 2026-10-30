@@ -1,3 +1,4 @@
+import { withAutoClutch } from '../simulation/autoClutch';
 import { shiftGear } from '../simulation/controls';
 import type { SimModel } from '../simulation/model';
 import { createInitialState, step } from '../simulation/simulator';
@@ -55,6 +56,8 @@ export interface RiderContext {
   readonly laps: number;
   readonly assist: boolean;
   readonly autoShift: boolean;
+  /** Manual bikes without auto shift: the clutch still slips and bites by itself. */
+  readonly autoClutch?: boolean;
 }
 
 export function createRider(
@@ -149,9 +152,11 @@ export function stepRider(
   let sim = rider.sim;
   let applied = input;
   if (ctx.autoShift) {
-    const box = autoGearbox(ctx.model, sim, input.throttle);
+    const box = autoGearbox(ctx.model, sim, input.throttle, input.brake);
     if (box.shift !== 0) sim = shiftGear(ctx.model, sim, box.shift);
     applied = { ...input, clutchLever: box.clutchLever };
+  } else if (ctx.autoClutch) {
+    applied = withAutoClutch(ctx.model, sim, input);
   }
 
   const grip = gripOn(ctx.limits, rider.surface);

@@ -15,6 +15,7 @@ export const YAMAHA_R15_V4: ManualSpec = {
   licenseClass: 'white',
   brand: 'Yamaha',
   model: 'YZF-R15 V4',
+  cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#3aa0ff' },
   engine: {
     displacementCc: 155,
     cylinders: 1,

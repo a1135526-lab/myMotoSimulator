@@ -124,7 +124,7 @@ export function StepCircuit() {
             checked={autoShift}
             onChange={(e) => setAutoShift(e.target.checked)}
           />
-          自動換檔（打檔車）
+          自動換檔（打檔車，含自動離合；關閉後依「配備」頁的離合器模式）
         </label>
       </div>
     </>

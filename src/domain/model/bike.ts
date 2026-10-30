@@ -120,6 +120,28 @@ export interface GearboxSpec {
 export type LicenseClass = 'white' | 'yellow' | 'red';
 export type BikeKind = 'scooter' | 'manual';
 
+/**
+ * Instrument cluster, so the HUD can look like the bike's real dash.
+ *   lcd-bar     monochrome LCD: segment tach bar across the top, big digits
+ *   round-lcd   round retro LCD with a ring of tach segments
+ *   analog-lcd  needle tachometer with an LCD block for speed and gear
+ *   twin-analog analog speedo and tacho either side of a centre screen
+ *   tft         full-colour screen with a sweeping tach arc
+ */
+export type ClusterLayout = 'lcd-bar' | 'round-lcd' | 'analog-lcd' | 'twin-analog' | 'tft';
+
+export interface ClusterSpec {
+  readonly layout: ClusterLayout;
+  /** LCD polarity: dark segments on a lit panel, or lit segments on black. */
+  readonly lcd?: 'positive' | 'negative';
+  /** Backlight / theme colour, #rrggbb. */
+  readonly accent: string;
+  /** Top of the tach scale, rpm (defaults from the rev limit). */
+  readonly tachMaxRpm?: number;
+  /** Top of an analog speedometer, km/h. */
+  readonly speedMaxKmh?: number;
+}
+
 interface BikeBase {
   /** kebab-case, e.g. "sym-drg-158". */
   readonly id: string;
@@ -130,6 +152,7 @@ interface BikeBase {
   readonly engine: EngineSpec;
   readonly chassis: ChassisSpec;
   readonly referencePerformance?: ReferencePerformance;
+  readonly cluster?: ClusterSpec;
 }
 
 export interface ScooterSpec extends BikeBase {

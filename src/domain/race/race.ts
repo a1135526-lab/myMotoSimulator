@@ -1,4 +1,5 @@
 import { prepareLaunch } from '../dyno/autoRider';
+import { withAutoClutch } from '../simulation/autoClutch';
 import { shiftGear, startEngine } from '../simulation/controls';
 import { MAX_STEPS_PER_ADVANCE } from '../simulation/fixedStep';
 import { shapeInput } from '../simulation/inputShaping';
@@ -6,7 +7,7 @@ import type { SimModel } from '../simulation/model';
 import { createInitialState, step } from '../simulation/simulator';
 import type { ControlCommand, SimInput } from '../simulation/types';
 import { opponentInput, type SkillProfile } from './opponent';
-import { createRacer, updateMarks, type RacerState } from './racer';
+import { createRacer, markLaunch, updateMarks, type RacerState } from './racer';
 import { treeTiming, type TreeMode, type TreeTiming } from './tree';
 
 /**
@@ -14,7 +15,9 @@ import { treeTiming, type TreeMode, type TreeTiming } from './tree';
  *
  *   staged    → both bikes on the line; the player is held on the brake so
  *               they can rev / pick a gear without rolling.
- *   countdown → tree runs; moving past the stage beam now is a false start.
+ *   countdown → tree runs. The bike is held until the first amber; from then on
+ *               the rider holds it, and launching before green — or quicker
+ *               after it than a human can react — is a false start.
  *   racing    → green is on.
  *   finished  → both crossed (or the trailing bike timed out).
  *
@@ -31,6 +34,8 @@ export interface RaceModels {
 export interface RaceSettings {
   readonly distanceM: number;
   readonly treeMode: TreeMode;
+  /** Manual bikes: the clutch slips and bites by itself (see autoClutch.ts). */
+  readonly autoClutch?: boolean;
 }
 
 export interface RaceState {
@@ -114,15 +119,19 @@ export function stepRace(models: RaceModels, race: RaceState, playerInput: SimIn
   const green = race.tree.greenAtS;
 
   // Player
+  const judging = clocked && clock1 >= race.tree.ambersAtS[0];
+  const held = judging ? playerInput : { ...playerInput, ...HOLD_ON_LINE };
   const pIn =
     race.player.finishedAtS !== null
       ? COAST_DOWN
-      : race.phase === 'staged'
-        ? { ...playerInput, ...HOLD_ON_LINE }
-        : playerInput;
+      : race.settings.autoClutch
+        ? withAutoClutch(models.player, race.player.sim, held)
+        : held;
   const pNext = step(models.player, race.player.sim, pIn);
+  // Judge the rider's own hands, not what the auto clutch did with them.
+  const pLaunched = judging ? markLaunch(race.player, playerInput, clock1, green) : race.player;
   const player = clocked
-    ? updateMarks(race.player, race.player.sim, pNext, clock0, clock1, green, distanceM)
+    ? updateMarks(pLaunched, race.player.sim, pNext, clock0, clock1, green, distanceM)
     : { ...race.player, sim: pNext };
 
   // Opponent
@@ -137,8 +146,11 @@ export function stepRace(models: RaceModels, race: RaceState, playerInput: SimIn
     ? shiftGear(models.opponent, race.opponent.sim, ai.shift)
     : race.opponent.sim;
   const oNext = step(models.opponent, oPrev, oIn);
+  const oLaunched = clocked
+    ? markLaunch({ ...race.opponent, sim: oPrev }, oIn, clock1, green)
+    : race.opponent;
   const opponent = clocked
-    ? updateMarks({ ...race.opponent, input: oIn }, oPrev, oNext, clock0, clock1, green, distanceM)
+    ? updateMarks({ ...oLaunched, input: oIn }, oPrev, oNext, clock0, clock1, green, distanceM)
     : { ...race.opponent, sim: oNext, input: oIn };
 
   const next = { ...race, clockS: clock1, player: { ...player, input: playerInput }, opponent };

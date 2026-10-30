@@ -15,6 +15,7 @@ export const YAMAHA_YZF_R3: ManualSpec = {
   licenseClass: 'yellow',
   brand: 'Yamaha',
   model: 'YZF-R3',
+  cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#3aa0ff' },
   engine: {
     displacementCc: 321,
     cylinders: 2,

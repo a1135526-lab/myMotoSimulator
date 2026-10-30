@@ -15,6 +15,7 @@ export const YAMAHA_MT_15: ManualSpec = {
   licenseClass: 'white',
   brand: 'Yamaha',
   model: 'MT-15 V2',
+  cluster: { layout: 'lcd-bar', lcd: 'negative', accent: '#7fd6ff' },
   engine: {
     displacementCc: 155,
     cylinders: 1,

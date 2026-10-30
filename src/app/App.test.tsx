@@ -10,8 +10,12 @@ describe('App (integration)', () => {
 
   it('renders gauges, parts and dyno with stock defaults', () => {
     render(<App />);
+    // The bike's own dash by default (DRG: segment LCD), analysis dials one click away.
+    expect(screen.getByTestId('dashboard')).toHaveAttribute('data-layout', 'lcd-bar');
+    fireEvent.click(screen.getByTestId('gauge-view-dials'));
     expect(screen.getByTestId('tachometer')).toBeInTheDocument();
     expect(screen.getByTestId('speedometer')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('gauge-view-stock'));
     expect(screen.getByTestId('part-ecu')).toHaveValue('stock');
     expect(screen.getByTestId('roller-set')).toHaveValue('18');
     expect(within(screen.getByTestId('dyno-summary')).getByText('原廠')).toBeInTheDocument();
@@ -138,7 +142,7 @@ describe('App (race mode)', () => {
     expect(screen.getByTestId('back-to-garage')).toBeDisabled();
 
     fireEvent.click(screen.getByTestId('mode-simulator'));
-    expect(await screen.findByTestId('tachometer')).toBeInTheDocument();
+    expect(await screen.findByTestId('dashboard')).toBeInTheDocument();
   });
 
   it('steps ahead of the current one are locked', async () => {

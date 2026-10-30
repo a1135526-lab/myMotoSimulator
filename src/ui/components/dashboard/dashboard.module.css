@@ -1,0 +1,119 @@
+.dash {
+  position: relative;
+  width: 100%;
+  line-height: 0;
+  filter: drop-shadow(0 8px 18px rgb(0 0 0 / 45%));
+}
+
+.dash svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Lamps */
+.lampOff {
+  fill: #23272c;
+}
+
+.lampOffText {
+  fill: #23272c;
+  font: 700 12px var(--font-display, sans-serif);
+  text-anchor: middle;
+}
+
+.lampNeutral {
+  fill: #2bff6a;
+  font: 700 12px var(--font-display, sans-serif);
+  text-anchor: middle;
+  filter: drop-shadow(0 0 4px #2bff6a);
+}
+
+.lampShift {
+  fill: #ff3b30;
+  filter: drop-shadow(0 0 6px #ff3b30);
+}
+
+.lampShiftFlash {
+  composes: lampShift;
+  animation: flash 0.12s steps(2, jump-none) infinite;
+}
+
+.lampAmber {
+  fill: #ffb020;
+  filter: drop-shadow(0 0 4px #ffb020);
+}
+
+/* Text on dials and screens */
+.label {
+  font: 600 7px var(--font-display, sans-serif);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dialNum {
+  font: 700 12px var(--font-display, sans-serif);
+  fill: #f3f5f7;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.dialNumRed {
+  composes: dialNum;
+  fill: #ff4b3e;
+}
+
+.scaleNum {
+  font: 600 7px var(--font-display, sans-serif);
+  text-anchor: middle;
+}
+
+.tftSpeed {
+  font: 700 64px var(--font-display, sans-serif);
+  text-anchor: middle;
+  fill: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.tftText {
+  font: 600 11px var(--font-display, sans-serif);
+  fill: #c9d3de;
+  font-variant-numeric: tabular-nums;
+}
+
+.tftGear {
+  font: 700 30px var(--font-display, sans-serif);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.tftFlash {
+  animation: flash 0.12s steps(2, jump-none) infinite;
+}
+
+@keyframes flash {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lampShiftFlash,
+  .tftFlash {
+    animation: none;
+  }
+}

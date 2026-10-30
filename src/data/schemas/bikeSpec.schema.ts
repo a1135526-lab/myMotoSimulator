@@ -75,6 +75,14 @@ const ReferencePerformanceSchema = z.object({
   provenance: ProvenanceSchema,
 });
 
+const ClusterSchema = z.object({
+  layout: z.enum(['lcd-bar', 'round-lcd', 'analog-lcd', 'twin-analog', 'tft']),
+  lcd: z.enum(['positive', 'negative']).optional(),
+  accent: z.string().regex(/^#[0-9a-f]{6}$/i, 'accent must be #rrggbb'),
+  tachMaxRpm: positive().optional(),
+  speedMaxKmh: positive().optional(),
+});
+
 const base = {
   id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'id must be kebab-case'),
   brand: z.string().min(1),
@@ -84,6 +92,7 @@ const base = {
   engine: EngineSchema,
   chassis: ChassisSchema,
   referencePerformance: ReferencePerformanceSchema.optional(),
+  cluster: ClusterSchema.optional(),
 };
 
 type Issue = (path: (string | number)[], message: string) => void;

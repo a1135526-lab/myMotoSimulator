@@ -9,6 +9,7 @@ import {
   type CircuitRider,
   type SimModel,
 } from '@/domain';
+import { dashboardModel, type DashboardModel } from './dashboard';
 import { gearLabelOf } from './telemetry';
 
 const PERCENT = 100;
@@ -58,6 +59,11 @@ export interface CircuitPlayerView {
   readonly driftPct: number;
   /** Race order gap to the rider ahead, m (null when leading). */
   readonly gapAheadM: number | null;
+  /** Lights out → the player's launch, s (negative = went early); null until they go. */
+  readonly reactionS: number | null;
+  readonly jumpStart: boolean;
+  /** Seconds left on a jump-start hold (null when not serving one). */
+  readonly penaltyLeftS: number | null;
 }
 
 export interface CircuitView {
@@ -70,6 +76,8 @@ export interface CircuitView {
   readonly runoffM: number;
   readonly riders: readonly CircuitRiderView[];
   readonly player: CircuitPlayerView;
+  /** The player's instrument cluster. */
+  readonly dash: DashboardModel;
 }
 
 const best = (laps: readonly number[]) => (laps.length ? Math.min(...laps) : null);
@@ -143,6 +151,10 @@ export function toCircuitView(
     geo,
     runoffM: race.settings.limits.runoffM,
     riders,
+    dash: dashboardModel(
+      (models[0] as SimModel).config.bike,
+      (models[0] as SimModel).engine.revLimitRpm,
+    ),
     player: {
       lap: Math.min(race.settings.laps, Math.max(1, p.crossings)),
       currentLapS: p.lapStartedAtS === null ? null : race.clockS - p.lapStartedAtS,
@@ -156,6 +168,12 @@ export function toCircuitView(
       offTrack: p.surface !== 'track',
       driftPct: Math.abs(p.drift) * PERCENT,
       gapAheadM: gapAhead(race.riders, pos),
+      reactionS: race.playerLaunchAtS === null ? null : race.playerLaunchAtS - race.lightsOutAtS,
+      jumpStart: race.penaltyUntilS !== null,
+      penaltyLeftS:
+        race.penaltyUntilS !== null && race.clockS < race.penaltyUntilS
+          ? race.penaltyUntilS - race.clockS
+          : null,
     },
   };
 }
