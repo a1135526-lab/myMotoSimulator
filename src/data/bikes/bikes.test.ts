@@ -25,14 +25,18 @@ const stockConfig = (bike: BikeSpec) => ({
   timestepS: DEFAULT_TIMESTEP_S,
 });
 
-/** Broad sanity bands per plate class: catches broken data, not fine calibration. */
+/**
+ * Broad sanity bands per plate class: catches broken data, not fine calibration.
+ * White tops out at 190 for the 249 cc four-cylinder sports bikes (ZX-25R ≈ 180);
+ * red at 320 for litre superbikes (S 1000 RR ≈ 300).
+ */
 const PLAUSIBLE: Record<
   LicenseClass,
   { topSpeedKmh: [number, number]; zeroTo100mS: [number, number] }
 > = {
-  white: { topSpeedKmh: [85, 150], zeroTo100mS: [6.5, 9.5] },
+  white: { topSpeedKmh: [85, 190], zeroTo100mS: [5.5, 9.5] },
   yellow: { topSpeedKmh: [120, 200], zeroTo100mS: [5, 8] },
-  red: { topSpeedKmh: [140, 260], zeroTo100mS: [4, 7] },
+  red: { topSpeedKmh: [140, 320], zeroTo100mS: [3.5, 7] },
 };
 
 describe('bike registry', () => {

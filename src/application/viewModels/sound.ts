@@ -4,6 +4,7 @@ import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
 import { useCircuitStore } from '../stores/circuitStore';
 import { useSimStore } from '../stores/simStore';
+import { useStreetStore } from '../stores/streetStore';
 
 /** What the audio layer needs to voice one engine. */
 export interface EngineSoundState {
@@ -84,5 +85,20 @@ export function readCircuitSound(): SoundFrame | null {
   return {
     player: { ...voice(player), speedKmh: player.speedKmh },
     ...(rival && { opponent: { ...voice(rival), gapM: rival.progressM - player.progressM } }),
+  };
+}
+
+export function readStreetSound(): SoundFrame | null {
+  const r = useStreetStore.getState().view?.rider;
+  if (!r) return null;
+  return {
+    player: {
+      rpm: r.rpm,
+      throttle: r.throttle,
+      running: r.engineRunning,
+      limiter: r.revLimiter,
+      cylinders: r.cylinders,
+      speedKmh: r.speedKmh,
+    },
   };
 }

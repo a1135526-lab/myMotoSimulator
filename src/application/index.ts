@@ -74,3 +74,15 @@ export { useActiveCircuit, useCircuits, useVenue, type Estimate } from './hooks/
 export { circuitGeometry } from './services/lapService';
 /** Fastest believable reaction to a start light, s (shown in race rules). */
 export { MIN_HUMAN_REACTION_S } from '@/domain';
+export { StreetProvider } from './hooks/StreetProvider';
+export { useStreetController } from './hooks/streetContext';
+export {
+  TIME_OF_DAY_LABELS,
+  TRAFFIC_LABELS,
+  useStreetStore,
+  type TimeOfDay,
+  type TrafficLevel,
+} from './stores/streetStore';
+export { cityMap } from './street/city';
+export { readStreetSound } from './viewModels/sound';
+export type { StreetView, StreetCarView, StreetRiderView } from './viewModels/street';

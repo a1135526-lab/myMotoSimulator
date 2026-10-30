@@ -3,3 +3,4 @@ export * from './bikes';
 export * from './parts';
 export * from './tracks';
 export * from './circuits';
+export * from './cities';

@@ -4,6 +4,7 @@ import styles from './common.module.css';
 const MODES: { id: AppMode; label: string }[] = [
   { id: 'simulator', label: '模擬器' },
   { id: 'race', label: '賽道模式' },
+  { id: 'street', label: '街景模式' },
 ];
 
 export function ModeTabs() {

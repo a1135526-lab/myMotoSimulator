@@ -222,3 +222,26 @@ test.describe('circuit race', () => {
     await page.keyboard.up('ArrowUp');
   });
 });
+
+test.describe('street mode', () => {
+  test.skip(({ isMobile }) => isMobile, 'keyboard flow');
+  test.use({ viewport: { width: 900, height: 700 } });
+  test.setTimeout(180_000);
+
+  test('pick a bike and conditions, ride off into the city', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('mode-street').click();
+    await page.getByTestId('time-dusk').click();
+    await page.getByTestId('traffic-none').click();
+    await page.getByTestId('street-go').click();
+    await expect(page.getByTestId('street-canvas')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('street-district')).not.toBeEmpty({ timeout: 30_000 });
+    await page.locator('h1').click();
+    await page.keyboard.down('ArrowUp');
+    const speed = async () => Number(await page.getByTestId('street-speed').textContent());
+    await expect.poll(speed, { timeout: 30_000 }).toBeGreaterThan(20);
+    await page.keyboard.up('ArrowUp');
+    await page.getByTestId('street-back').click();
+    await expect(page.getByTestId('street-go')).toBeVisible();
+  });
+});

@@ -20,7 +20,7 @@ function saveSound(on: boolean): void {
 }
 
 export type DynoView = 'engine' | 'chassis';
-export type AppMode = 'simulator' | 'race';
+export type AppMode = 'simulator' | 'race' | 'street';
 
 interface UiState {
   readonly mode: AppMode;

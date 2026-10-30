@@ -1,56 +1,6 @@
 import * as THREE from 'three';
 
-/** Low-poly bike + rider, ~2 m long, facing −Z. Wheels spin via `update`. */
-export interface BikeModel {
-  readonly group: THREE.Group;
-  update(distanceM: number, speedMps: number): void;
-}
-
-const WHEEL_RADIUS_M = 0.31;
-
-export function createBikeModel(color: string, scooter: boolean): BikeModel {
-  const group = new THREE.Group();
-  const paint = new THREE.MeshLambertMaterial({ color });
-  const dark = new THREE.MeshLambertMaterial({ color: '#1b1d22' });
-  const skin = new THREE.MeshLambertMaterial({ color: '#2a2f3a' });
-
-  const wheels: THREE.Mesh[] = [];
-  for (const zPos of [-0.7, 0.7]) {
-    const wheel = new THREE.Mesh(
-      new THREE.CylinderGeometry(WHEEL_RADIUS_M, WHEEL_RADIUS_M, 0.16, 18),
-      dark,
-    );
-    wheel.rotation.z = Math.PI / 2;
-    wheel.position.set(0, WHEEL_RADIUS_M, zPos);
-    wheels.push(wheel);
-    group.add(wheel);
-  }
-
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.45, scooter ? 1.3 : 1.1), paint);
-  body.position.set(0, 0.62, scooter ? 0.15 : 0);
-  const nose = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.55, 0.35), paint);
-  nose.position.set(0, scooter ? 0.75 : 0.9, -0.6);
-  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.12, 0.7), dark);
-  seat.position.set(0, scooter ? 0.92 : 0.95, 0.35);
-  group.add(body, nose, seat);
-
-  // Rider: tucked torso, helmet, arms to the bars.
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.6, 0.3), skin);
-  torso.position.set(0, 1.25, 0.25);
-  torso.rotation.x = -0.6;
-  const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 10), paint);
-  helmet.position.set(0, 1.55, -0.05);
-  const legs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.5), skin);
-  legs.position.set(0, 0.95, 0.35);
-  group.add(torso, helmet, legs);
-
-  return {
-    group,
-    update: (distanceM) => {
-      for (const w of wheels) w.rotation.x = -distanceM / WHEEL_RADIUS_M;
-    },
-  };
-}
+export { createBikeModel, type BikeModel } from './bikeModel';
 
 /** First-person handlebars and dash, attached to the camera. */
 export function createCockpit(): THREE.Group {
