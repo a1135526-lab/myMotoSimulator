@@ -2,12 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { MANUAL_TEST_BIKE } from '../../test/fixtures/manualTestBike';
 import { makeConfig } from '../../test/fixtures/simConfig';
 import { TEST_CITY_DATA, TEST_CITY_OPTIONS } from '../../test/fixtures/testCity';
-import type { CircuitCommand } from '../circuit/circuitRace';
 import { buildModel } from '../simulation/model';
 import type { CitySurface } from './city';
 import { buildCity } from './cityBuild';
 import { citySurfaceAt, isSolid } from './cityQueries';
-import { createFreeRider, stepFreeRider, type FreeRideContext } from './freeRide';
+import { createFreeRider, REVERSE_MAX_MPS, stepFreeRider, type FreeRideContext } from './freeRide';
 import {
   advanceStreet,
   clearStreetDestination,
@@ -15,6 +14,7 @@ import {
   resetStreetRider,
   setStreetDestination,
   startStreetEngine,
+  type StreetCommand,
   type StreetSettings,
 } from './streetRide';
 import { createTraffic, hitCar, stepTraffic } from './traffic';
@@ -22,12 +22,13 @@ import { createTraffic, hitCar, stepTraffic } from './traffic';
 const map = buildCity(TEST_CITY_DATA, TEST_CITY_OPTIONS);
 const scooter = buildModel(makeConfig());
 const manual = buildModel(makeConfig((t) => t, MANUAL_TEST_BIKE));
-const idle: CircuitCommand = {
+const idle: StreetCommand = {
   throttlePressed: false,
   brakePressed: false,
   clutchPressed: false,
   steerLeftPressed: false,
   steerRightPressed: false,
+  reversePressed: false,
 };
 const settings: StreetSettings = {
   gripG: 1.05,
@@ -40,7 +41,7 @@ const settings: StreetSettings = {
 const rideFor = (
   model: typeof scooter,
   state: ReturnType<typeof createStreetRide>,
-  command: CircuitCommand,
+  command: StreetCommand,
   seconds: number,
 ) => {
   let s = state;
@@ -93,6 +94,51 @@ describe('free riding', () => {
     const back = stepFreeRider(ctx({ clockS: 10 }), r, r.input, 0, false);
     expect(back.crashedUntilS).toBeNull();
     expect(citySurfaceAt(map, back.x, back.z)).toBe('road');
+  });
+
+  it('paddles backwards at walking pace from a standstill', () => {
+    let s = createStreetRide(map, scooter, settings);
+    const start = s.rider;
+    s = rideFor(scooter, s, { ...idle, reversePressed: true }, 2);
+    expect(s.rider.reverseMps).toBeCloseTo(REVERSE_MAX_MPS, 5);
+    expect(s.rider.sim.speedMps).toBe(0);
+    // Moved against the heading.
+    const back = -(
+      Math.cos(start.heading) * (s.rider.x - start.x) +
+      Math.sin(start.heading) * (s.rider.z - start.z)
+    );
+    expect(back).toBeGreaterThan(0.5);
+    s = rideFor(scooter, s, idle, 1);
+    expect(s.rider.reverseMps).toBe(0);
+  });
+
+  it('turning the bars while reversing swings the heading the other way', () => {
+    const turned = (reversePressed: boolean) => {
+      const s0 = createStreetRide(map, scooter, settings);
+      const command = { ...idle, reversePressed, throttlePressed: !reversePressed };
+      const s = rideFor(
+        scooter,
+        rideFor(scooter, s0, command, 1),
+        {
+          ...command,
+          steerLeftPressed: true,
+        },
+        1,
+      );
+      return s.rider.heading - s0.rider.heading;
+    };
+    expect(turned(false)).toBeLessThan(0);
+    expect(turned(true)).toBeGreaterThan(0);
+  });
+
+  it('reverse does nothing while rolling forwards or on the throttle', () => {
+    let s = createStreetRide(map, scooter, settings);
+    s = rideFor(scooter, s, { ...idle, throttlePressed: true }, 2);
+    s = rideFor(scooter, s, { ...idle, reversePressed: true }, 0.5);
+    expect(s.rider.reverseMps).toBe(0);
+    let still = createStreetRide(map, scooter, settings);
+    still = rideFor(scooter, still, { ...idle, reversePressed: true, throttlePressed: true }, 1);
+    expect(still.rider.reverseMps).toBe(0);
   });
 
   it('tracks trip distance and top speed', () => {

@@ -29,6 +29,7 @@ const view = (
     gearLabel: null,
     engineRunning: true,
     revLimiter: false,
+    reversing: false,
     crashed: false,
     offRoad: false,
     manual: false,

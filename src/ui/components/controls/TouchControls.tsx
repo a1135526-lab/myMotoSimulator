@@ -6,6 +6,8 @@ interface TouchControlsProps {
   manual: boolean;
   /** Circuit racing: add lean-left / lean-right buttons. */
   steering?: boolean;
+  /** Street riding: a hold-to-paddle-backwards button next to the steering. */
+  reverse?: boolean;
   onPress: (control: TouchControl) => void;
   onRelease: (control: TouchControl) => void;
   onReset: () => void;
@@ -17,6 +19,7 @@ interface TouchControlsProps {
 export function TouchControls({
   manual,
   steering = false,
+  reverse = false,
   onPress,
   onRelease,
   onReset,
@@ -53,10 +56,15 @@ export function TouchControls({
         </div>
       )}
       {steering && (
-        <div className={styles.steerRow}>
+        <div className={styles.steerRow} data-reverse={reverse || undefined}>
           <button type="button" className={styles.steer} {...bind('steerLeft')}>
             ◀ 左傾
           </button>
+          {reverse && (
+            <button type="button" className={styles.reverse} {...bind('reverse')}>
+              倒車
+            </button>
+          )}
           <button type="button" className={styles.steer} {...bind('steerRight')}>
             右傾 ▶
           </button>

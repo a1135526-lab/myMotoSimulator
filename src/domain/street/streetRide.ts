@@ -22,6 +22,11 @@ import { createTraffic, hitCar, stepTraffic, type TrafficState } from './traffic
  * A free ride: the player and the city's traffic, stepped together at the
  * physics timestep (traffic every few steps — it only needs to look smooth).
  */
+/** The circuit controls plus a held reverse (paddling backwards). */
+export interface StreetCommand extends CircuitCommand {
+  readonly reversePressed: boolean;
+}
+
 export interface StreetSettings {
   /** Dry tarmac grip, g. */
   readonly gripG: number;
@@ -87,11 +92,19 @@ export function stepStreet(
   state: StreetState,
   input: SimInput,
   steer: number,
+  reverse = false,
 ): StreetState {
   const dt = model.timestepS;
   const timed = { ...state, clockS: state.clockS + dt, steps: state.steps + 1 };
   const ctx = context(map, model, timed);
-  let rider: FreeRider = stepFreeRider(ctx, state.rider, input, steer, wantsDrift(input.brake));
+  let rider: FreeRider = stepFreeRider(
+    ctx,
+    state.rider,
+    input,
+    steer,
+    wantsDrift(input.brake),
+    reverse,
+  );
 
   const traffic =
     timed.steps % TRAFFIC_EVERY === 0
@@ -127,7 +140,7 @@ export function advanceStreet(
   map: CityMap,
   model: SimModel,
   state: StreetState,
-  command: CircuitCommand,
+  command: StreetCommand,
   elapsedS: number,
 ): StreetState {
   const dt = model.timestepS;
@@ -137,7 +150,11 @@ export function advanceStreet(
   while (acc >= dt) {
     const input = shapeInput(current.playerInput, command, dt);
     const steer = approach(current.steer, wanted, dt);
-    current = { ...stepStreet(map, model, current, input, steer), steer, playerInput: input };
+    current = {
+      ...stepStreet(map, model, current, input, steer, command.reversePressed),
+      steer,
+      playerInput: input,
+    };
     acc -= dt;
   }
   return { ...current, accumulatorS: acc };

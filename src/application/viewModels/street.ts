@@ -42,6 +42,8 @@ export interface StreetRiderView {
   readonly gearLabel: string | null;
   readonly engineRunning: boolean;
   readonly revLimiter: boolean;
+  /** Paddling backwards; speedKmh is then the backwards speed. */
+  readonly reversing: boolean;
   readonly crashed: boolean;
   readonly offRoad: boolean;
   readonly manual: boolean;
@@ -108,6 +110,7 @@ function navView(state: StreetState): NavView | null {
 export function toStreetView(state: StreetState, model: SimModel, map: CityMap): StreetView {
   const r = state.rider;
   const bike = model.config.bike;
+  const reversing = r.reverseMps > 0;
   return {
     clockS: state.clockS,
     rider: {
@@ -117,13 +120,14 @@ export function toStreetView(state: StreetState, model: SimModel, map: CityMap):
       lean: r.lean,
       slip: r.drift * DRIFT_SLIP_RAD,
       drift: Math.abs(r.drift),
-      speedKmh: mpsToKmh(r.sim.speedMps),
+      speedKmh: mpsToKmh(reversing ? r.reverseMps : r.sim.speedMps),
       rpm: r.sim.engineRpm,
       throttle: r.sim.throttle,
       brake: r.sim.brake,
-      gearLabel: gearLabelOf(r.sim.gear),
+      gearLabel: reversing ? 'R' : gearLabelOf(r.sim.gear),
       engineRunning: r.sim.engineRunning,
       revLimiter: r.sim.revLimiterActive,
+      reversing,
       crashed: r.crashedUntilS !== null,
       offRoad: r.surface !== 'road',
       manual: bike.kind === 'manual',

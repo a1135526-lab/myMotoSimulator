@@ -1,7 +1,10 @@
-import type { CircuitCommand } from '@/domain';
+import type { StreetCommand } from '@/domain';
 
-/** Everything a device can hold down; steering is only used on circuits. */
-export type InputCommand = CircuitCommand;
+/**
+ * Everything a device can hold down; steering is only used on circuits and
+ * in the city, reverse only in the city.
+ */
+export type InputCommand = StreetCommand;
 
 /** One-shot actions triggered by the rider (not held). */
 export type InputAction =
@@ -23,6 +26,7 @@ export const RELEASED: InputCommand = {
   clutchPressed: false,
   steerLeftPressed: false,
   steerRightPressed: false,
+  reversePressed: false,
 };
 
 /** OR-combines several sources so keyboard and touch work together. */

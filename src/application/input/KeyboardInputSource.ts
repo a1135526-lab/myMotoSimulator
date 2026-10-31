@@ -13,7 +13,8 @@ import {
  *    Enter start, R reset, Space start/timer.
  *  circuit (road racing): ←/→ and A/D steer, so shifting moves to E/Q only;
  *    V switches first / third person.
- *  street (free ride): the circuit keys plus M for the big map.
+ *  street (free ride): the circuit keys plus X (hold) to reverse and M for
+ *    the big map.
  */
 export type KeyLayout = 'standard' | 'circuit' | 'street';
 
@@ -57,8 +58,11 @@ const LAYOUTS: Readonly<Record<KeyLayout, LayoutSpec>> = {
     actions: new Map([...COMMON_ACTIONS, ['ArrowRight', 'shiftUp'], ['ArrowLeft', 'shiftDown']]),
   },
   circuit: { held: CIRCUIT_HELD, actions: new Map(CIRCUIT_ACTIONS) },
-  // The city adds M for the big map.
-  street: { held: CIRCUIT_HELD, actions: new Map([...CIRCUIT_ACTIONS, ['KeyM', 'toggleMap']]) },
+  // The city adds X to paddle backwards and M for the big map.
+  street: {
+    held: new Map([...CIRCUIT_HELD, ['KeyX', 'reversePressed']]),
+    actions: new Map([...CIRCUIT_ACTIONS, ['KeyM', 'toggleMap']]),
+  },
 };
 
 /** Form controls keep their own arrow/space behaviour. */

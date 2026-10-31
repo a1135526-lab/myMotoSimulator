@@ -1,6 +1,6 @@
 import { RELEASED, type InputCommand, type InputSource } from './InputSource';
 
-export type TouchControl = 'throttle' | 'brake' | 'clutch' | 'steerLeft' | 'steerRight';
+export type TouchControl = 'throttle' | 'brake' | 'clutch' | 'steerLeft' | 'steerRight' | 'reverse';
 
 const FIELD: Record<TouchControl, keyof InputCommand> = {
   throttle: 'throttlePressed',
@@ -8,6 +8,7 @@ const FIELD: Record<TouchControl, keyof InputCommand> = {
   clutch: 'clutchPressed',
   steerLeft: 'steerLeftPressed',
   steerRight: 'steerRightPressed',
+  reverse: 'reversePressed',
 };
 
 /** Backs the on-screen buttons; UI calls press/release from pointer events. */

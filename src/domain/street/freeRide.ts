@@ -21,6 +21,9 @@ import { citySurfaceAt, isSolid, nearestRoadPose } from './cityQueries';
  * are the full simulator; turning is by lean, κ = g·tanφ / v², as on the
  * circuit (with no steering assist), plus walking-pace steering and the brake
  * slide. Heading h: forward = (cos h, sin h); a left turn lowers h.
+ *
+ * Reverse is the rider paddling the bike backwards with their feet: only from
+ * a standstill with the throttle shut, at walking pace, outside the engine sim.
  */
 
 /** Grip by surface, as a share of the tarmac's. */
@@ -40,6 +43,15 @@ export const STREET_CRASH_S = 1.5;
 const BUMP_MPS = 2;
 /** Body radius for hitting walls, m. */
 export const RIDER_RADIUS_M = 0.6;
+/** Paddling backwards tops out at a slow walk, m/s (≈ 4 km/h). */
+export const REVERSE_MAX_MPS = 1.1;
+const REVERSE_ACCEL_MPS2 = 1.2;
+/** Feet down when the key is let go; harder with the brake on. */
+const REVERSE_STOP_MPS2 = 3;
+const REVERSE_BRAKE_MPS2 = 8;
+/** Reverse only engages from (nearly) stopped, with the throttle shut. */
+const REVERSE_ENGAGE_MPS = 0.3;
+const REVERSE_MAX_THROTTLE = 0.05;
 
 export interface FreeRider {
   readonly sim: SimState;
@@ -49,6 +61,8 @@ export interface FreeRider {
   readonly heading: number;
   readonly lean: number;
   readonly drift: number;
+  /** Backwards speed while paddling in reverse, m/s (≥ 0). */
+  readonly reverseMps: number;
   readonly surface: CitySurface;
   readonly crashedUntilS: number | null;
   readonly distanceM: number;
@@ -75,6 +89,7 @@ export function createFreeRider(model: SimModel, map: CityMap): FreeRider {
     heading,
     lean: 0,
     drift: 0,
+    reverseMps: 0,
     surface: 'road',
     crashedUntilS: null,
     distanceM: 0,
@@ -102,6 +117,7 @@ export function respawnRider(ctx: FreeRideContext, rider: FreeRider): FreeRider 
     heading: pose.heading,
     lean: 0,
     drift: 0,
+    reverseMps: 0,
     surface: 'road',
     crashedUntilS: null,
   };
@@ -113,6 +129,7 @@ export function crashRider(ctx: FreeRideContext, rider: FreeRider): FreeRider {
     sim: { ...rider.sim, speedMps: 0 },
     lean: 0,
     drift: 0,
+    reverseMps: 0,
     crashedUntilS: ctx.clockS + STREET_CRASH_S,
   };
 }
@@ -127,6 +144,15 @@ function blocked(map: CityMap, x: number, z: number): boolean {
     [x, z + r],
     [x, z - r],
   ].some(([px, pz]) => isSolid(citySurfaceAt(map, px ?? x, pz ?? z)));
+}
+
+/** Backwards speed after one step of paddling (or putting the feet down). */
+function stepReverse(rider: FreeRider, input: SimInput, wanted: boolean, dt: number): number {
+  const engage =
+    wanted && rider.sim.speedMps < REVERSE_ENGAGE_MPS && input.throttle <= REVERSE_MAX_THROTTLE;
+  if (engage) return Math.min(REVERSE_MAX_MPS, rider.reverseMps + REVERSE_ACCEL_MPS2 * dt);
+  const stop = REVERSE_STOP_MPS2 + REVERSE_BRAKE_MPS2 * input.brake;
+  return Math.max(0, rider.reverseMps - stop * dt);
 }
 
 function modelOn(ctx: FreeRideContext, surface: CitySurface, grip: number, lean: number) {
@@ -150,6 +176,8 @@ export function stepFreeRider(
   steer: number,
   /** Hard on the brake: start (with steer) or hold a rear slide. */
   driftWanted: boolean,
+  /** Paddling backwards (only takes effect from a standstill). */
+  reverseWanted = false,
 ): FreeRider {
   const dt = ctx.model.timestepS;
   if (rider.crashedUntilS !== null) {
@@ -176,12 +204,16 @@ export function stepFreeRider(
   applied = { ...applied, brake: applied.brake * brakeShare * Math.min(1, grip) };
   sim = step(modelOn(ctx, rider.surface, grip, rider.lean), sim, applied);
 
-  const v = sim.speedMps;
+  const forward = sim.speedMps;
+  const reverseMps = stepReverse(rider, input, reverseWanted, dt);
+  // Signed: negative while rolling backwards, which also swings the heading
+  // the other way for the same bar angle, as a real bike does.
+  const v = forward - reverseMps;
   const lean = stepLean(rider.lean, Math.max(-1, Math.min(1, steer)) * maxLean(grip), dt);
   const kappa =
-    pathCurvature(lean, v, steer) +
-    driftCurvature(drift, v, steer) +
-    (rider.surface === 'grass' ? runoffCurvature(steer, v) : 0);
+    pathCurvature(lean, Math.abs(v), steer) +
+    driftCurvature(drift, forward, steer) +
+    (rider.surface === 'grass' ? runoffCurvature(steer, forward) : 0);
   const heading = rider.heading - v * kappa * dt;
   const x = rider.x + Math.cos(heading) * v * dt;
   const z = rider.z + Math.sin(heading) * v * dt;
@@ -193,12 +225,15 @@ export function stepFreeRider(
     heading: Math.atan2(Math.sin(heading), Math.cos(heading)),
     lean,
     drift,
-    distanceM: rider.distanceM + v * dt,
-    topSpeedKmh: Math.max(rider.topSpeedKmh, mpsToKmh(v)),
+    reverseMps,
+    distanceM: rider.distanceM + Math.abs(v) * dt,
+    topSpeedKmh: Math.max(rider.topSpeedKmh, mpsToKmh(forward)),
   };
   if (blocked(ctx.map, x, z)) {
     // Walking pace into a wall just stops you; any faster and you're down.
-    return v > BUMP_MPS ? crashRider(ctx, moved) : { ...moved, sim: { ...sim, speedMps: 0 } };
+    return Math.abs(v) > BUMP_MPS
+      ? crashRider(ctx, moved)
+      : { ...moved, sim: { ...sim, speedMps: 0 }, reverseMps: 0 };
   }
   return { ...moved, x, z, surface: citySurfaceAt(ctx.map, x, z) };
 }

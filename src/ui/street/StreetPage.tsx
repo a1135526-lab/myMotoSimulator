@@ -21,6 +21,7 @@ const STREET_KEYS: [string, string][] = [
   ['↓', '煞車'],
   ['← →', '壓車轉向'],
   ['↓ + ← →', '煞車甩尾'],
+  ['X（停車時按住）', '倒車'],
   ['E / Q', '升 / 降檔'],
   ['Shift', '離合'],
   ['Enter', '發動'],
@@ -105,6 +106,7 @@ export function StreetPage({ map }: { map: CityMap }) {
         <TouchControls
           manual={manual && !autoShift}
           steering
+          reverse
           onPress={(c) => controller.touch.press(c)}
           onRelease={(c) => controller.touch.release(c)}
           onReset={() => controller.handleAction('reset')}

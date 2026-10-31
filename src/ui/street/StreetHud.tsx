@@ -11,6 +11,7 @@ function alertFor(view: StreetView): { text: string; tone: 'info' | 'warn' | 'da
   const r = view.rider;
   if (r.crashed) return { text: '摔車了！馬上把你放回最近的道路', tone: 'danger' };
   if (!r.engineRunning) return { text: '熄火 · 空檔或拉離合後按 Enter 發動', tone: 'warn' };
+  if (r.reversing) return { text: '倒車中 · 用腳往後推，放開 X 停下', tone: 'info' };
   if (r.offRoad && r.speedKmh > 5) return { text: '騎上人行道了，小心行人', tone: 'warn' };
   return null;
 }

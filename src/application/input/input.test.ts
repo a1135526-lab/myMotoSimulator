@@ -160,9 +160,30 @@ describe('KeyboardInputSource (circuit layout)', () => {
     expect(onAction).toHaveBeenCalledWith('shiftDown');
   });
 
+  it('the street layout holds X to reverse and M opens the map', () => {
+    const target = new EventTarget();
+    const onAction = vi.fn();
+    const kb = new KeyboardInputSource(target, onAction, 'street');
+    target.dispatchEvent(key('keydown', 'KeyX'));
+    expect(kb.read().reversePressed).toBe(true);
+    target.dispatchEvent(key('keyup', 'KeyX'));
+    expect(kb.read().reversePressed).toBe(false);
+    target.dispatchEvent(key('keydown', 'KeyM'));
+    expect(onAction).toHaveBeenCalledWith('toggleMap');
+  });
+
+  it('only the street layout reverses', () => {
+    const target = new EventTarget();
+    const kb = new KeyboardInputSource(target, vi.fn(), 'circuit');
+    target.dispatchEvent(key('keydown', 'KeyX'));
+    expect(kb.read().reversePressed).toBe(false);
+  });
+
   it('touch steering buttons', () => {
     const touch = new TouchInputSource();
     touch.press('steerRight');
     expect(touch.read().steerRightPressed).toBe(true);
+    touch.press('reverse');
+    expect(touch.read().reversePressed).toBe(true);
   });
 });
