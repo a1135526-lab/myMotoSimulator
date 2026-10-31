@@ -23,8 +23,9 @@ export function StreetScene({ map, timeOfDay }: { map: CityMap; timeOfDay: TimeO
     observer.observe(canvas);
     let frame = 0;
     const loop = () => {
-      const { view, camera } = useStreetStore.getState();
-      if (view) renderer.render(view, camera);
+      const { view, camera, mapOpen } = useStreetStore.getState();
+      // The big map covers the whole scene and freezes the ride; don't draw under it.
+      if (view && !mapOpen) renderer.render(view, camera);
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);

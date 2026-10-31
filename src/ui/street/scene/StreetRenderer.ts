@@ -31,7 +31,19 @@ const SUN_DISTANCE_M = 400;
 /** Degrees to radians. */
 const DEG = Math.PI / 180;
 
+/** Render scale when WebGL runs on the CPU (headless CI, blocked GPU drivers). */
+const SOFTWARE_PIXEL_RATIO = 0.5;
+
 const yawFor = (heading: number) => Math.atan2(-Math.cos(heading), -Math.sin(heading));
+
+/** SwiftShader / llvmpipe and friends: WebGL emulated on the CPU. */
+function isSoftwareRenderer(gl: WebGLRenderingContext | WebGL2RenderingContext): boolean {
+  const info = gl.getExtension('WEBGL_debug_renderer_info');
+  const name = String(
+    gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ?? '',
+  ).toLowerCase();
+  return /swiftshader|llvmpipe|softpipe|software|basic render/.test(name);
+}
 
 export class StreetRenderer {
   private readonly renderer: THREE.WebGLRenderer;
@@ -67,11 +79,16 @@ export class StreetRenderer {
       antialias: true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Without a GPU the whole city is drawn on the CPU; trade sharpness and
+    // shadows for a frame rate that still lets the page respond.
+    const software = isSoftwareRenderer(this.renderer.getContext());
+    this.renderer.setPixelRatio(
+      software ? SOFTWARE_PIXEL_RATIO : Math.min(window.devicePixelRatio, 2),
+    );
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = light.exposure;
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = !software;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Physical sky, and the same sky baked into an environment map so

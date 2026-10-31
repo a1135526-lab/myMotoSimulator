@@ -32,6 +32,8 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 12px 20px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .main {

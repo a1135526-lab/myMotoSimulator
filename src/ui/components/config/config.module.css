@@ -1,15 +1,26 @@
 .bikeSelector {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  max-width: 100%;
   font-size: 0.85rem;
   color: var(--text-muted);
 }
 
+.bikeSelector .inline {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Long option labels ("… 通勤速克達") must not push a phone-width page sideways. */
 .bikeSelector select {
   font-weight: 600;
   color: var(--text);
-  min-width: 170px;
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
 }
 
 .parts {
