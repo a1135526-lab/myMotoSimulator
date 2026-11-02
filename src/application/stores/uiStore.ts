@@ -39,6 +39,9 @@ interface UiState {
    */
   readonly tiltOn: boolean;
   setTiltOn(on: boolean): void;
+  /** Shift by flicking the phone forward (up) or back (down); same permission rules as tilt. */
+  readonly flickShiftOn: boolean;
+  setFlickShiftOn(on: boolean): void;
 }
 
 export const useUiStore = create<UiState>()((set) => ({
@@ -55,4 +58,6 @@ export const useUiStore = create<UiState>()((set) => ({
   setComparePreset: (comparePresetId) => set({ comparePresetId }),
   tiltOn: false,
   setTiltOn: (tiltOn) => set({ tiltOn }),
+  flickShiftOn: false,
+  setFlickShiftOn: (flickShiftOn) => set({ flickShiftOn }),
 }));

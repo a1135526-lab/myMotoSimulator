@@ -8,6 +8,7 @@ import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
 import { toCircuitView } from '../viewModels/circuit';
 import { CircuitContext } from './circuitContext';
+import { useFlickShift } from './useFlickShift';
 import { useInputSources } from './useInputSources';
 import { useTiltSteering } from './useTiltSteering';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
@@ -85,6 +86,7 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
 
   useSimulationLoop(controller);
   useInputSources(controller, 'circuit');
+  useFlickShift(controller);
   useTiltSteering(controller);
 
   return <CircuitContext.Provider value={controller}>{children}</CircuitContext.Provider>;

@@ -6,6 +6,7 @@ import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
 import { toRaceView } from '../viewModels/race';
 import { RaceContext } from './raceContext';
+import { useFlickShift } from './useFlickShift';
 import { useInputSources } from './useInputSources';
 import { useActiveTrack } from './useRaceSetup';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
@@ -56,6 +57,7 @@ export function RaceProvider({ children }: { children: ReactNode }) {
 
   useSimulationLoop(controller);
   useInputSources(controller);
+  useFlickShift(controller);
 
   return <RaceContext.Provider value={controller}>{children}</RaceContext.Provider>;
 }

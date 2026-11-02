@@ -15,13 +15,29 @@ const DEG = Math.PI / 180;
  * sideways. Returns null when the phone lies too flat to tell.
  */
 export function screenTwistDeg(betaDeg: number, gammaDeg: number): number | null {
-  const b = betaDeg * DEG;
-  const g = gammaDeg * DEG;
-  // World "up" in device axes (x right, y towards the top of the phone).
-  const x = -Math.sin(g) * Math.cos(b);
-  const y = Math.sin(b);
+  const { x, y } = worldUp(betaDeg, gammaDeg);
   if (Math.hypot(x, y) < MIN_UPRIGHT) return null;
   return Math.atan2(x, y) / DEG;
+}
+
+/**
+ * World "up" in device axes: x right, y towards the top of the phone, z out
+ * of the screen towards the rider.
+ */
+export function worldUp(betaDeg: number, gammaDeg: number) {
+  const b = betaDeg * DEG;
+  const g = gammaDeg * DEG;
+  return { x: -Math.sin(g) * Math.cos(b), y: Math.sin(b), z: Math.cos(g) * Math.cos(b) };
+}
+
+/**
+ * How far the screen is tipped back to face the sky, in degrees: 0 standing
+ * upright facing the rider, + tipped away (top edge forward), − towards them.
+ * Turning it like a wheel leaves this unchanged.
+ */
+export function screenPitchDeg(betaDeg: number, gammaDeg: number): number {
+  const { x, y, z } = worldUp(betaDeg, gammaDeg);
+  return Math.atan2(z, Math.hypot(x, y)) / DEG;
 }
 
 const wrapDeg = (d: number) => ((((d + 180) % 360) + 360) % 360) - 180;
