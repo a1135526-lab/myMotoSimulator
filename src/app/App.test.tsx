@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from './App';
 import { useConfigStore, useRaceStore } from '@/application';
 
+/** The race modes are a lazy chunk (Three.js); its first load in a cold test run takes a while. */
+const LAZY = { timeout: 10_000 };
+
 describe('App (integration)', () => {
   beforeEach(() => {
     useConfigStore.getState().selectBike('sym-drg-158');
@@ -106,7 +109,7 @@ describe('App (race mode)', () => {
     fireEvent.click(screen.getByTestId('mode-race'));
 
     // 1. Track
-    fireEvent.click(await screen.findByTestId('discipline-drag'));
+    fireEvent.click(await screen.findByTestId('discipline-drag', {}, LAZY));
     fireEvent.click(await screen.findByTestId('track-custom'));
     fireEvent.change(screen.getByTestId('race-distance'), { target: { value: '1000' } });
     expect(screen.getByText(/自訂賽道・1000 m/)).toBeInTheDocument();
@@ -150,7 +153,7 @@ describe('App (race mode)', () => {
   it('steps ahead of the current one are locked', async () => {
     render(<App />);
     fireEvent.click(screen.getByTestId('mode-race'));
-    expect(await screen.findByRole('button', { name: /對手/ })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: /對手/ }, LAZY)).toBeDisabled();
   });
 });
 
@@ -163,7 +166,7 @@ describe('App (circuit racing)', () => {
   it('picks a circuit, shows lap estimates, and enters a circuit race', async () => {
     render(<App />);
     fireEvent.click(screen.getByTestId('mode-race'));
-    fireEvent.click(await screen.findByTestId('discipline-circuit'));
+    fireEvent.click(await screen.findByTestId('discipline-circuit', {}, LAZY));
     fireEvent.click(screen.getByTestId('circuit-hill-town'));
     fireEvent.click(screen.getByTestId('laps-1'));
     expect(screen.getByText(/山城技術賽道・1 圈/)).toBeInTheDocument();
@@ -175,7 +178,7 @@ describe('App (circuit racing)', () => {
     expect(screen.getByTestId('matchup')).toHaveTextContent('預估單圈');
     fireEvent.click(screen.getByTestId('wizard-next'));
 
-    expect(await screen.findByTestId('circuit-canvas')).toBeInTheDocument();
+    expect(await screen.findByTestId('circuit-canvas', {}, LAZY)).toBeInTheDocument();
     expect(screen.getByTestId('circuit-hint')).toHaveTextContent('按 Space 開始亮燈');
     expect(screen.getByTestId('race-lap')).toHaveTextContent('LAP 1/1');
     fireEvent.click(screen.getByTestId('camera-toggle'));

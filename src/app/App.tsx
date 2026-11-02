@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { SimulationProvider, useUiStore } from '@/application';
+import { UpdatePrompt } from '@/ui/components/common/UpdatePrompt';
 import { SimulatorPage } from '@/ui/pages/SimulatorPage';
 
 const RaceRoot = lazy(() => import('@/ui/race/RaceRoot'));
@@ -10,6 +11,15 @@ const StreetRoot = lazy(() => import('@/ui/street/StreetRoot'));
  * keyboard and the animation loop.
  */
 export function App() {
+  return (
+    <>
+      <ModeRoot />
+      <UpdatePrompt />
+    </>
+  );
+}
+
+function ModeRoot() {
   const mode = useUiStore((s) => s.mode);
   if (mode === 'street') {
     return (

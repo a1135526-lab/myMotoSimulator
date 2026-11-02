@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0d0f12"/>
+  <!-- Speedometer around (256, 280), r 170: track, sweep, red zone, needle -->
+  <g fill="none" stroke-width="34" stroke-linecap="round">
+    <path d="M135.8 400.2 A170 170 0 1 1 376.2 400.2" stroke="#2a2f38"/>
+    <path d="M135.8 400.2 A170 170 0 0 1 256 110" stroke="#ff7a1a"/>
+    <path d="M376.2 159.8 A170 170 0 0 1 376.2 400.2" stroke="#ff4d4f"/>
+  </g>
+  <g stroke="#ffffff" stroke-width="10" stroke-linecap="round">
+    <line x1="256" y1="155" x2="256" y2="133"/>
+    <line x1="147.7" y1="217.5" x2="128.6" y2="206.5"/>
+    <line x1="364.3" y1="217.5" x2="383.4" y2="206.5"/>
+  </g>
+  <line x1="256" y1="280" x2="322" y2="166" stroke="#ff7a1a" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="256" cy="280" r="30" fill="#ff7a1a"/>
+  <circle cx="256" cy="280" r="12" fill="#0d0f12"/>
+</svg>
