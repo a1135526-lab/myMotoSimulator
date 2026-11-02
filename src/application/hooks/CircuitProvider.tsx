@@ -8,7 +8,7 @@ import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
 import { toCircuitView } from '../viewModels/circuit';
 import { CircuitContext } from './circuitContext';
-import { useKeyboardControls } from './useKeyboardControls';
+import { useInputSources } from './useInputSources';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
 import { useSimulationLoop } from './useSimulationLoop';
 
@@ -83,7 +83,7 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
   useEffect(() => () => controller.dispose(), [controller]);
 
   useSimulationLoop(controller);
-  useKeyboardControls(controller, 'circuit');
+  useInputSources(controller, 'circuit');
 
   return <CircuitContext.Provider value={controller}>{children}</CircuitContext.Provider>;
 }

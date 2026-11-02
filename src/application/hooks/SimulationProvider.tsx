@@ -2,13 +2,13 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { SimulationController } from '../simulation/SimulationController';
 import { useSimStore } from '../stores/simStore';
 import { SimulationContext } from './simulationContext';
-import { useKeyboardControls } from './useKeyboardControls';
+import { useInputSources } from './useInputSources';
 import { useSimConfig } from './useSimConfig';
 import { useSimulationLoop } from './useSimulationLoop';
 
 /**
  * Creates the one SimulationController for the app, keeps it in sync with the
- * selected configuration, and wires the render loop and keyboard.
+ * selected configuration, and wires the render loop, keyboard and on-screen buttons.
  */
 export function SimulationProvider({ children }: { children: ReactNode }) {
   const config = useSimConfig();
@@ -28,7 +28,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
   useEffect(() => () => controller.dispose(), [controller]);
 
   useSimulationLoop(controller);
-  useKeyboardControls(controller);
+  useInputSources(controller);
 
   return <SimulationContext.Provider value={controller}>{children}</SimulationContext.Provider>;
 }

@@ -37,6 +37,7 @@ ui → application → domain
 - **狀態不可變**：domain 的 step 函式回傳新物件，不改舊的。沒變化時回傳同一個參考（`withRider` 這類 helper 依賴這點）。
 - **3D 場景不走 React**：`*Scene.tsx` 自己跑 `requestAnimationFrame`，每幀從 store 的 `getState()` 讀 view，交給命令式的 `*Renderer`。不要把每幀資料放進 React state。
 - **輸入**：held 按鍵是 `InputCommand`（= domain 的 `StreetCommand`，含油門、煞車、離合、左右、倒車）；一次性動作是 `InputAction`。鍵位在 `KeyboardInputSource.ts` 的 `LAYOUTS`（`standard`／`circuit`／`street`）。新增按鍵時，記得同步：`RELEASED`、`TouchInputSource`、`TouchControls`、頁面上的 `KeyHints`、README 的操作表。
+- **StrictMode**：開發模式（`npm run dev`）會把 Provider 掛載 → 卸載 → 再掛載，卸載時 `controller.dispose()` 會拔掉所有輸入來源。輸入來源（鍵盤、觸控按鈕）一定要在 effect 裡接上（`useInputSources`），只在 constructor 接的話，開發模式下會失效。e2e 跑的是正式建置版，抓不到這類問題。
 - **車款資料**：每個規格區塊都有 `provenance`；沒查證的數值 UI 會標「估計值」。不要把估計值寫成已查證。
 - **街景地圖**：`src/data/cities/nanzih/nanzih.json` 由 `scripts/osm/` 從 OpenStreetMap 產生，不要手改；資料 © OpenStreetMap 貢獻者（ODbL），README 的標示要保留。
 

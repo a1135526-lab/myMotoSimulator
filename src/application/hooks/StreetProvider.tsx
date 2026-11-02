@@ -6,7 +6,7 @@ import { useConfigStore } from '../stores/configStore';
 import { TRAFFIC_CARS, useStreetStore } from '../stores/streetStore';
 import { toStreetView } from '../viewModels/street';
 import { StreetContext } from './streetContext';
-import { useKeyboardControls } from './useKeyboardControls';
+import { useInputSources } from './useInputSources';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
 import { useSimulationLoop } from './useSimulationLoop';
 
@@ -65,7 +65,7 @@ export function StreetProvider({ map, children }: { map: CityMap; children: Reac
   useEffect(() => () => controller.dispose(), [controller]);
 
   useSimulationLoop(controller);
-  useKeyboardControls(controller, 'street');
+  useInputSources(controller, 'street');
 
   return <StreetContext.Provider value={controller}>{children}</StreetContext.Provider>;
 }

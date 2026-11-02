@@ -6,7 +6,7 @@ import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
 import { toRaceView } from '../viewModels/race';
 import { RaceContext } from './raceContext';
-import { useKeyboardControls } from './useKeyboardControls';
+import { useInputSources } from './useInputSources';
 import { useActiveTrack } from './useRaceSetup';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
 import { useSimulationLoop } from './useSimulationLoop';
@@ -55,7 +55,7 @@ export function RaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => () => controller.dispose(), [controller]);
 
   useSimulationLoop(controller);
-  useKeyboardControls(controller);
+  useInputSources(controller);
 
   return <RaceContext.Provider value={controller}>{children}</RaceContext.Provider>;
 }
