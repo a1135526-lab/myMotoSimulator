@@ -10,8 +10,10 @@ import { useEngineAudio } from '../../audio/useEngineAudio';
 import { ModeTabs } from '../../components/common/ModeTabs';
 import { SoundToggle } from '../../components/common/SoundToggle';
 import { KeyHints } from '../../components/controls/KeyHints';
+import { FullscreenButton, RotateHint, TiltToggle } from '../../components/controls/StageButtons';
 import { TouchControls } from '../../components/controls/TouchControls';
 import { AppLayout } from '../../layouts/AppLayout';
+import { useImmersive } from '../../layouts/useMediaQuery';
 import { CircuitHud } from './CircuitHud';
 import { CircuitResults } from './CircuitResults';
 import { CircuitScene } from './CircuitScene';
@@ -40,10 +42,13 @@ export function CircuitPage() {
   const bike = useCurrentBike();
   const manual = bike.kind === 'manual';
   const live = view?.phase === 'lights' || view?.phase === 'racing';
+  const immersive = useImmersive();
+  const showGo = !immersive || (!live && view?.phase !== 'finished');
   useEngineAudio(readCircuitSound);
 
   return (
     <AppLayout
+      immersive={immersive}
       toolbar={
         <>
           <ModeTabs />
@@ -60,7 +65,7 @@ export function CircuitPage() {
           disabled={live}
           data-testid="back-to-garage"
         >
-          ← 返回車庫
+          {immersive ? '←' : '← 返回車庫'}
         </button>
         <p className={styles.raceTitle}>
           {circuit.name} · {view?.laps ?? '-'} 圈 · {bike.brand} {bike.model}
@@ -71,9 +76,12 @@ export function CircuitPage() {
           onClick={toggleCamera}
           data-testid="camera-toggle"
         >
-          {camera === 'first' ? '切到第三人稱' : '切到第一人稱'}（V）
+          {immersive ? '👁' : `${camera === 'first' ? '切到第三人稱' : '切到第一人稱'}（V）`}
         </button>
+        <TiltToggle className={styles.garageButton} />
+        <FullscreenButton className={styles.garageButton} />
       </div>
+      <RotateHint />
       <div className={styles.stage}>
         <CircuitScene theme={{ sky: circuit.sky, scenery: circuit.scenery }} />
         {view && <CircuitHud view={view} camera={camera} />}
@@ -86,18 +94,21 @@ export function CircuitPage() {
         )}
       </div>
       <div className={styles.controls}>
-        <button
-          type="button"
-          className={styles.goButton}
-          onClick={() => controller.go()}
-          disabled={live}
-          data-testid="circuit-go"
-        >
-          {view?.phase === 'finished' ? '回起跑格' : '開始亮燈'}
-        </button>
+        {showGo && (
+          <button
+            type="button"
+            className={styles.goButton}
+            onClick={() => controller.go()}
+            disabled={live}
+            data-testid="circuit-go"
+          >
+            {view?.phase === 'finished' ? '回起跑格' : '開始亮燈'}
+          </button>
+        )}
         <TouchControls
           manual={manual && !autoShift}
           steering
+          overlay={immersive}
           onPress={(c) => controller.touch.press(c)}
           onRelease={(c) => controller.touch.release(c)}
           onReset={() => controller.handleAction('reset')}

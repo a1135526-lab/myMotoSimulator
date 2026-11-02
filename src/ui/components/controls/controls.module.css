@@ -172,3 +172,128 @@
   background: var(--text);
   color: var(--surface);
 }
+
+/* ---- Phone on its side: see-through buttons over the 3D picture ---- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.thumbLeft,
+.thumbRight {
+  position: absolute;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.thumbLeft {
+  left: calc(12px + env(safe-area-inset-left));
+  justify-items: start;
+}
+
+.thumbRight {
+  right: calc(12px + env(safe-area-inset-right));
+  justify-items: end;
+}
+
+.thumbRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.thumbRow:empty {
+  display: none;
+}
+
+.overlay button {
+  min-width: 64px;
+  height: 64px;
+  padding: 0 10px;
+  border-radius: 16px;
+  border: 2px solid rgb(255 255 255 / 0.35) !important;
+  background: rgb(10 12 16 / 0.42) !important;
+  backdrop-filter: blur(4px);
+  color: #fff !important;
+  font-size: 1rem !important;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.8);
+}
+
+.overlay .steer {
+  width: 76px;
+  height: 76px;
+  font-size: 1.6rem !important;
+  border-color: rgb(30 136 229 / 0.8) !important;
+}
+
+.overlay .throttle {
+  width: 84px;
+  height: 104px;
+  border-color: var(--accent) !important;
+}
+
+.overlay .brake {
+  width: 76px;
+  height: 76px;
+  border-color: var(--danger) !important;
+}
+
+.overlay .clutch {
+  border-color: var(--series-compare) !important;
+}
+
+.overlay .reset,
+.overlay .start,
+.overlay .shift,
+.overlay .reverse {
+  min-width: 52px;
+  height: 44px;
+  font-size: 0.8rem !important;
+}
+
+.overlay .shift {
+  min-width: 60px;
+  height: 52px;
+}
+
+.overlay .steer[data-pressed] {
+  background: rgb(30 136 229 / 0.75) !important;
+}
+
+.overlay .throttle[data-pressed] {
+  background: rgb(255 122 26 / 0.75) !important;
+}
+
+.overlay .brake[data-pressed] {
+  background: rgb(255 77 79 / 0.75) !important;
+}
+
+.overlay .clutch[data-pressed],
+.overlay .shift[data-pressed],
+.overlay .start[data-pressed],
+.overlay .reset[data-pressed],
+.overlay .reverse[data-pressed] {
+  background: rgb(255 255 255 / 0.35) !important;
+}
+
+/* Phone held upright in a 3D mode. */
+.rotateHint {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.rotateHint small {
+  font-size: 0.75rem;
+}

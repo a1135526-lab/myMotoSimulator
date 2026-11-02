@@ -314,3 +314,47 @@
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* ---- Phone on its side: clear the button bar and the thumbs ---- */
+[data-immersive] .topLeft {
+  top: calc(50px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  padding: 6px 12px 6px 10px;
+  transform: scale(0.85);
+  transform-origin: top left;
+}
+
+[data-immersive] .topRight {
+  top: calc(8px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+  transform: scale(0.75);
+  transform-origin: top right;
+}
+
+[data-immersive] .alert {
+  top: calc(50px + env(safe-area-inset-top));
+  bottom: auto;
+  max-width: 50vw;
+  white-space: normal;
+  text-align: center;
+}
+
+[data-immersive] .bottomLeft {
+  display: none;
+}
+
+[data-immersive] .bottomRight {
+  left: 50%;
+  right: auto;
+  bottom: calc(6px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+}
+
+[data-immersive] .dashSlot {
+  width: 210px;
+}
+
+[data-immersive] .dashSlot[data-layout='round-lcd'],
+[data-immersive] .dashSlot[data-layout='tick-ring'] {
+  width: 140px;
+}

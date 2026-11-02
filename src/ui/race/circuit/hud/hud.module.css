@@ -512,3 +512,40 @@
     animation: none;
   }
 }
+
+/* ---- Phone on its side: below the button bar, cluster between the thumbs ---- */
+[data-immersive] .hud {
+  grid-template-areas:
+    'tl tc tr'
+    '. . .'
+    '. br .';
+  padding: calc(48px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) 6px
+    calc(10px + env(safe-area-inset-left));
+  gap: 6px;
+}
+
+[data-immersive] .topLeft,
+[data-immersive] .topRight {
+  transform: scale(0.8);
+}
+
+[data-immersive] .topLeft {
+  transform-origin: top left;
+}
+
+[data-immersive] .topRight {
+  transform-origin: top right;
+}
+
+[data-immersive] .bottomLeft {
+  display: none;
+}
+
+/* Pinned, not a grid row: the timing column can be taller than a phone on its side. */
+[data-immersive] .bottomRight {
+  position: absolute;
+  left: 50%;
+  bottom: calc(4px + env(safe-area-inset-bottom));
+  transform: translateX(-50%) scale(0.75);
+  transform-origin: bottom center;
+}

@@ -47,3 +47,9 @@
   color: var(--text-muted);
   text-align: center;
 }
+
+/* Phone on its side in a 3D mode: the page's stage takes the whole screen. */
+.shell[data-immersive] {
+  padding: 0;
+  max-width: none;
+}

@@ -70,3 +70,43 @@ test.describe('mobile touch', () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 });
+
+test.describe('phone on its side', () => {
+  test.skip(({ isMobile }) => !isMobile, 'touch flow');
+  test.use({ viewport: { width: 852, height: 393 } });
+  // The 3D pages render on the CPU in CI; loading one takes a while.
+  test.setTimeout(120_000);
+
+  test('a 3D race fills the screen with the buttons on the picture', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('mode-race').click();
+    await page.getByTestId('discipline-drag').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
+    await expect(page.getByTestId('race-canvas')).toBeVisible();
+
+    // No page header: the picture takes the whole screen.
+    await expect(page.locator('h1')).toHaveCount(0);
+    const stage = await page.getByTestId('race-canvas').boundingBox();
+    expect(stage?.width).toBeGreaterThan(840);
+    expect(stage?.height).toBeGreaterThan(380);
+    const throttle = await page.getByRole('button', { name: '油門', exact: true }).boundingBox();
+    expect(throttle?.x).toBeGreaterThan(852 / 2); // under the right thumb
+
+    // The start button sits mid-picture until the lights begin.
+    await page.getByTestId('race-go').tap();
+    await expect(page.getByTestId('race-go')).toHaveCount(0);
+  });
+
+  test('tilt steering switches on from its button', async ({ page, context }) => {
+    // What a rider allowing motion sensors looks like to the page.
+    await context.grantPermissions(['accelerometer', 'gyroscope', 'magnetometer']);
+    await page.goto('/');
+    await page.getByTestId('mode-race').click();
+    await page.getByTestId('discipline-circuit').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
+    const tilt = page.getByTestId('tilt-toggle');
+    await expect(tilt).toHaveAttribute('aria-pressed', 'false');
+    await tilt.tap();
+    await expect(tilt).toHaveAttribute('aria-pressed', 'true');
+  });
+});

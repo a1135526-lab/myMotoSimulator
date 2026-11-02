@@ -9,8 +9,10 @@ import { useEngineAudio } from '../audio/useEngineAudio';
 import { ModeTabs } from '../components/common/ModeTabs';
 import { SoundToggle } from '../components/common/SoundToggle';
 import { KeyHints } from '../components/controls/KeyHints';
+import { FullscreenButton, RotateHint } from '../components/controls/StageButtons';
 import { TouchControls } from '../components/controls/TouchControls';
 import { AppLayout } from '../layouts/AppLayout';
+import { useImmersive } from '../layouts/useMediaQuery';
 import { RaceHud } from './RaceHud';
 import { RaceResultCard } from './RaceResultCard';
 import { RaceScene } from './RaceScene';
@@ -24,6 +26,10 @@ export function RacePage() {
   const { track, distanceM } = useActiveTrack();
   const manual = bike.kind === 'manual';
   const live = view?.phase === 'countdown' || view?.phase === 'racing';
+  const immersive = useImmersive();
+  // Full screen, the start button sits mid-picture: only while it can be pressed
+  // and the result card (with its own rematch button) isn't up.
+  const showGo = !immersive || (!live && !view?.result);
   useEngineAudio(readRaceSound);
 
   const theme = {
@@ -35,6 +41,7 @@ export function RacePage() {
 
   return (
     <AppLayout
+      immersive={immersive}
       toolbar={
         <>
           <ModeTabs />
@@ -51,13 +58,15 @@ export function RacePage() {
           disabled={live}
           data-testid="back-to-garage"
         >
-          ← 返回車庫
+          {immersive ? '←' : '← 返回車庫'}
         </button>
+        <FullscreenButton className={styles.garageButton} />
         <p className={styles.raceTitle}>
           {track.rain ? '🌧 ' : ''}
           {track.name}・{distanceM} m · {bike.brand} {bike.model} vs {view?.opponent.label ?? ''}
         </p>
       </div>
+      <RotateHint />
       <div className={styles.stage}>
         <RaceScene theme={theme} />
         {view && <RaceHud view={view} />}
@@ -70,17 +79,20 @@ export function RacePage() {
         )}
       </div>
       <div className={styles.controls}>
-        <button
-          type="button"
-          className={styles.goButton}
-          onClick={() => controller.go()}
-          disabled={live}
-          data-testid="race-go"
-        >
-          {view?.phase === 'finished' ? '回起跑線' : '開始倒數'}
-        </button>
+        {showGo && (
+          <button
+            type="button"
+            className={styles.goButton}
+            onClick={() => controller.go()}
+            disabled={live}
+            data-testid="race-go"
+          >
+            {view?.phase === 'finished' ? '回起跑線' : '開始倒數'}
+          </button>
+        )}
         <TouchControls
           manual={manual}
+          overlay={immersive}
           onPress={(c) => controller.touch.press(c)}
           onRelease={(c) => controller.touch.release(c)}
           onReset={() => controller.restage()}

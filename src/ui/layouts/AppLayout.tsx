@@ -4,9 +4,21 @@ import styles from './AppLayout.module.css';
 interface AppLayoutProps {
   toolbar: ReactNode;
   children: ReactNode;
+  /**
+   * Phone on its side in a 3D mode: no header or footer; the page's stage
+   * fills the screen and its controls sit on top of the picture.
+   */
+  immersive?: boolean;
 }
 
-export function AppLayout({ toolbar, children }: AppLayoutProps) {
+export function AppLayout({ toolbar, children, immersive = false }: AppLayoutProps) {
+  if (immersive) {
+    return (
+      <div className={styles.shell} data-immersive="">
+        <main className={styles.main}>{children}</main>
+      </div>
+    );
+  }
   return (
     <div className={styles.shell}>
       <header className={styles.header}>

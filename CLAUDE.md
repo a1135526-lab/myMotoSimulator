@@ -38,6 +38,9 @@ ui → application → domain
 - **3D 場景不走 React**：`*Scene.tsx` 自己跑 `requestAnimationFrame`，每幀從 store 的 `getState()` 讀 view，交給命令式的 `*Renderer`。不要把每幀資料放進 React state。
 - **輸入**：held 按鍵是 `InputCommand`（= domain 的 `StreetCommand`，含油門、煞車、離合、左右、倒車）；一次性動作是 `InputAction`。鍵位在 `KeyboardInputSource.ts` 的 `LAYOUTS`（`standard`／`circuit`／`street`）。新增按鍵時，記得同步：`RELEASED`、`TouchInputSource`、`TouchControls`、頁面上的 `KeyHints`、README 的操作表。
 - **StrictMode**：開發模式（`npm run dev`）會把 Provider 掛載 → 卸載 → 再掛載，卸載時 `controller.dispose()` 會拔掉所有輸入來源。輸入來源（鍵盤、觸控按鈕）一定要在 effect 裡接上（`useInputSources`），只在 constructor 接的話，開發模式下會失效。e2e 跑的是正式建置版，抓不到這類問題。
+- **手機橫向全螢幕**：3D 頁面用 `useImmersive()`（`(pointer: coarse) and (orientation: landscape) and (max-height: 540px)`），成立時 `AppLayout immersive` 不畫標題列，外層加上 `data-immersive`；各 CSS module 用 `[data-immersive] .xxx` 改成全螢幕和覆蓋式按鈕（`TouchControls overlay`）。HUD 要避開左右下角的拇指區。
+- **傾斜轉向**：`TiltInputSource` 送出類比的 `steerAxis`（−1～1），domain 用 `steerTarget()` 合併，按鈕優先。iOS 要從點擊呼叫 `requestTiltPermission()`，而且只在 https 有效。
+- **PWA**：`vite-plugin-pwa`，service worker 只存在於正式 build（`npm run dev` 沒有），e2e 用 `serviceWorkers: 'block'`。改了 `public/icon.svg` 要跑 `node scripts/icons/render-icons.mjs`。
 - **車款資料**：每個規格區塊都有 `provenance`；沒查證的數值 UI 會標「估計值」。不要把估計值寫成已查證。
 - **街景地圖**：`src/data/cities/nanzih/nanzih.json` 由 `scripts/osm/` 從 OpenStreetMap 產生，不要手改；資料 © OpenStreetMap 貢獻者（ODbL），README 的標示要保留。
 

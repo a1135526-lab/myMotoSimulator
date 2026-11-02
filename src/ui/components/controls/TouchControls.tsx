@@ -8,6 +8,8 @@ interface TouchControlsProps {
   steering?: boolean;
   /** Street riding: a hold-to-paddle-backwards button next to the steering. */
   reverse?: boolean;
+  /** Phone on its side: see-through buttons over the picture, under the thumbs. */
+  overlay?: boolean;
   onPress: (control: TouchControl) => void;
   onRelease: (control: TouchControl) => void;
   onReset: () => void;
@@ -31,6 +33,7 @@ export function TouchControls({
   manual,
   steering = false,
   reverse = false,
+  overlay = false,
   onPress,
   onRelease,
   onReset,
@@ -104,49 +107,119 @@ export function TouchControls({
     },
   });
 
+  const clutch = (
+    <button type="button" className={styles.clutch} {...bind('clutch')}>
+      離合
+    </button>
+  );
+  const down = (
+    <button type="button" className={styles.shift} {...tap(() => onShift(-1))}>
+      降檔
+    </button>
+  );
+  const up = (
+    <button type="button" className={styles.shift} {...tap(() => onShift(1))}>
+      升檔
+    </button>
+  );
+  const start = (
+    <button type="button" className={styles.start} {...tap(onStart)}>
+      發動
+    </button>
+  );
+  const left = (
+    <button type="button" className={styles.steer} {...bind('steerLeft')} aria-label="左傾">
+      ◀{overlay ? '' : ' 左傾'}
+    </button>
+  );
+  const right = (
+    <button type="button" className={styles.steer} {...bind('steerRight')} aria-label="右傾">
+      {overlay ? '' : '右傾 '}▶
+    </button>
+  );
+  const back = reverse && (
+    <button type="button" className={styles.reverse} {...bind('reverse')}>
+      倒車
+    </button>
+  );
+  const brake = (
+    <button type="button" className={styles.brake} {...bind('brake')}>
+      煞車
+    </button>
+  );
+  const reset = (
+    <button type="button" className={styles.reset} {...tap(onReset)}>
+      重置
+    </button>
+  );
+  const throttle = (
+    <button type="button" className={styles.throttle} {...bind('throttle')}>
+      油門
+    </button>
+  );
+
+  if (overlay) {
+    // Thumbs on the picture: steering (or the brake, on a drag strip) under
+    // the left thumb, throttle under the right; the rest just above them.
+    return (
+      <div className={`${styles.controls} ${styles.overlay}`} aria-label="觸控操作" ref={panel}>
+        <div className={styles.thumbLeft}>
+          <div className={styles.thumbRow}>
+            {manual && clutch}
+            {back}
+          </div>
+          <div className={styles.thumbRow}>
+            {steering ? (
+              <>
+                {left}
+                {right}
+              </>
+            ) : (
+              brake
+            )}
+          </div>
+        </div>
+        <div className={styles.thumbRight}>
+          <div className={styles.thumbRow}>
+            {reset}
+            {manual && (
+              <>
+                {start}
+                {down}
+                {up}
+              </>
+            )}
+          </div>
+          <div className={styles.thumbRow}>
+            {steering && brake}
+            {throttle}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.controls} aria-label="觸控操作" ref={panel}>
       {manual && (
         <div className={styles.manualRow}>
-          <button type="button" className={styles.clutch} {...bind('clutch')}>
-            離合
-          </button>
-          <button type="button" className={styles.shift} {...tap(() => onShift(-1))}>
-            降檔
-          </button>
-          <button type="button" className={styles.shift} {...tap(() => onShift(1))}>
-            升檔
-          </button>
-          <button type="button" className={styles.start} {...tap(onStart)}>
-            發動
-          </button>
+          {clutch}
+          {down}
+          {up}
+          {start}
         </div>
       )}
       {steering && (
         <div className={styles.steerRow} data-reverse={reverse || undefined}>
-          <button type="button" className={styles.steer} {...bind('steerLeft')}>
-            ◀ 左傾
-          </button>
-          {reverse && (
-            <button type="button" className={styles.reverse} {...bind('reverse')}>
-              倒車
-            </button>
-          )}
-          <button type="button" className={styles.steer} {...bind('steerRight')}>
-            右傾 ▶
-          </button>
+          {left}
+          {back}
+          {right}
         </div>
       )}
       <div className={styles.touch}>
-        <button type="button" className={styles.brake} {...bind('brake')}>
-          煞車
-        </button>
-        <button type="button" className={styles.reset} {...tap(onReset)}>
-          重置
-        </button>
-        <button type="button" className={styles.throttle} {...bind('throttle')}>
-          油門
-        </button>
+        {brake}
+        {reset}
+        {throttle}
       </div>
     </div>
   );
