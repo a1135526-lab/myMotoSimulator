@@ -51,4 +51,5 @@ ui → application → domain
 ## Git
 
 - Conventional Commits（`feat:`、`fix:`、`docs:`…），commitlint 會擋；pre-commit 跑 lint-staged（eslint --fix + prettier）。
-- 遠端：`github.com/a1135526-lab/myMotoSimulator`，push 到 `main` 會跑 CI（`check` → `e2e`）。
+- 遠端：`github.com/a1135526-lab/myMotoSimulator`，push 到 `main` 會跑 CI（`check` → `e2e` → `deploy`）。
+- **push 到 `main` = 上線**：`check` 和 `e2e` 都通過後，`deploy` 會把遊戲發佈到 <https://a1135526-lab.github.io/myMotoSimulator/>。正式網址在子路徑下，build 時用 `BASE_PATH=/myMotoSimulator/`；程式裡不要寫死以 `/` 開頭的資源路徑。
