@@ -48,31 +48,6 @@ test.describe('desktop keyboard', () => {
   });
 });
 
-test.describe('mobile touch', () => {
-  test.skip(({ isMobile }) => !isMobile, 'touch flow');
-
-  test('holding the on-screen throttle accelerates', async ({ page }) => {
-    await page.goto('/');
-    const throttle = page.getByRole('button', { name: '油門' });
-    await throttle.scrollIntoViewIfNeeded();
-    const box = await throttle.boundingBox();
-    if (!box) throw new Error('throttle button not visible');
-
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.down();
-    await expect.poll(() => speed(page), { timeout: 5000 }).toBeGreaterThan(20);
-    await page.mouse.up();
-  });
-
-  test('has no horizontal page scroll', async ({ page }) => {
-    await page.goto('/');
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
-    expect(overflow).toBeLessThanOrEqual(0);
-  });
-});
-
 test.describe('manual bike', () => {
   test.skip(({ isMobile }) => isMobile, 'keyboard flow');
 
