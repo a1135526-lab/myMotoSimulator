@@ -33,6 +33,12 @@ interface UiState {
   readonly comparePresetId: string | null;
   setDynoView(view: DynoView): void;
   setComparePreset(id: string | null): void;
+  /**
+   * Steer by turning the phone. Not remembered across visits: iOS asks for
+   * permission again each time, and only from a tap.
+   */
+  readonly tiltOn: boolean;
+  setTiltOn(on: boolean): void;
 }
 
 export const useUiStore = create<UiState>()((set) => ({
@@ -47,4 +53,6 @@ export const useUiStore = create<UiState>()((set) => ({
   comparePresetId: null,
   setDynoView: (dynoView) => set({ dynoView }),
   setComparePreset: (comparePresetId) => set({ comparePresetId }),
+  tiltOn: false,
+  setTiltOn: (tiltOn) => set({ tiltOn }),
 }));

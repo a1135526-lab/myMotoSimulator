@@ -38,6 +38,7 @@ export { useConfigStore, type ResettableGroup } from './stores/configStore';
 export { usePresetStore } from './stores/presetStore';
 export { useUiStore, type DynoView } from './stores/uiStore';
 export type { TouchControl } from './input/TouchInputSource';
+export { requestTiltPermission, type TiltPermission } from './input/TiltInputSource';
 export type { Preset } from './services/presetService';
 export { isStock, type SelectableCategory } from './tuning/selection';
 export type {

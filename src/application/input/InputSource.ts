@@ -29,7 +29,13 @@ export const RELEASED: InputCommand = {
   reversePressed: false,
 };
 
-/** OR-combines several sources so keyboard and touch work together. */
+type HeldKey = Exclude<keyof InputCommand, 'steerAxis'>;
+const HELD_KEYS = Object.keys(RELEASED) as HeldKey[];
+
+/**
+ * OR-combines several sources so keyboard, touch and tilt work together; of
+ * the analogue steering axes, the one steered hardest wins.
+ */
 export class CompositeInputSource implements InputSource {
   private readonly sources = new Set<InputSource>();
 
@@ -43,11 +49,14 @@ export class CompositeInputSource implements InputSource {
 
   read(): InputCommand {
     const out = { ...RELEASED };
+    let axis = 0;
     for (const source of this.sources) {
       const c = source.read();
-      for (const key of Object.keys(out) as (keyof InputCommand)[]) out[key] ||= c[key];
+      for (const key of HELD_KEYS) out[key] ||= c[key];
+      const a = c.steerAxis ?? 0;
+      if (Math.abs(a) > Math.abs(axis)) axis = a;
     }
-    return out;
+    return axis === 0 ? out : { ...out, steerAxis: axis };
   }
 
   dispose(): void {

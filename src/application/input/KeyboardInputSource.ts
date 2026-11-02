@@ -18,7 +18,7 @@ import {
  */
 export type KeyLayout = 'standard' | 'circuit' | 'street';
 
-type Held = keyof InputCommand;
+type Held = Exclude<keyof InputCommand, 'steerAxis'>;
 
 interface LayoutSpec {
   readonly held: ReadonlyMap<string, Held>;

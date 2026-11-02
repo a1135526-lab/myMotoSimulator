@@ -254,6 +254,14 @@ const approach = (value: number, target: number, dt: number) => {
 export interface CircuitCommand extends ControlCommand {
   readonly steerLeftPressed: boolean;
   readonly steerRightPressed: boolean;
+  /** Analogue steering, −1…1 (+ = left), e.g. from tilting the phone. */
+  readonly steerAxis?: number;
+}
+
+/** Steering wanted, −1…1 (+ = left): the buttons win over the analogue axis. */
+export function steerTarget(command: CircuitCommand): number {
+  const buttons = (command.steerLeftPressed ? 1 : 0) - (command.steerRightPressed ? 1 : 0);
+  return buttons !== 0 ? buttons : clamp(command.steerAxis ?? 0, -1, 1);
 }
 
 export function advanceCircuitRace(
@@ -266,7 +274,7 @@ export function advanceCircuitRace(
   const dt = models[0]?.timestepS ?? 1 / 240;
   let acc = Math.min(race.accumulatorS + Math.max(0, elapsedS), dt * MAX_STEPS_PER_ADVANCE);
   let current = race;
-  const wanted = (command.steerLeftPressed ? 1 : 0) - (command.steerRightPressed ? 1 : 0);
+  const wanted = steerTarget(command);
   while (acc >= dt) {
     const input = shapeInput(current.playerInput, command, dt);
     const steer = approach(current.steer, wanted, dt);

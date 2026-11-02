@@ -1,5 +1,5 @@
 import { wantsDrift } from '../circuit/drift';
-import type { CircuitCommand } from '../circuit/circuitRace';
+import { steerTarget, type CircuitCommand } from '../circuit/circuitRace';
 import { shiftGear, startEngine } from '../simulation/controls';
 import { MAX_STEPS_PER_ADVANCE } from '../simulation/fixedStep';
 import { shapeInput } from '../simulation/inputShaping';
@@ -146,7 +146,7 @@ export function advanceStreet(
   const dt = model.timestepS;
   let acc = Math.min(state.accumulatorS + Math.max(0, elapsedS), dt * MAX_STEPS_PER_ADVANCE);
   let current = state;
-  const wanted = (command.steerLeftPressed ? 1 : 0) - (command.steerRightPressed ? 1 : 0);
+  const wanted = steerTarget(command);
   while (acc >= dt) {
     const input = shapeInput(current.playerInput, command, dt);
     const steer = approach(current.steer, wanted, dt);

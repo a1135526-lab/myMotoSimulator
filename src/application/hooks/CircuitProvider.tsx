@@ -9,6 +9,7 @@ import { useRaceStore } from '../stores/raceStore';
 import { toCircuitView } from '../viewModels/circuit';
 import { CircuitContext } from './circuitContext';
 import { useInputSources } from './useInputSources';
+import { useTiltSteering } from './useTiltSteering';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
 import { useSimulationLoop } from './useSimulationLoop';
 
@@ -84,6 +85,7 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
 
   useSimulationLoop(controller);
   useInputSources(controller, 'circuit');
+  useTiltSteering(controller);
 
   return <CircuitContext.Provider value={controller}>{children}</CircuitContext.Provider>;
 }

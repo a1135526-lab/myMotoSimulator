@@ -131,6 +131,29 @@ describe('free riding', () => {
     expect(turned(true)).toBeGreaterThan(0);
   });
 
+  it('an analogue steer axis (tilt) turns the bike, and the buttons override it', () => {
+    const turned = (command: StreetCommand) => {
+      const s0 = rideFor(
+        scooter,
+        createStreetRide(map, scooter, settings),
+        {
+          ...idle,
+          throttlePressed: true,
+        },
+        2,
+      );
+      return (
+        rideFor(scooter, s0, { ...command, throttlePressed: true }, 1).rider.heading -
+        s0.rider.heading
+      );
+    };
+    const half = turned({ ...idle, steerAxis: 0.5 });
+    const full = turned({ ...idle, steerAxis: 1 });
+    expect(half).toBeLessThan(0); // left lowers the heading
+    expect(full).toBeLessThan(half);
+    expect(turned({ ...idle, steerAxis: 1, steerRightPressed: true })).toBeGreaterThan(0);
+  });
+
   it('reverse does nothing while rolling forwards or on the throttle', () => {
     let s = createStreetRide(map, scooter, settings);
     s = rideFor(scooter, s, { ...idle, throttlePressed: true }, 2);

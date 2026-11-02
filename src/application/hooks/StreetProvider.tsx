@@ -7,6 +7,7 @@ import { TRAFFIC_CARS, useStreetStore } from '../stores/streetStore';
 import { toStreetView } from '../viewModels/street';
 import { StreetContext } from './streetContext';
 import { useInputSources } from './useInputSources';
+import { useTiltSteering } from './useTiltSteering';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
 import { useSimulationLoop } from './useSimulationLoop';
 
@@ -66,6 +67,7 @@ export function StreetProvider({ map, children }: { map: CityMap; children: Reac
 
   useSimulationLoop(controller);
   useInputSources(controller, 'street');
+  useTiltSteering(controller);
 
   return <StreetContext.Provider value={controller}>{children}</StreetContext.Provider>;
 }
