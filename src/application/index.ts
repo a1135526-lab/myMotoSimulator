@@ -37,6 +37,14 @@ export { useBikeSpecSheet, type SpecSection } from './hooks/useSpecSheet';
 export { useConfigStore, type ResettableGroup } from './stores/configStore';
 export { usePresetStore } from './stores/presetStore';
 export { useUiStore, type DynoView } from './stores/uiStore';
+export {
+  MAX_BUTTON_SCALE,
+  MIN_BUTTON_SCALE,
+  useControlLayoutStore,
+  type ButtonSpot,
+  type ControlLayoutKind,
+  type OverlayButton,
+} from './stores/controlLayoutStore';
 export type { TouchControl } from './input/TouchInputSource';
 export { requestTiltPermission, type TiltPermission } from './input/TiltInputSource';
 export type { Preset } from './services/presetService';

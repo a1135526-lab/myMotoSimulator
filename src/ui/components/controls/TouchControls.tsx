@@ -1,5 +1,6 @@
 import { useEffect, useRef, type PointerEvent } from 'react';
 import type { TouchControl } from '@/application';
+import { LayoutEditPanel, OverlayControls } from './OverlayControls';
 import styles from './controls.module.css';
 
 interface TouchControlsProps {
@@ -159,43 +160,25 @@ export function TouchControls({
   );
 
   if (overlay) {
-    // Thumbs on the picture: steering (or the brake, on a drag strip) under
-    // the left thumb, throttle under the right; the rest just above them.
+    const kind = steering ? 'steer' : 'drag';
     return (
-      <div className={`${styles.controls} ${styles.overlay}`} aria-label="觸控操作" ref={panel}>
-        <div className={styles.thumbLeft}>
-          <div className={styles.thumbRow}>
-            {manual && clutch}
-            {back}
-          </div>
-          <div className={styles.thumbRow}>
-            {steering ? (
-              <>
-                {left}
-                {right}
-              </>
-            ) : (
-              brake
-            )}
-          </div>
+      <>
+        <div className={`${styles.controls} ${styles.overlay}`} aria-label="觸控操作" ref={panel}>
+          <OverlayControls
+            kind={kind}
+            manual={manual}
+            buttons={{
+              ...(steering && { steerLeft: left, steerRight: right }),
+              brake,
+              throttle,
+              ...(manual && { clutch, shiftDown: down, shiftUp: up, start }),
+              ...(reverse && { reverse: back || undefined }),
+              reset,
+            }}
+          />
         </div>
-        <div className={styles.thumbRight}>
-          <div className={styles.thumbRow}>
-            {reset}
-            {manual && (
-              <>
-                {start}
-                {down}
-                {up}
-              </>
-            )}
-          </div>
-          <div className={styles.thumbRow}>
-            {steering && brake}
-            {throttle}
-          </div>
-        </div>
-      </div>
+        <LayoutEditPanel kind={kind} />
+      </>
     );
   }
 

@@ -10,7 +10,13 @@ import { useEngineAudio } from '../../audio/useEngineAudio';
 import { ModeTabs } from '../../components/common/ModeTabs';
 import { SoundToggle } from '../../components/common/SoundToggle';
 import { KeyHints } from '../../components/controls/KeyHints';
-import { FullscreenButton, RotateHint, TiltToggle } from '../../components/controls/StageButtons';
+import {
+  FlickShiftToggle,
+  FullscreenButton,
+  LayoutEditButton,
+  RotateHint,
+  TiltToggle,
+} from '../../components/controls/StageButtons';
 import { TouchControls } from '../../components/controls/TouchControls';
 import { AppLayout } from '../../layouts/AppLayout';
 import { useImmersive } from '../../layouts/useMediaQuery';
@@ -78,8 +84,12 @@ export function CircuitPage() {
         >
           {immersive ? '👁' : `${camera === 'first' ? '切到第三人稱' : '切到第一人稱'}（V）`}
         </button>
-        <TiltToggle className={styles.garageButton} />
+        <TiltToggle className={styles.garageButton} compact={immersive} />
+        {manual && !autoShift && (
+          <FlickShiftToggle className={styles.garageButton} compact={immersive} />
+        )}
         <FullscreenButton className={styles.garageButton} />
+        {immersive && <LayoutEditButton className={styles.garageButton} />}
       </div>
       <RotateHint />
       <div className={styles.stage}>

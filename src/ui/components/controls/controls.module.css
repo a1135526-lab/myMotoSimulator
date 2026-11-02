@@ -181,33 +181,86 @@
   pointer-events: none;
 }
 
-.thumbLeft,
-.thumbRight {
+/* The screen minus notches and the home bar; button spots are shares of it. */
+.safeBox {
   position: absolute;
-  bottom: calc(10px + env(safe-area-inset-bottom));
-  display: grid;
-  gap: 8px;
+  top: env(safe-area-inset-top);
+  right: env(safe-area-inset-right);
+  bottom: env(safe-area-inset-bottom);
+  left: env(safe-area-inset-left);
+}
+
+.spot {
+  position: absolute;
+  transform: translate(-50%, -50%) scale(var(--button-scale, 1));
   pointer-events: auto;
 }
 
-.thumbLeft {
-  left: calc(12px + env(safe-area-inset-left));
-  justify-items: start;
+/* Edit mode: the buttons don't ride, their spot drags. */
+.safeBox[data-editing] .spot {
+  cursor: grab;
+  touch-action: none;
 }
 
-.thumbRight {
-  right: calc(12px + env(safe-area-inset-right));
-  justify-items: end;
+.safeBox[data-editing] .spot > button {
+  pointer-events: none;
+  outline: 2px dashed rgb(255 255 255 / 0.85);
+  outline-offset: 3px;
 }
 
-.thumbRow {
+.safeBox[data-editing] .spot[data-dragging] > button {
+  outline-color: var(--accent);
+}
+
+.editPanel {
+  position: fixed;
+  z-index: 40;
+  top: calc(50px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
+  max-width: calc(100vw - 32px);
+  white-space: nowrap;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgb(10 12 16 / 0.85);
+  color: #fff;
+  font-size: 0.85rem;
+  pointer-events: auto;
 }
 
-.thumbRow:empty {
-  display: none;
+.editPanel button {
+  min-width: 36px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+  font-weight: 700;
+}
+
+.editPanel button:disabled {
+  opacity: 0.35;
+}
+
+.editPanel .editDone {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+}
+
+.editScale {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editScale output {
+  min-width: 3.2em;
+  text-align: center;
 }
 
 .overlay button {

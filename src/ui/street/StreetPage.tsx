@@ -8,7 +8,13 @@ import { useEngineAudio } from '../audio/useEngineAudio';
 import { ModeTabs } from '../components/common/ModeTabs';
 import { SoundToggle } from '../components/common/SoundToggle';
 import { KeyHints } from '../components/controls/KeyHints';
-import { FullscreenButton, RotateHint, TiltToggle } from '../components/controls/StageButtons';
+import {
+  FlickShiftToggle,
+  FullscreenButton,
+  LayoutEditButton,
+  RotateHint,
+  TiltToggle,
+} from '../components/controls/StageButtons';
 import { TouchControls } from '../components/controls/TouchControls';
 import type { CityMap } from '@/domain';
 import { AppLayout } from '../layouts/AppLayout';
@@ -88,8 +94,12 @@ export function StreetPage({ map }: { map: CityMap }) {
         >
           {immersive ? '🗺' : '🗺 地圖・導航（M）'}
         </button>
-        <TiltToggle className={race.garageButton} />
+        <TiltToggle className={race.garageButton} compact={immersive} />
+        {manual && !autoShift && (
+          <FlickShiftToggle className={race.garageButton} compact={immersive} />
+        )}
         <FullscreenButton className={race.garageButton} />
+        {immersive && <LayoutEditButton className={race.garageButton} />}
       </div>
       <RotateHint />
       <div className={race.stage}>

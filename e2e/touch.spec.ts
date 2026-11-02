@@ -110,3 +110,64 @@ test.describe('phone on its side', () => {
     await expect(tilt).toHaveAttribute('aria-pressed', 'true');
   });
 });
+
+test.describe('phone on its side: custom buttons and flick shifting', () => {
+  test.skip(({ isMobile }) => !isMobile, 'touch flow');
+  test.use({ viewport: { width: 852, height: 393 } });
+  test.setTimeout(120_000);
+
+  async function enterDragRace(page: Page, manual = false) {
+    await page.goto('/');
+    if (manual) await page.getByTestId('kind-manual').click();
+    await page.getByTestId('mode-race').click();
+    await page.getByTestId('discipline-drag').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
+    await expect(page.getByTestId('race-canvas')).toBeVisible();
+  }
+
+  test('drag a button somewhere else; it stays there next time', async ({ page }) => {
+    await enterDragRace(page);
+    const throttle = page.getByRole('button', { name: '油門', exact: true });
+    const before = await throttle.boundingBox();
+    if (!before) throw new Error('no throttle');
+
+    await page.getByTestId('layout-edit').tap();
+    await expect(page.getByTestId('layout-editor')).toBeVisible();
+    const cdp = await page.context().newCDPSession(page);
+    const from = { x: before.x + before.width / 2, y: before.y + before.height / 2 };
+    const to = { x: 600, y: 200 };
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [from] });
+    for (let i = 1; i <= 8; i++) {
+      const p = { x: from.x + ((to.x - from.x) * i) / 8, y: from.y + ((to.y - from.y) * i) / 8 };
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [p] });
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.getByTestId('layout-done').tap();
+
+    const moved = async () => {
+      const box = await throttle.boundingBox();
+      return box ? Math.hypot(box.x + box.width / 2 - to.x, box.y + box.height / 2 - to.y) : 1e9;
+    };
+    expect(await moved()).toBeLessThan(12);
+    await enterDragRace(page);
+    expect(await moved()).toBeLessThan(12);
+  });
+
+  test('flicking the phone forward shifts up', async ({ page, context }) => {
+    await context.grantPermissions(['accelerometer', 'gyroscope', 'magnetometer']);
+    await enterDragRace(page, true);
+    await expect(page.getByTestId('race-gear')).toHaveText('N');
+    await page.getByTestId('flick-shift-toggle').tap();
+    await expect(page.getByTestId('flick-shift-toggle')).toHaveAttribute('aria-pressed', 'true');
+    // Held upright, then the top edge tipped away by 25°, all at once: in CI the
+    // 3D page is too busy for timers to pace real sensor timing.
+    await page.evaluate(() => {
+      for (const pitch of [0, 0, 0, 6, 12, 19, 25]) {
+        window.dispatchEvent(
+          new DeviceOrientationEvent('deviceorientation', { beta: 90 - pitch, gamma: 0 }),
+        );
+      }
+    });
+    await expect(page.getByTestId('race-gear')).toHaveText('1');
+  });
+});

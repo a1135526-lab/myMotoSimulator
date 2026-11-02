@@ -9,7 +9,12 @@ import { useEngineAudio } from '../audio/useEngineAudio';
 import { ModeTabs } from '../components/common/ModeTabs';
 import { SoundToggle } from '../components/common/SoundToggle';
 import { KeyHints } from '../components/controls/KeyHints';
-import { FullscreenButton, RotateHint } from '../components/controls/StageButtons';
+import {
+  FlickShiftToggle,
+  FullscreenButton,
+  LayoutEditButton,
+  RotateHint,
+} from '../components/controls/StageButtons';
 import { TouchControls } from '../components/controls/TouchControls';
 import { AppLayout } from '../layouts/AppLayout';
 import { useImmersive } from '../layouts/useMediaQuery';
@@ -60,7 +65,9 @@ export function RacePage() {
         >
           {immersive ? '←' : '← 返回車庫'}
         </button>
+        {manual && <FlickShiftToggle className={styles.garageButton} compact={immersive} />}
         <FullscreenButton className={styles.garageButton} />
+        {immersive && <LayoutEditButton className={styles.garageButton} />}
         <p className={styles.raceTitle}>
           {track.rain ? '🌧 ' : ''}
           {track.name}・{distanceM} m · {bike.brand} {bike.model} vs {view?.opponent.label ?? ''}
