@@ -98,7 +98,7 @@ function rivals(records: readonly MatchRecord[]): RivalStats[] {
 
 /** Everything the profile shows, worked out from the match history. */
 export function matchStats(records: readonly MatchRecord[]): MatchStats {
-  const kinds: MatchKind[] = ['room', 'circuit', 'drag'];
+  const kinds: MatchKind[] = ['ranked', 'room', 'circuit', 'drag'];
   const byKind = Object.fromEntries(
     kinds.map((k) => {
       const ms = records.filter((m) => m.kind === k);

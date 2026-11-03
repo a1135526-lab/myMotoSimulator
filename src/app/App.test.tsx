@@ -10,12 +10,15 @@ const LAZY = { timeout: 10_000 };
 beforeEach(() => useUiStore.setState({ mode: 'simulator' }));
 
 describe('App (lobby)', () => {
-  it('starts in the lobby: profile at the top left, a card per mode', () => {
+  it('starts in the lobby: profile at the top left, a card per mode', async () => {
     useUiStore.setState({ mode: 'home' });
     render(<App />);
     expect(screen.getByTestId('open-profile')).toHaveTextContent('0 場');
     fireEvent.click(screen.getByTestId('home-simulator'));
     expect(screen.getByTestId('bike-select')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('go-home'));
+    fireEvent.click(screen.getByTestId('home-ranked'));
+    expect(await screen.findByTestId('ranked-menu', {}, LAZY)).toHaveTextContent('沒有連線功能');
     fireEvent.click(screen.getByTestId('go-home'));
     fireEvent.click(screen.getByTestId('open-profile'));
     expect(screen.getByTestId('profile')).toHaveTextContent('訪客');

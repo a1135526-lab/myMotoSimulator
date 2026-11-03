@@ -1,6 +1,7 @@
 import { CircuitProvider, RaceProvider, useRaceStore } from '@/application';
 import { CircuitPage } from './circuit/CircuitPage';
 import { RacePage } from './RacePage';
+import { RankedRoot } from './ranked/RankedRoot';
 import { RoomRoot } from './room/RoomRoot';
 import { RaceWizard } from './setup/RaceWizard';
 
@@ -13,6 +14,7 @@ export default function RaceRoot() {
   const discipline = useRaceStore((s) => s.discipline);
   // Friend rooms have their own lobby instead of the garage steps.
   if (discipline === 'room') return <RoomRoot />;
+  if (discipline === 'ranked') return <RankedRoot />;
   if (step !== 'race') return <RaceWizard />;
   if (discipline === 'circuit') {
     return (

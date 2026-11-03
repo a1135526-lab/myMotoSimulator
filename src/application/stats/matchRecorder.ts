@@ -1,5 +1,6 @@
 import { getCircuit, getTrack } from '@/data';
 import type { RaceResult } from '@/domain';
+import { useRankedStore } from '../online/ranked/rankedStore';
 import type { RoomSettings } from '../online/room/roomTypes';
 import type { CircuitView } from '../viewModels/circuit';
 import { useMatchStore } from './matchStore';
@@ -34,6 +35,17 @@ function ridersOf(view: CircuitView, myBike: string): MatchRider[] {
   }));
 }
 
+/** A ranked race under way: filed as ranked, and its place reported for points. */
+function rankedNow(): boolean {
+  const r = useRankedStore.getState();
+  return r.match !== null && (r.phase === 'room' || r.phase === 'ai');
+}
+
+function file(match: MatchRecord): void {
+  useMatchStore.getState().addMatch(match);
+  if (match.kind === 'ranked') void useRankedStore.getState().report(match.position, match.field);
+}
+
 function fromCircuit(
   view: CircuitView,
   kind: 'room' | 'circuit',
@@ -47,7 +59,7 @@ function fromCircuit(
   return {
     id: newMatchId(),
     at: Date.now(),
-    kind,
+    kind: rankedNow() ? 'ranked' : kind,
     trackId: circuitId,
     trackName: circuitName(circuitId),
     laps,
@@ -68,7 +80,7 @@ export function recordRoomMatch(view: CircuitView, settings: RoomSettings, bike?
   const me = view.riders[0];
   const mine = bike ?? { label: me?.bike ?? '', manual: me?.manual ?? false };
   const match = fromCircuit(view, 'room', settings.circuitId, settings.laps, mine);
-  if (match) useMatchStore.getState().addMatch(match);
+  if (match) file(match);
 }
 
 let circuitWasFinished = false;
@@ -83,7 +95,7 @@ export function observeCircuitMatch(
   const finished = view.phase === 'finished';
   if (finished && !circuitWasFinished) {
     const match = fromCircuit(view, 'circuit', circuitId, laps, bike);
-    if (match) useMatchStore.getState().addMatch(match);
+    if (match) file(match);
   }
   circuitWasFinished = finished;
 }

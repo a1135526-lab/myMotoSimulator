@@ -13,6 +13,7 @@ import {
   type CircuitGeometry,
   type CircuitRaceState,
   type CircuitSettings,
+  type CircuitSkill,
   type GhostLap,
   type RiderSkill,
   type SimConfig,
@@ -36,6 +37,8 @@ export interface CircuitConfig {
   readonly autoClutch: boolean;
   /** Best lap so far on this circuit, to race against. */
   readonly ghost: GhostLap | null;
+  /** Exact AI pace (ranked races), instead of the `skill` presets. */
+  readonly aiSkill?: CircuitSkill;
 }
 
 export interface CircuitSnapshot {
@@ -124,7 +127,9 @@ export class CircuitController {
     const [lo, hi] = LIGHTS_HOLD_RANGE_S;
     this.race = createCircuitRace(this.geo, this.models, {
       settings,
-      aiSkills: opponents.map((_, i) => riderSkill(CIRCUIT_SKILLS[skill], i)),
+      aiSkills: opponents.map((_, i) =>
+        riderSkill(this.config.aiSkill ?? CIRCUIT_SKILLS[skill], i),
+      ),
       holdS: holdS ?? lo + this.random() * (hi - lo),
     });
     // A rematch keeps the ghost, including a best set in the last race.

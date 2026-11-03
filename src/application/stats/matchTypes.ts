@@ -3,10 +3,11 @@
  * on a circuit or drag strip — as kept in your match history.
  */
 
-export type MatchKind = 'room' | 'circuit' | 'drag';
+export type MatchKind = 'room' | 'circuit' | 'drag' | 'ranked';
 
 export const MATCH_KIND_LABELS: Readonly<Record<MatchKind, string>> = {
   room: '好友對戰',
+  ranked: '排位賽',
   circuit: '賽道（對 AI）',
   drag: '直線加速（對 AI）',
 };
@@ -71,7 +72,9 @@ function parseRider(raw: unknown): MatchRider | null {
 export function parseMatch(raw: unknown): MatchRecord | null {
   if (!raw || typeof raw !== 'object') return null;
   const m = raw as Record<string, unknown>;
-  if (m.kind !== 'room' && m.kind !== 'circuit' && m.kind !== 'drag') return null;
+  if (m.kind !== 'room' && m.kind !== 'circuit' && m.kind !== 'drag' && m.kind !== 'ranked') {
+    return null;
+  }
   if (!isStr(m.id, 64) || !isNum(m.at) || !isStr(m.trackId, 40) || !isStr(m.bike)) return null;
   if (!isNum(m.position) || !isNum(m.field) || m.position < 1 || m.field < 1) return null;
   const riders = Array.isArray(m.riders)

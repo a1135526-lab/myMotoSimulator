@@ -158,6 +158,24 @@ export { useMatchStore, type SyncState } from './stats/matchStore';
 export { matchStats, type MatchStats, type Tally } from './stats/matchStats';
 export { MATCH_KIND_LABELS, type MatchKind, type MatchRecord } from './stats/matchTypes';
 export { ROOM_FINISH_WINDOW_S } from './online/room/circuitRoom';
+export { useRankedStore } from './online/ranked/rankedStore';
+// Tiers and rules for the ranked screens (the UI can't reach into domain).
+export {
+  RANKED_GROUP_LABELS,
+  RANKED_LAPS,
+  TIERS,
+  tierOf,
+  type RankedGroup,
+  type Tier,
+} from '@/domain';
+export { fetchRankedBoard, type RankedBoardRow } from './online/ranked/rankedBoard';
+export {
+  rankedProfile,
+  type RankedMatch,
+  type RankedPhase,
+  type RankedRecord,
+  type RankedResult,
+} from './online/ranked/rankedTypes';
 export {
   useFriendsStore,
   type Friend,

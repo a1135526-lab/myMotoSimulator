@@ -6,6 +6,7 @@ import {
   useCurrentBike,
   useCircuits,
   useRaceStore,
+  useRankedStore,
   useRoomStore,
   useUiStore,
 } from '@/application';
@@ -23,6 +24,7 @@ import {
 import { TouchControls } from '../../components/controls/TouchControls';
 import { AppLayout } from '../../layouts/AppLayout';
 import { useImmersive } from '../../layouts/useMediaQuery';
+import { RankedResultActions } from '../ranked/RankedResultActions';
 import { RoomResultActions } from '../room/RoomResultActions';
 import { CircuitHud } from './CircuitHud';
 import { CircuitResults } from './CircuitResults';
@@ -42,7 +44,14 @@ const CIRCUIT_KEYS: [string, string][] = [
 ];
 
 /** `room`: a friend-room race (the host starts it; results go back to the room). */
-export function CircuitPage({ room = false }: { room?: boolean }) {
+export function CircuitPage({
+  room = false,
+  ranked = false,
+}: {
+  room?: boolean;
+  ranked?: boolean;
+}) {
+  const rankedCircuitId = useRankedStore((s) => s.match?.circuitId ?? null);
   const controller = useCircuitController();
   const roomCircuitId = useRoomStore((s) => s.settings.circuitId);
   const circuits = useCircuits();
@@ -52,16 +61,15 @@ export function CircuitPage({ room = false }: { room?: boolean }) {
   const setStep = useRaceStore((s) => s.setStep);
   const autoShift = useRaceStore((s) => s.autoShift);
   const garageCircuit = useActiveCircuit();
-  const circuit = room
-    ? (circuits.find((c) => c.id === roomCircuitId) ?? garageCircuit)
-    : garageCircuit;
+  const circuitId = ranked ? rankedCircuitId : room ? roomCircuitId : null;
+  const circuit = circuits.find((c) => c.id === circuitId) ?? garageCircuit;
   const ghostOn = useUiStore((s) => s.ghostOn);
   const setGhostOn = useUiStore((s) => s.setGhostOn);
   const bike = useCurrentBike();
   const manual = bike.kind === 'manual';
   const live = view?.phase === 'lights' || view?.phase === 'racing';
   const immersive = useImmersive();
-  const showGo = !room && (!immersive || (!live && view?.phase !== 'finished'));
+  const showGo = !room && !ranked && (!immersive || (!live && view?.phase !== 'finished'));
   useEngineAudio(readCircuitSound);
 
   return (
@@ -79,11 +87,17 @@ export function CircuitPage({ room = false }: { room?: boolean }) {
         <button
           type="button"
           className={styles.garageButton}
-          onClick={() => (room ? useRoomStore.getState().leave() : setStep('tune'))}
-          disabled={live && !room}
+          onClick={() =>
+            ranked
+              ? useRankedStore.getState().cancel()
+              : room
+                ? useRoomStore.getState().leave()
+                : setStep('tune')
+          }
+          disabled={live && !room && !ranked}
           data-testid="back-to-garage"
         >
-          {immersive ? '←' : room ? '← 離開房間' : '← 返回車庫'}
+          {immersive ? '←' : ranked ? '← 離開排位' : room ? '← 離開房間' : '← 返回車庫'}
         </button>
         <p className={styles.raceTitle}>
           {circuit.name} · {view?.laps ?? '-'} 圈 · {bike.brand} {bike.model}
@@ -124,7 +138,7 @@ export function CircuitPage({ room = false }: { room?: boolean }) {
             circuitId={circuit.id}
             onRematch={() => controller.go()}
             onGarage={() => setStep('tune')}
-            actions={room ? <RoomResultActions /> : undefined}
+            actions={ranked ? <RankedResultActions /> : room ? <RoomResultActions /> : undefined}
           />
         )}
       </div>

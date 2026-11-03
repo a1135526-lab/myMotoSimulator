@@ -19,6 +19,15 @@ const ENTRIES: readonly (Entry & {
   readonly art: ArtName;
 })[] = [
   {
+    id: 'ranked',
+    mode: 'race',
+    discipline: 'ranked',
+    icon: '🏆',
+    title: '排位賽',
+    blurb: '配對線上段位接近的玩家，沒人就打電腦；從青銅一路爬到大師。',
+    art: 'circuit',
+  },
+  {
     id: 'room',
     mode: 'race',
     discipline: 'room',
@@ -72,8 +81,8 @@ export function HomePage() {
     if (e.mode === 'race') {
       const race = useRaceStore.getState();
       race.setDiscipline(e.discipline);
-      // Rooms set up in their own lobby; the others start at choosing the track.
-      race.setStep(e.discipline === 'room' ? 'mode' : 'track');
+      // Rooms and ranked have their own screens; the others start at choosing the track.
+      race.setStep(e.discipline === 'room' || e.discipline === 'ranked' ? 'mode' : 'track');
     }
     setMode(e.mode);
   };
@@ -101,7 +110,7 @@ export function HomePage() {
               key={e.id}
               type="button"
               className={styles.card}
-              data-feature={e.id === 'room' || undefined}
+              data-feature={e.id === 'ranked' || undefined}
               style={{ background: artBackground(e.art) }}
               onClick={() => open(e)}
               data-testid={`home-${e.id}`}

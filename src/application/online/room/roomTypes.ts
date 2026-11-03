@@ -24,6 +24,8 @@ export interface RoomPlayer {
 export interface RoomSettings {
   readonly circuitId: string;
   readonly laps: number;
+  /** A ranked match: everyone rides this group's stock bike, no assists. */
+  readonly ranked?: 'scooter' | 'manual';
 }
 
 /** Where a rider is, ~10 times a second while racing. */
@@ -103,7 +105,9 @@ function parseSettings(raw: unknown): RoomSettings | null {
   const o = obj(raw);
   const circuitId = str(o?.circuitId, 40);
   const laps = num(o?.laps, 1, 20);
-  return circuitId && laps !== null ? { circuitId, laps: Math.round(laps) } : null;
+  if (!circuitId || laps === null) return null;
+  const ranked = o?.ranked === 'scooter' || o?.ranked === 'manual' ? o.ranked : undefined;
+  return { circuitId, laps: Math.round(laps), ...(ranked && { ranked }) };
 }
 
 function parsePose(raw: unknown): PosePayload | null {

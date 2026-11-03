@@ -37,7 +37,7 @@ export const RACE_STEP_LABELS: Readonly<Record<RaceStep, string>> = {
 
 /** Straight-line drag race, or laps of a road circuit. */
 /** `room`: a circuit race with friends, set up in a room instead of the garage steps. */
-export type Discipline = 'drag' | 'circuit' | 'room';
+export type Discipline = 'drag' | 'circuit' | 'room' | 'ranked';
 
 export const MAX_CIRCUIT_OPPONENTS = 3;
 export const MAX_LAPS = 10;

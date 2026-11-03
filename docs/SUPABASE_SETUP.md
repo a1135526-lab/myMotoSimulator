@@ -17,13 +17,16 @@
 
 ## 資料庫檔案（依序執行）
 
-| 檔案                       | 內容                                 | 可以重複執行嗎                              |
-| -------------------------- | ------------------------------------ | ------------------------------------------- |
-| `supabase/schema.sql`      | 排行榜、暱稱、規則表                 | ⚠️ 會**清空**排行榜，正式上線後不要整份重跑 |
-| `supabase/002_matches.sql` | 對戰紀錄（個人資訊頁的雲端同步）     | ✅ 只新增，不會動到排行榜                   |
-| `supabase/003_friends.sql` | 好友（邀請、接受、移除、看好友戰績） | ✅ 只新增                                   |
+| 檔案                       | 內容                                 | 可以重複執行嗎                                |
+| -------------------------- | ------------------------------------ | --------------------------------------------- |
+| `supabase/schema.sql`      | 排行榜、暱稱、規則表                 | ⚠️ 會**清空**排行榜，正式上線後不要整份重跑   |
+| `supabase/002_matches.sql` | 對戰紀錄（個人資訊頁的雲端同步）     | ✅ 只新增，不會動到排行榜                     |
+| `supabase/003_friends.sql` | 好友（邀請、接受、移除、看好友戰績） | ✅ 只新增                                     |
+| `supabase/004_ranked.sql`  | 排位賽積分、排位排行榜               | ✅ 只新增（`add_matches` 會更新成接受排位賽） |
 
 `002_matches.sql`：每位玩家自己的比賽紀錄（`matches` 表），只能透過 `add_matches`（一次最多 100 場、每人上限 5000 場）和 `get_my_matches`（只回傳自己的）存取。
+
+`004_ranked.sql`：`ranked` 表存每人每組的積分，`ranked_reports` 防止同一場回報兩次。只能透過 `report_ranked`（伺服器依名次算分、30 秒最多一場）、`get_my_ranked`、`get_ranked_board` 存取。配對本身走 Realtime presence 頻道 `mm:scooter`／`mm:manual`，不碰資料庫。新增排位賽道時，改 `src/domain/ranked/ranking.ts` 的 `RANKED_CIRCUITS` 即可；改加減分表要同時改 `ranking.ts` 和 SQL 的 `ranked_delta()`。
 
 ## 安全設計（schema.sql）
 

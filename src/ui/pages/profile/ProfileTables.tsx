@@ -21,7 +21,7 @@ const dateTime = (ms: number) => {
 };
 
 export function KindTable({ stats }: { stats: MatchStats }) {
-  const kinds: MatchKind[] = ['room', 'circuit', 'drag'];
+  const kinds: MatchKind[] = ['ranked', 'room', 'circuit', 'drag'];
   return (
     <table className={styles.table}>
       <thead>

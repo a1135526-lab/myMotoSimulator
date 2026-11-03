@@ -41,7 +41,8 @@ interface RoomState {
   readonly waitingForNext: boolean;
   readonly finishes: Readonly<Record<string, RoomFinish>>;
   readonly error: string | null;
-  create(profile: RoomProfile, settings: RoomSettings): Promise<void>;
+  /** A new room; `code` to use a given one (a ranked match the matchmaker named). */
+  create(profile: RoomProfile, settings: RoomSettings, code?: string): Promise<void>;
   join(code: string, profile: RoomProfile): Promise<void>;
   leave(): void;
   /** Your bike changed: tell the room. */
@@ -184,8 +185,8 @@ export const useRoomStore = create<RoomState>()((set, get) => {
     settings: { circuitId: 'practice-park', laps: 3 },
     error: null,
 
-    create: async (profile, settings) => {
-      const entered = await enter(newRoomCode(random), profile);
+    create: async (profile, settings, code) => {
+      const entered = await enter(code ?? newRoomCode(random), profile);
       if (!entered) return;
       presenceSeen = null;
       set({ status: 'lobby', settings });
