@@ -1,4 +1,4 @@
-# Scooter Dyno Simulator
+# 揍灰來尬掐
 
 > 🎮 **直接玩：<https://a1135526-lab.github.io/myMotoSimulator/>**（電腦、手機都可以，不用安裝）
 >

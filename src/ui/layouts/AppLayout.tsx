@@ -27,7 +27,7 @@ export function AppLayout({ toolbar, children, immersive = false }: AppLayoutPro
           <span className={styles.logo} aria-hidden>
             ◔
           </span>
-          Scooter Dyno Simulator
+          揍灰來尬掐
         </h1>
         <div className={styles.toolbar}>
           {toolbar}

@@ -93,7 +93,7 @@ export function HomePage() {
       </header>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>機車模擬器</h1>
+        <h1 className={styles.title}>揍灰來尬掐</h1>
         <p className={styles.subtitle}>選一個模式開始</p>
         <div className={styles.grid}>
           {ENTRIES.map((e) => (

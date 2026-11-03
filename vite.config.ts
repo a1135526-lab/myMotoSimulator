@@ -17,8 +17,8 @@ export default defineConfig({
       injectRegister: false,
       includeAssets: ['icon.svg', 'apple-touch-icon.png', 'favicon-32.png'],
       manifest: {
-        name: 'Scooter Dyno Simulator 機車模擬器',
-        short_name: '機車模擬器',
+        name: '揍灰來尬掐',
+        short_name: '揍灰來尬掐',
         description: '機車動力模擬器：馬力機、直線加速、賽道繞圈、楠梓街景。',
         lang: 'zh-Hant-TW',
         start_url: '.',

@@ -22,7 +22,7 @@ export function RoomLobby() {
   const iAmHost = !!me && host?.id === me.id;
   const circuit = circuits.find((c) => c.id === settings.circuitId);
 
-  const invite = `來機車模擬器跟我比賽！好友對戰的房號：${code ?? ''}\n${window.location.origin}${import.meta.env.BASE_URL}`;
+  const invite = `來揍灰來尬掐跟我比賽！好友對戰的房號：${code ?? ''}\n${window.location.origin}${import.meta.env.BASE_URL}`;
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(invite);
