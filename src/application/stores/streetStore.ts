@@ -77,7 +77,8 @@ export const useStreetStore = create<StreetStoreState>()((set) => ({
   // Riding aids start off: the player opts in.
   autoShift: false,
   autoClutch: false,
-  camera: 'third',
+  // Onboard by default, as on the circuit.
+  camera: 'first',
   mapOpen: false,
   missionsOpen: false,
   missionResult: null,

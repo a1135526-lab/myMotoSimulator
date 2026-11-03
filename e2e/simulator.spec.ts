@@ -166,9 +166,9 @@ test.describe('circuit race', () => {
     const speed = async () => Number(await page.getByTestId('circuit-speed').textContent());
     await expect.poll(speed, { timeout: 10_000 }).toBeGreaterThan(40);
 
-    await expect(page.getByTestId('camera-toggle')).toContainText('切到第一人稱');
-    await page.keyboard.press('KeyV');
     await expect(page.getByTestId('camera-toggle')).toContainText('切到第三人稱');
+    await page.keyboard.press('KeyV');
+    await expect(page.getByTestId('camera-toggle')).toContainText('切到第一人稱');
 
     await page.keyboard.down('ArrowLeft');
     await expect

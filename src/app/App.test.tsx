@@ -181,7 +181,9 @@ describe('App (circuit racing)', () => {
     expect(await screen.findByTestId('circuit-canvas', {}, LAZY)).toBeInTheDocument();
     expect(screen.getByTestId('circuit-hint')).toHaveTextContent('按 Space 開始亮燈');
     expect(screen.getByTestId('race-lap')).toHaveTextContent('LAP 1/1');
-    fireEvent.click(screen.getByTestId('camera-toggle'));
+    // Onboard by default; V / the button swaps to the chase camera.
     expect(screen.getByTestId('camera-toggle')).toHaveTextContent('切到第三人稱');
+    fireEvent.click(screen.getByTestId('camera-toggle'));
+    expect(screen.getByTestId('camera-toggle')).toHaveTextContent('切到第一人稱');
   });
 });

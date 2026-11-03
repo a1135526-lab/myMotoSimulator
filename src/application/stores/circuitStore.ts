@@ -32,7 +32,8 @@ interface CircuitStoreState {
 
 export const useCircuitStore = create<CircuitStoreState>()((set) => ({
   view: null,
-  camera: 'third',
+  // Onboard by default: the rider's own view, leaning with the bike.
+  camera: 'first',
   lapNotice: null,
   publish: (view) => set({ view }),
   setLapNotice: (lapNotice) => set({ lapNotice }),
