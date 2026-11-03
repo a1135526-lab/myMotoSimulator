@@ -182,6 +182,20 @@ describe('CircuitController', () => {
     expect(view().player.driftPct).toBe(0);
   });
 
+  it('a friend room: Space does nothing, the host start does; out of time ends the race', () => {
+    const { controller, view } = setup();
+    controller.setRoomMode(true);
+    controller.go();
+    expect(view().phase).toBe('grid');
+    controller.startRoomRace(0.5);
+    runFor(controller, 7);
+    expect(view().phase).toBe('racing');
+    controller.setOutOfTime(() => true);
+    controller.tick(1 / 30);
+    expect(view().phase).toBe('finished');
+    expect(view().riders[0]?.finishTimeS).toBeNull();
+  });
+
   it('V toggles the camera; R puts the player back on track', () => {
     const { controller, camera, view } = setup();
     controller.handleAction('toggleCamera');

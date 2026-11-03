@@ -46,6 +46,7 @@ ui → application → domain
 - **街景任務**：定義在 `src/data/cities/missions.ts`（用地標的確切名稱），`streetMissions(map)` 對應到地圖並算好路線；規則在 `domain/street/missions.ts`。
 - **全球排行榜**：Supabase，結構和所有規則在 `supabase/schema.sql`（資料表全鎖，只開放 RPC），前端在 `src/application/online/`。新增賽道／直線賽道／任務時，`schema.sql` 的規則表也要加（見 `docs/SUPABASE_SETUP.md`）。登入是選擇性的：不登入照常玩、只記本機紀錄；登入後沒有暱稱會自動問一次。測試一律離線：Vitest 不載入 `.env.*`，Playwright 用 `VITE_ONLINE=off`。絕不放 secret / service_role key。
 - **好友對戰**：`src/application/online/room/`。Supabase Realtime 的 broadcast（訊息）＋ presence（誰在房間），頻道 `room:<5 碼房號>`，不碰資料庫。房主 = 最早加入的人；開始時房主送出同一個 `holdS`，各自用 `CircuitController.startRoomRace()` 起跑。別人的位置用 `RemoteRiders` 延遲 150 ms 補間，`withRemoteRiders()` 合進 `CircuitView` 重新排名次。收到的訊息一律經 `parseMessage()` 檢查。測試用 `FakeHub` 模擬多人。
+- **大廳／對戰紀錄**：`uiStore.mode` 預設 `home`（大廳），`profile` 是個人資訊頁。比賽結束時 `stats/matchRecorder.ts` 寫一筆 `MatchRecord` 到 `matchStore`（localStorage `scooter-dyno:matches`，登入後經 `supabase/002_matches.sql` 的 RPC 同步）；數據由 `matchStats()` 純函式算出。好友對戰的強制結束：第一名完賽時間 + `ROOM_FINISH_WINDOW_S`（15 s），由 `CircuitController.setOutOfTime` 判定。e2e 和 App 測試從大廳出發，需要模擬器的測試要先點 `mode-simulator`。
 - **PWA**：`vite-plugin-pwa`，service worker 只存在於正式 build（`npm run dev` 沒有），e2e 用 `serviceWorkers: 'block'`。改了 `public/icon.svg` 要跑 `node scripts/icons/render-icons.mjs`。
 - **車款資料**：每個規格區塊都有 `provenance`；沒查證的數值 UI 會標「估計值」。不要把估計值寫成已查證。
 - **街景地圖**：`src/data/cities/nanzih/nanzih.json` 由 `scripts/osm/` 從 OpenStreetMap 產生，不要手改；資料 © OpenStreetMap 貢獻者（ODbL），README 的標示要保留。

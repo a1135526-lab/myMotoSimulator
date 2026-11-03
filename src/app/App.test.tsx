@@ -1,10 +1,27 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from './App';
-import { useConfigStore, useRaceStore } from '@/application';
+import { useConfigStore, useRaceStore, useUiStore } from '@/application';
 
 /** The race modes are a lazy chunk (Three.js); its first load in a cold test run takes a while. */
 const LAZY = { timeout: 10_000 };
+
+// Every visit starts in the lobby; these tests begin on the simulator.
+beforeEach(() => useUiStore.setState({ mode: 'simulator' }));
+
+describe('App (lobby)', () => {
+  it('starts in the lobby: profile at the top left, a card per mode', () => {
+    useUiStore.setState({ mode: 'home' });
+    render(<App />);
+    expect(screen.getByTestId('open-profile')).toHaveTextContent('0 場');
+    fireEvent.click(screen.getByTestId('home-simulator'));
+    expect(screen.getByTestId('bike-select')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('mode-home'));
+    fireEvent.click(screen.getByTestId('open-profile'));
+    expect(screen.getByTestId('profile')).toHaveTextContent('訪客');
+    expect(screen.getByTestId('stat-總場次')).toHaveTextContent('0');
+  });
+});
 
 describe('App (integration)', () => {
   beforeEach(() => {

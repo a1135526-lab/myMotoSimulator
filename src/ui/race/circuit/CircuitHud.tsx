@@ -3,6 +3,7 @@ import { MIN_HUMAN_REACTION_S, type CameraMode, type CircuitView } from '@/appli
 import { CircuitMap } from './CircuitMap';
 import { fmtLap } from './format';
 import { Cluster } from './hud/Cluster';
+import { FinishCountdown } from './hud/FinishCountdown';
 import { LapNoticeBanner } from './hud/LapNoticeBanner';
 import { LeanDrift } from './hud/LeanDrift';
 import { GO_FLASH_S, StartGantry } from './hud/StartGantry';
@@ -86,6 +87,7 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
   return (
     <div className={styles.hud}>
       <LapNoticeBanner />
+      <FinishCountdown view={view} />
       <div
         className={styles.vignette}
         style={{ opacity: vignette, '--drift': player.driftPct / PERCENT } as CSSProperties}

@@ -166,6 +166,10 @@ export const resetPlayer = (
   return model ? updatePlayer(race, (r) => recoverRider(context(race, geo, model), r)) : race;
 };
 
+/** Out of time (a friend room's finish window closed): the race ends without your flag. */
+export const retireCircuitPlayer = (race: CircuitRaceState): CircuitRaceState =>
+  race.phase === 'racing' ? { ...race, phase: 'finished' } : race;
+
 function nextPhase(race: CircuitRaceState): CircuitPhase {
   if (race.phase === 'grid' || race.phase === 'finished') return race.phase;
   const player = race.riders[0];

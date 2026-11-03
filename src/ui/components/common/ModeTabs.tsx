@@ -2,6 +2,7 @@ import { useUiStore, type AppMode } from '@/application';
 import styles from './common.module.css';
 
 const MODES: { id: AppMode; label: string }[] = [
+  { id: 'home', label: '🏠 大廳' },
   { id: 'simulator', label: '模擬器' },
   { id: 'race', label: '賽道模式' },
   { id: 'street', label: '街景模式' },

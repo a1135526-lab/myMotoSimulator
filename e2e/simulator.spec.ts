@@ -10,6 +10,7 @@ test.describe('desktop keyboard', () => {
 
   test('select bike → change rollers → hold ↑ → speed rises', async ({ page }) => {
     await page.goto('/');
+    await page.getByTestId('mode-simulator').click(); // from the lobby
     await page.getByTestId('bike-select').selectOption('sym-jet-sl-125');
     await expect(page.getByTestId('roller-set')).toHaveValue('12');
     await page.getByTestId('roller-set').selectOption('10');
@@ -31,6 +32,7 @@ test.describe('desktop keyboard', () => {
 
   test('Space times a launch; R resets', async ({ page }) => {
     await page.goto('/');
+    await page.getByTestId('mode-simulator').click(); // from the lobby
     await page.locator('h1').click();
     await page.keyboard.press('Space');
     await expect(page.getByTestId('timer-phase')).toHaveAttribute('data-phase', 'armed');
@@ -53,6 +55,7 @@ test.describe('manual bike', () => {
 
   test('clutch → 1st → rev → release clutch → upshift', async ({ page }) => {
     await page.goto('/');
+    await page.getByTestId('mode-simulator').click(); // from the lobby
     await page.getByTestId('kind-manual').click();
     await page.getByTestId('bike-select').selectOption('kawasaki-ninja-400');
     await page.locator('h1').click();
@@ -78,6 +81,7 @@ test.describe('manual bike', () => {
 
   test('dumping the clutch at idle stalls; Enter restarts in neutral', async ({ page }) => {
     await page.goto('/');
+    await page.getByTestId('mode-simulator').click(); // from the lobby
     await page.getByTestId('kind-manual').click();
     await page.locator('h1').click();
     await page.keyboard.down('Shift');

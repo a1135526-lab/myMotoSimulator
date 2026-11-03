@@ -591,3 +591,56 @@
   font-size: 0.8rem;
   font-weight: 600;
 }
+
+/* ---- Friend room: finish window after the winner's flag ---- */
+.countdown {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 26px;
+  border-radius: 16px;
+  background: var(--glass);
+  backdrop-filter: blur(6px);
+  border: 2px solid var(--hud-accent);
+}
+
+.countdown span {
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  font-weight: 700;
+}
+
+.countdown strong {
+  font-size: clamp(2.6rem, 8vw, 4.5rem);
+  line-height: 1;
+  font-weight: 800;
+}
+
+.countdown small {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.countdown[data-urgent] {
+  border-color: var(--led-r);
+}
+
+.countdown[data-urgent] strong {
+  color: var(--led-r);
+}
+
+.countdownWait {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: var(--glass);
+  font-weight: 700;
+  white-space: nowrap;
+}

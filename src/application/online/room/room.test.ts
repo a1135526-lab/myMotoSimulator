@@ -3,6 +3,7 @@ import type { CircuitRiderView, CircuitView } from '../../viewModels/circuit';
 import { FakeHub } from './fakeRoom';
 import { INTERP_DELAY_MS, RemoteTrack } from './remoteRiders';
 import { newRoomCode, normalizeRoomCode, parseMessage, type PosePayload } from './roomTypes';
+import { roomDeadlineS, ROOM_FINISH_WINDOW_S } from './circuitRoom';
 import { withRemoteRiders } from './withRemoteRiders';
 
 /** A separate copy of the room store per player, all on one fake connection. */
@@ -178,5 +179,34 @@ describe('remote bikes', () => {
     const byName = Object.fromEntries(merged.riders.map((r) => [r.name, r.position]));
     expect(byName).toEqual({ 阿明: 3, '阿明 2': 2, 小華: 1 });
     expect(merged.riders[1]?.remote).toBe(true);
+  });
+});
+
+describe('finish window', () => {
+  it('closes 15 s after the first flag', () => {
+    expect(roomDeadlineS({})).toBeNull();
+    expect(
+      roomDeadlineS({ a: { timeS: 90, bestLapS: null }, b: { timeS: 84, bestLapS: null } }),
+    ).toBe(84 + ROOM_FINISH_WINDOW_S);
+  });
+
+  it('a flag after the window is a DNF; once closed, the rest are out', () => {
+    const me = { name: '阿明', isPlayer: true, progressM: 500, finishTimeS: 80, position: 1 };
+    const view = { riders: [me as CircuitRiderView] } as unknown as CircuitView;
+    const remote = (id: string, name: string) => ({
+      player: { id, name, bike: 'X', manual: false, cylinders: 1, joinedAt: 0 },
+      pose: pose(400),
+    });
+    const merged = withRemoteRiders(
+      view,
+      [remote('late', '遲到'), remote('slow', '還在跑')],
+      { late: { timeS: 99, bestLapS: null } },
+      { deadlineS: 95, closed: true },
+    );
+    const late = merged.riders.find((r) => r.name === '遲到');
+    const slow = merged.riders.find((r) => r.name === '還在跑');
+    expect(late).toMatchObject({ finishTimeS: null, dnf: true });
+    expect(slow).toMatchObject({ finishTimeS: null, dnf: true });
+    expect(merged.riders[0]?.position).toBe(1);
   });
 });

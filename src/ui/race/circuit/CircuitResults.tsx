@@ -28,7 +28,7 @@ function Results({ view, circuitId, onRematch, onGarage, actions }: CircuitResul
   const order = [...view.riders].sort((a, b) => a.position - b.position);
   const winner = order[0]?.finishTimeS ?? null;
   const me = view.riders[0];
-  const won = me?.position === 1;
+  const won = me?.position === 1 && !me.dnf;
 
   return (
     <div className={styles.resultBackdrop}>
@@ -40,7 +40,7 @@ function Results({ view, circuitId, onRematch, onGarage, actions }: CircuitResul
       >
         <p className={styles.kicker}>FINAL CLASSIFICATION</p>
         <h2 className={won ? styles.win : styles.lose}>
-          {won ? '冠軍！' : `第 ${me?.position ?? '-'} 名`}
+          {me?.dnf ? '未完賽' : won ? '冠軍！' : `第 ${me?.position ?? '-'} 名`}
         </h2>
         <table className={styles.resultTable}>
           <thead>
@@ -60,7 +60,7 @@ function Results({ view, circuitId, onRematch, onGarage, actions }: CircuitResul
                 <th scope="row">{r.name}</th>
                 <td>
                   {r.finishTimeS === null
-                    ? r.remote
+                    ? r.remote && !r.dnf
                       ? '比賽中'
                       : '未完賽'
                     : r.position === 1 || winner === null

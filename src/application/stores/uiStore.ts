@@ -39,7 +39,8 @@ function saveGhostOn(on: boolean): void {
 }
 
 export type DynoView = 'engine' | 'chassis';
-export type AppMode = 'simulator' | 'race' | 'street';
+/** `home`: the lobby every visit starts in; `profile`: your race stats. */
+export type AppMode = 'home' | 'profile' | 'simulator' | 'race' | 'street';
 
 interface UiState {
   readonly mode: AppMode;
@@ -70,7 +71,7 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>()((set) => ({
-  mode: 'simulator',
+  mode: 'home',
   soundOn: loadSound(),
   setSoundOn: (soundOn) => {
     saveSound(soundOn);

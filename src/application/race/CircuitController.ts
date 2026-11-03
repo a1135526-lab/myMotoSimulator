@@ -5,6 +5,7 @@ import {
   CIRCUIT_SKILLS,
   createCircuitRace,
   resetPlayer,
+  retireCircuitPlayer,
   riderSkill,
   shiftCircuitPlayer,
   startCircuitPlayerEngine,
@@ -62,6 +63,8 @@ export class CircuitController {
   private recorder = new LapRecorder();
   /** Racing in a friend room: Space / the start button don't start the lights. */
   private roomMode = false;
+  /** A friend room's finish window has closed on you: end your race unfinished. */
+  private outOfTime: (race: CircuitRaceState) => boolean = () => false;
   private ghost: GhostLap | null = null;
 
   constructor(
@@ -86,6 +89,10 @@ export class CircuitController {
 
   setRoomMode(on: boolean): void {
     this.roomMode = on;
+  }
+
+  setOutOfTime(check: (race: CircuitRaceState) => boolean): void {
+    this.outOfTime = check;
   }
 
   /** A friend-room start: fresh grid, lights on, the same hold as everyone else. */
@@ -127,6 +134,9 @@ export class CircuitController {
 
   tick(elapsedS: number): void {
     this.race = advanceCircuitRace(this.geo, this.models, this.race, this.input.read(), elapsedS);
+    if (this.race.riders[0]?.finishedAtS === null && this.outOfTime(this.race)) {
+      this.race = retireCircuitPlayer(this.race);
+    }
     const lap = this.recorder.observe(this.geo, this.race);
     if (lap) this.lapCompleted(lap);
     this.emit();

@@ -47,6 +47,10 @@ export interface CircuitRiderView {
   readonly bestLapS: number | null;
   /** Another player in a friend room (their bike runs on their device). */
   readonly remote?: boolean;
+  /** Missed a friend room's finish window: out, unplaced. */
+  readonly dnf?: boolean;
+  /** "Brand Model", for another player in a friend room. */
+  readonly bike?: string;
 }
 
 export interface CircuitPlayerView {
@@ -94,6 +98,10 @@ export interface CircuitView {
   readonly dash: DashboardModel;
   /** Where your best lap was at this point of the current one; null when off or none. */
   readonly ghost: CircuitGhostView | null;
+  /** Friend room: seconds left to take the flag after the winner did; null before. */
+  readonly finishCountdownS?: number | null;
+  /** Friend room: you finished or retired, and so has everyone else. */
+  readonly roomOver?: boolean;
 }
 
 const best = (laps: readonly number[]) => (laps.length ? Math.min(...laps) : null);

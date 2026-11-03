@@ -154,6 +154,10 @@ export {
   type OnlineSubmission,
 } from './online/leaderboard';
 export { missionCatalog } from './street/missionCatalog';
+export { useMatchStore, type SyncState } from './stats/matchStore';
+export { matchStats, type MatchStats, type Tally } from './stats/matchStats';
+export { MATCH_KIND_LABELS, type MatchKind, type MatchRecord } from './stats/matchTypes';
+export { ROOM_FINISH_WINDOW_S } from './online/room/circuitRoom';
 export { amHost, useRoomStore, type RoomProfile, type RoomStatus } from './online/room/roomStore';
 export {
   CODE_LENGTH,

@@ -13,14 +13,22 @@ export function withRemoteRiders(
   view: CircuitView,
   remotes: readonly RemoteRider[],
   finishes: Readonly<Record<string, RoomFinish>>,
+  /** The finish window: a flag later than `deadlineS` doesn't count; once `closed`, the rest are out. */
+  window: { readonly deadlineS: number | null; readonly closed: boolean } = {
+    deadlineS: null,
+    closed: false,
+  },
 ): CircuitView {
   if (remotes.length === 0) return view;
+  const inTime = (t: number | null) =>
+    t !== null && (window.deadlineS === null || t <= window.deadlineS) ? t : null;
   const taken = new Set(view.riders.map((r) => r.name));
   const added = remotes.map(({ player, pose }): CircuitRiderView => {
     let name = player.name;
     for (let n = 2; taken.has(name); n++) name = `${player.name} ${n}`;
     taken.add(name);
     const finish = finishes[player.id];
+    const timeS = inTime(finish?.timeS ?? pose.finishTimeS);
     return {
       name,
       isPlayer: false,
@@ -41,9 +49,11 @@ export function withRemoteRiders(
       progressM: pose.progressM,
       position: 0,
       crashed: pose.crashed,
-      finishTimeS: finish?.timeS ?? pose.finishTimeS,
+      finishTimeS: timeS,
       bestLapS: finish?.bestLapS ?? pose.bestLapS,
       remote: true,
+      bike: player.bike,
+      dnf: timeS === null && window.closed,
     };
   });
   const all = [...view.riders, ...added];

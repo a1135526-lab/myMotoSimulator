@@ -9,6 +9,7 @@ import { useCircuitStore } from '../stores/circuitStore';
 import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
 import { roomFrame, useCircuitRoom } from '../online/room/circuitRoom';
+import { observeCircuitMatch } from '../stats/matchRecorder';
 import { useRoomStore } from '../online/room/roomStore';
 import { loadGhost, saveGhost, useRecordsStore } from '../stores/recordsStore';
 import { useUiStore } from '../stores/uiStore';
@@ -141,20 +142,19 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
     () =>
       new CircuitController(
         config,
-        ({ race, geo, models, names, ghost }) =>
-          useCircuitStore
-            .getState()
-            .publish(
-              roomFrame(
-                toCircuitView(
-                  race,
-                  geo,
-                  models,
-                  names,
-                  useUiStore.getState().ghostOn ? ghost : null,
-                ),
-              ),
-            ),
+        ({ race, geo, models, names, ghost }) => {
+          const view = roomFrame(
+            toCircuitView(race, geo, models, names, useUiStore.getState().ghostOn ? ghost : null),
+          );
+          const { circuit, laps, player } = applied.current;
+          if (useRaceStore.getState().discipline !== 'room') {
+            observeCircuitMatch(view, circuit.id, laps, {
+              label: `${player.bike.brand} ${player.bike.model}`,
+              manual: player.bike.kind === 'manual',
+            });
+          }
+          useCircuitStore.getState().publish(view);
+        },
         () => useCircuitStore.getState().toggleCamera(),
         Math.random,
         (lap) => recordLap(applied.current, lap),

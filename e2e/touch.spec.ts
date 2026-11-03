@@ -20,6 +20,7 @@ test.describe('mobile touch', () => {
 
   test('holding the on-screen throttle accelerates; brake and reset stop it', async ({ page }) => {
     await page.goto('/');
+    await page.getByTestId('mode-simulator').click(); // from the lobby
     let lift = await touchHold(page, '油門');
     await expect.poll(() => speed(page), { timeout: 5000 }).toBeGreaterThan(20);
     await lift();
@@ -37,6 +38,7 @@ test.describe('mobile touch', () => {
 
   test('two fingers: hold the clutch and tap a shift', async ({ page }) => {
     await page.goto('/');
+    await page.getByTestId('mode-simulator').click(); // from the lobby
     await page.getByTestId('kind-manual').click();
     const gear = page.getByTestId('gear-indicator');
     await expect(gear).toHaveText('N');
@@ -118,7 +120,10 @@ test.describe('phone on its side: custom buttons and flick shifting', () => {
 
   async function enterDragRace(page: Page, manual = false) {
     await page.goto('/');
-    if (manual) await page.getByTestId('kind-manual').click();
+    if (manual) {
+      await page.getByTestId('mode-simulator').click(); // from the lobby
+      await page.getByTestId('kind-manual').click();
+    }
     await page.getByTestId('mode-race').click();
     await page.getByTestId('discipline-drag').click();
     for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();

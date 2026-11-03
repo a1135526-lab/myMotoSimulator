@@ -3,6 +3,7 @@ import { getBike } from '@/data';
 import { selectionForLevel } from '../race/opponentSetup';
 import type { RaceResult } from '@/domain';
 import { sendScore, submitDrag } from '../online/leaderboard';
+import { recordDragMatch } from '../stats/matchRecorder';
 import { RaceController, type RaceConfig } from '../race/RaceController';
 import { useConfigStore } from '../stores/configStore';
 import { activeTrack, useRaceStore } from '../stores/raceStore';
@@ -47,6 +48,17 @@ function useRaceConfig(): RaceConfig {
 function recordRun(config: RaceConfig, result: RaceResult): void {
   const store = useRaceStore.getState();
   const me = result.player;
+  const strip = activeTrack(store.trackId, store.customDistanceM);
+  const oppBike = config.opponent.bike;
+  recordDragMatch(
+    result,
+    { trackId: strip.track.id, distanceM: strip.distanceM },
+    {
+      label: `${config.player.bike.brand} ${config.player.bike.model}`,
+      manual: config.player.bike.kind === 'manual',
+    },
+    `${oppBike.brand} ${oppBike.model}`,
+  );
   if (me.falseStart || !me.finished || me.elapsedS === null || me.trapSpeedKmh === null) {
     store.setDragRecord(null);
     return;

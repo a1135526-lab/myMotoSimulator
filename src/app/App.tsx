@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { SimulationProvider, useUiStore } from '@/application';
 import { UpdatePrompt } from '@/ui/components/common/UpdatePrompt';
+import { HomePage } from '@/ui/pages/home/HomePage';
+import { ProfilePage } from '@/ui/pages/profile/ProfilePage';
 import { SimulatorPage } from '@/ui/pages/SimulatorPage';
 
 const RaceRoot = lazy(() => import('@/ui/race/RaceRoot'));
@@ -21,6 +23,8 @@ export function App() {
 
 function ModeRoot() {
   const mode = useUiStore((s) => s.mode);
+  if (mode === 'home') return <HomePage />;
+  if (mode === 'profile') return <ProfilePage />;
   if (mode === 'street') {
     return (
       <Suspense fallback={<p style={{ padding: 16 }}>載入 3D 街景中…</p>}>
