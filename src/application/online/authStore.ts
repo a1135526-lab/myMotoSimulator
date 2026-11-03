@@ -9,6 +9,8 @@ interface AuthState {
   /** offline: this build has no leaderboard server. */
   readonly status: AuthStatus;
   readonly email: string | null;
+  /** Your account id (friends and invites are addressed by it). */
+  readonly userId: string | null;
   /** Shown on the boards; null until chosen (then scores can't be sent yet). */
   readonly nickname: string | null;
   readonly profile: ProfileStatus;
@@ -77,6 +79,7 @@ function loadProfile(): void {
 export const useAuthStore = create<AuthState>()((set) => ({
   status: supabase ? 'loading' : 'offline',
   email: null,
+  userId: null,
   nickname: null,
   profile: 'unknown',
   reloadProfile: loadProfile,
@@ -91,7 +94,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   signOut: async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
-    set({ status: 'signedOut', email: null, nickname: null, profile: 'unknown' });
+    set({ status: 'signedOut', email: null, userId: null, nickname: null, profile: 'unknown' });
   },
   setNickname: async (name) => {
     if (!supabase) return '目前沒有連線到排行榜';
@@ -113,13 +116,18 @@ if (supabase) {
       useAuthStore.setState({
         status: 'signedOut',
         email: null,
+        userId: null,
         nickname: null,
         profile: 'unknown',
       });
       return;
     }
     const wasSignedIn = useAuthStore.getState().status === 'signedIn';
-    useAuthStore.setState({ status: 'signedIn', email: session.user.email ?? null });
+    useAuthStore.setState({
+      status: 'signedIn',
+      email: session.user.email ?? null,
+      userId: session.user.id,
+    });
     // Token refreshes keep the same player; only look the nickname up on sign-in.
     // Outside the callback: Supabase asks not to await its own calls in here.
     if (!wasSignedIn) setTimeout(loadProfile, 0);

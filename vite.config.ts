@@ -42,7 +42,7 @@ export default defineConfig({
       },
       workbox: {
         // Everything, including the 3D chunks and the city map, so every mode works offline.
-        globPatterns: ['**/*.{js,css,html,svg,png,json}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg,json}'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
           {

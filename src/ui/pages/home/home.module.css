@@ -1,4 +1,7 @@
 .shell {
+  position: relative;
+  /* Its own layer, so the backdrop (z-index −1) sits behind the page but above the body. */
+  isolation: isolate;
   max-width: 1100px;
   margin: 0 auto;
   padding: calc(16px + env(safe-area-inset-top)) 16px 24px;
@@ -12,15 +15,19 @@
   gap: 12px;
 }
 
+.topLeft {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
 .topRight {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-}
-
-.tabs {
-  margin-top: 14px;
 }
 
 .chip {
@@ -95,9 +102,9 @@
 
 .card {
   display: grid;
-  align-content: start;
+  align-content: end;
   gap: 6px;
-  min-height: 150px;
+  min-height: 190px;
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -105,19 +112,22 @@
   color: var(--text);
   text-align: left;
   cursor: pointer;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 0.8);
   transition:
-    transform 0.12s ease,
-    border-color 0.12s ease;
+    transform 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--accent);
 }
 
 .card[data-feature] {
   border-color: var(--accent);
-  background: linear-gradient(160deg, var(--accent-soft), var(--surface) 70%);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 10px 30px rgb(255 122 26 / 0.25);
 }
 
 .card strong {
@@ -125,7 +135,7 @@
 }
 
 .card span:last-child {
-  color: var(--text-muted);
+  color: rgb(255 255 255 / 0.85);
   font-size: 0.85rem;
   line-height: 1.5;
 }

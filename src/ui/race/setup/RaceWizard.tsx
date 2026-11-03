@@ -7,7 +7,8 @@ import {
   useRaceStore,
   type RaceStep,
 } from '@/application';
-import { ModeTabs } from '../../components/common/ModeTabs';
+import { artBackground } from '../../art';
+import { HomeButton } from '../../components/common/HomeButton';
 import { SoundToggle } from '../../components/common/SoundToggle';
 import { AppLayout } from '../../layouts/AppLayout';
 import { BikeGrid } from './BikeGrid';
@@ -62,6 +63,7 @@ function StepMode() {
           role="radio"
           aria-checked={discipline === m.id}
           className={discipline === m.id ? styles.modeCardActive : styles.modeCard}
+          style={{ background: artBackground(m.id === 'drag' ? 'drag' : m.id) }}
           onClick={() => {
             setDiscipline(m.id);
             // A room is set up in its own lobby, not the garage steps.
@@ -103,7 +105,7 @@ export function RaceWizard() {
     <AppLayout
       toolbar={
         <>
-          <ModeTabs />
+          <HomeButton />
           <SoundToggle />
         </>
       }

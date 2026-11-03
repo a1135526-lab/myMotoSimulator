@@ -17,6 +17,8 @@ export interface RoomPlayer {
   readonly cylinders: number;
   /** When they joined, ms; the earliest one in the room is the host. */
   readonly joinedAt: number;
+  /** Their account nickname when signed in (to add them as a friend). */
+  readonly accountName?: string;
 }
 
 export interface RoomSettings {
@@ -85,7 +87,16 @@ export function parsePlayer(raw: unknown): RoomPlayer | null {
   const cylinders = num(o.cylinders, 1, 16);
   const joinedAt = num(o.joinedAt, 0, Number.MAX_SAFE_INTEGER);
   if (!id || !name || !bike || cylinders === null || joinedAt === null) return null;
-  return { id, name, bike, manual: o.manual === true, cylinders, joinedAt };
+  const accountName = str(o.accountName, NAME_MAX) ?? undefined;
+  return {
+    id,
+    name,
+    bike,
+    manual: o.manual === true,
+    cylinders,
+    joinedAt,
+    ...(accountName && { accountName }),
+  };
 }
 
 function parseSettings(raw: unknown): RoomSettings | null {

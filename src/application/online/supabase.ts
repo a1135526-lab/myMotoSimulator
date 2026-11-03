@@ -28,6 +28,10 @@ const MESSAGES: Readonly<Record<string, string>> = {
   nickname_chars: '暱稱只能用文字、數字、空格、底線和減號',
   nickname_blocked: '暱稱含有不適當的字詞',
   nickname_taken: '這個暱稱已經有人用了',
+  friend_not_found: '找不到這個暱稱的玩家',
+  friend_self: '不能加自己為好友',
+  too_many_friends: '好友數量已達上限（200 位）',
+  not_friends: '你們還不是好友',
 };
 
 export function errorText(error: unknown): string {

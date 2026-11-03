@@ -1,4 +1,7 @@
 .shell {
+  position: relative;
+  /* Its own layer, so an ArtBackdrop (z-index −1) sits behind the page but above the body. */
+  isolation: isolate;
   max-width: 1440px;
   margin: 0 auto;
   padding: 16px;

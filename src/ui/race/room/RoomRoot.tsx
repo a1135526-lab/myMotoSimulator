@@ -1,7 +1,15 @@
 import { useEffect, useMemo } from 'react';
-import { CircuitProvider, useCurrentBike, useRaceStore, useRoomStore } from '@/application';
-import { ModeTabs } from '../../components/common/ModeTabs';
-import { SoundToggle } from '../../components/common/SoundToggle';
+import {
+  CircuitProvider,
+  useAuthStore,
+  useCurrentBike,
+  useRaceStore,
+  useRoomStore,
+} from '@/application';
+import { HomeButton } from '../../components/common/HomeButton';
+import { MusicToggle } from '../../components/common/MusicToggle';
+import { LobbyMusicPlayer } from '../../audio/LobbyMusicPlayer';
+import { ArtBackdrop } from '../../components/common/ArtBackdrop';
 import { AppLayout } from '../../layouts/AppLayout';
 import { CircuitPage } from '../circuit/CircuitPage';
 import { RoomEntry } from './RoomEntry';
@@ -13,22 +21,22 @@ export function RoomRoot() {
   const me = useRoomStore((s) => s.me);
   const updateProfile = useRoomStore((s) => s.updateProfile);
   const bike = useCurrentBike();
+  const nickname = useAuthStore((s) => s.nickname);
   const profile = useMemo(
     () => ({
       bike: `${bike.brand} ${bike.model}`,
       manual: bike.kind === 'manual',
       cylinders: bike.engine.cylinders,
+      // Signed in: others in the room can add you as a friend by it.
+      ...(nickname && { accountName: nickname }),
     }),
-    [bike],
+    [bike, nickname],
   );
 
   // A new bike in the lobby: let the others see it.
   useEffect(() => {
     if (me && me.bike !== profile.bike) updateProfile({ ...profile, name: me.name });
   }, [me, profile, updateProfile]);
-
-  // Leaving race mode (another tab) leaves the room too.
-  useEffect(() => () => useRoomStore.getState().leave(), []);
 
   const back = () => {
     useRoomStore.getState().leave();
@@ -48,11 +56,13 @@ export function RoomRoot() {
     <AppLayout
       toolbar={
         <>
-          <ModeTabs />
-          <SoundToggle />
+          <HomeButton />
+          <MusicToggle />
         </>
       }
     >
+      <LobbyMusicPlayer />
+      <ArtBackdrop name="room" />
       {status === 'lobby' ? <RoomLobby /> : <RoomEntry profile={profile} onBack={back} />}
     </AppLayout>
   );

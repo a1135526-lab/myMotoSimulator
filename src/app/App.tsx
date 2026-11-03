@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { SimulationProvider, useUiStore } from '@/application';
 import { UpdatePrompt } from '@/ui/components/common/UpdatePrompt';
+import { InviteToasts } from '@/ui/components/friends/InviteToasts';
 import { HomePage } from '@/ui/pages/home/HomePage';
 import { ProfilePage } from '@/ui/pages/profile/ProfilePage';
 import { SimulatorPage } from '@/ui/pages/SimulatorPage';
@@ -17,6 +18,7 @@ export function App() {
     <>
       <ModeRoot />
       <UpdatePrompt />
+      <InviteToasts />
     </>
   );
 }

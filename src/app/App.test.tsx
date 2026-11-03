@@ -16,7 +16,7 @@ describe('App (lobby)', () => {
     expect(screen.getByTestId('open-profile')).toHaveTextContent('0 場');
     fireEvent.click(screen.getByTestId('home-simulator'));
     expect(screen.getByTestId('bike-select')).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('mode-home'));
+    fireEvent.click(screen.getByTestId('go-home'));
     fireEvent.click(screen.getByTestId('open-profile'));
     expect(screen.getByTestId('profile')).toHaveTextContent('訪客');
     expect(screen.getByTestId('stat-總場次')).toHaveTextContent('0');
@@ -123,11 +123,11 @@ describe('App (race mode)', () => {
 
   it('walks the garage: track → bike → tune → opponent → race', async () => {
     render(<App />);
-    fireEvent.click(screen.getByTestId('mode-race'));
+    fireEvent.click(screen.getByTestId('go-home'));
+    fireEvent.click(screen.getByTestId('home-drag'));
 
     // 1. Track
-    fireEvent.click(await screen.findByTestId('discipline-drag', {}, LAZY));
-    fireEvent.click(await screen.findByTestId('track-custom'));
+    fireEvent.click(await screen.findByTestId('track-custom', {}, LAZY));
     fireEvent.change(screen.getByTestId('race-distance'), { target: { value: '1000' } });
     expect(screen.getByText(/自訂賽道・1000 m/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('wizard-next'));
@@ -163,13 +163,15 @@ describe('App (race mode)', () => {
     expect(screen.getByTestId('race-hint')).toHaveTextContent('注意燈號');
     expect(screen.getByTestId('back-to-garage')).toBeDisabled();
 
-    fireEvent.click(screen.getByTestId('mode-simulator'));
+    fireEvent.click(screen.getByTestId('go-home'));
+    fireEvent.click(screen.getByTestId('home-simulator'));
     expect(await screen.findByTestId('dashboard')).toBeInTheDocument();
   });
 
   it('steps ahead of the current one are locked', async () => {
     render(<App />);
-    fireEvent.click(screen.getByTestId('mode-race'));
+    fireEvent.click(screen.getByTestId('go-home'));
+    fireEvent.click(screen.getByTestId('home-drag'));
     expect(await screen.findByRole('button', { name: /對手/ }, LAZY)).toBeDisabled();
   });
 });
@@ -182,9 +184,9 @@ describe('App (circuit racing)', () => {
 
   it('picks a circuit, shows lap estimates, and enters a circuit race', async () => {
     render(<App />);
-    fireEvent.click(screen.getByTestId('mode-race'));
-    fireEvent.click(await screen.findByTestId('discipline-circuit', {}, LAZY));
-    fireEvent.click(screen.getByTestId('circuit-hill-town'));
+    fireEvent.click(screen.getByTestId('go-home'));
+    fireEvent.click(screen.getByTestId('home-circuit'));
+    fireEvent.click(await screen.findByTestId('circuit-hill-town', {}, LAZY));
     fireEvent.click(screen.getByTestId('laps-1'));
     expect(screen.getByText(/山城技術賽道・1 圈/)).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('wizard-next'));

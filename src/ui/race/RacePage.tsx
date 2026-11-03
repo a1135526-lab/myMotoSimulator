@@ -6,7 +6,7 @@ import {
   useRaceStore,
 } from '@/application';
 import { useEngineAudio } from '../audio/useEngineAudio';
-import { ModeTabs } from '../components/common/ModeTabs';
+import { HomeButton } from '../components/common/HomeButton';
 import { SoundToggle } from '../components/common/SoundToggle';
 import { KeyHints } from '../components/controls/KeyHints';
 import {
@@ -49,7 +49,7 @@ export function RacePage() {
       immersive={immersive}
       toolbar={
         <>
-          <ModeTabs />
+          <HomeButton />
           <SoundToggle />
           <KeyHints manual={manual} spaceLabel="起跑 / 再比" />
         </>

@@ -20,7 +20,7 @@ test.describe('mobile touch', () => {
 
   test('holding the on-screen throttle accelerates; brake and reset stop it', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-simulator').click(); // from the lobby
+    await page.getByTestId('home-simulator').click();
     let lift = await touchHold(page, '油門');
     await expect.poll(() => speed(page), { timeout: 5000 }).toBeGreaterThan(20);
     await lift();
@@ -38,7 +38,7 @@ test.describe('mobile touch', () => {
 
   test('two fingers: hold the clutch and tap a shift', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-simulator').click(); // from the lobby
+    await page.getByTestId('home-simulator').click();
     await page.getByTestId('kind-manual').click();
     const gear = page.getByTestId('gear-indicator');
     await expect(gear).toHaveText('N');
@@ -81,8 +81,7 @@ test.describe('phone on its side', () => {
 
   test('a 3D race fills the screen with the buttons on the picture', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-race').click();
-    await page.getByTestId('discipline-drag').click();
+    await page.getByTestId('home-drag').click();
     for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
     await expect(page.getByTestId('race-canvas')).toBeVisible();
 
@@ -103,8 +102,7 @@ test.describe('phone on its side', () => {
     // What a rider allowing motion sensors looks like to the page.
     await context.grantPermissions(['accelerometer', 'gyroscope', 'magnetometer']);
     await page.goto('/');
-    await page.getByTestId('mode-race').click();
-    await page.getByTestId('discipline-circuit').click();
+    await page.getByTestId('home-circuit').click();
     for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
     const tilt = page.getByTestId('tilt-toggle');
     await expect(tilt).toHaveAttribute('aria-pressed', 'false');
@@ -121,11 +119,11 @@ test.describe('phone on its side: custom buttons and flick shifting', () => {
   async function enterDragRace(page: Page, manual = false) {
     await page.goto('/');
     if (manual) {
-      await page.getByTestId('mode-simulator').click(); // from the lobby
+      await page.getByTestId('home-simulator').click();
       await page.getByTestId('kind-manual').click();
+      await page.getByTestId('go-home').click();
     }
-    await page.getByTestId('mode-race').click();
-    await page.getByTestId('discipline-drag').click();
+    await page.getByTestId('home-drag').click();
     for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
     await expect(page.getByTestId('race-canvas')).toBeVisible();
   }

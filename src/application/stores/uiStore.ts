@@ -3,6 +3,24 @@ import type { GhostLap } from '@/domain';
 
 const SOUND_KEY = 'scooter-dyno:sound';
 const GHOST_KEY = 'scooter-dyno:ghost-on';
+const MUSIC_KEY = 'scooter-dyno:music';
+
+/** Lobby music: on unless turned off. */
+function loadMusicOn(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(MUSIC_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+function saveMusicOn(on: boolean): void {
+  try {
+    globalThis.localStorage?.setItem(MUSIC_KEY, on ? 'on' : 'off');
+  } catch {
+    // Not persisted; the toggle still works for this session.
+  }
+}
 
 /** Per-viewer convenience only; storage may be blocked, so every access is guarded. */
 function loadSound(): boolean {
@@ -62,6 +80,9 @@ interface UiState {
   /** Shift by flicking the phone forward (up) or back (down); same permission rules as tilt. */
   readonly flickShiftOn: boolean;
   setFlickShiftOn(on: boolean): void;
+  /** Music in the lobby, profile and friend rooms. */
+  readonly musicOn: boolean;
+  setMusicOn(on: boolean): void;
   /** Race your best lap's ghost on circuits. */
   readonly ghostOn: boolean;
   setGhostOn(on: boolean): void;
@@ -88,6 +109,11 @@ export const useUiStore = create<UiState>()((set) => ({
   setFlickShiftOn: (flickShiftOn) => set({ flickShiftOn }),
   rivalGhost: null,
   setRivalGhost: (rivalGhost) => set({ rivalGhost }),
+  musicOn: loadMusicOn(),
+  setMusicOn: (musicOn) => {
+    saveMusicOn(musicOn);
+    set({ musicOn });
+  },
   ghostOn: loadGhostOn(),
   setGhostOn: (ghostOn) => {
     saveGhostOn(ghostOn);

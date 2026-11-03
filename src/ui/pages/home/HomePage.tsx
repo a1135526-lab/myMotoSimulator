@@ -1,6 +1,9 @@
 import { useRaceStore, useUiStore, type Discipline } from '@/application';
-import { ModeTabs } from '../../components/common/ModeTabs';
-import { SoundToggle } from '../../components/common/SoundToggle';
+import { artBackground, type ArtName } from '../../art';
+import { useLobbyMusic } from '../../audio/useLobbyMusic';
+import { ArtBackdrop } from '../../components/common/ArtBackdrop';
+import { MusicToggle } from '../../components/common/MusicToggle';
+import { FriendsButton } from '../../components/friends/FriendsButton';
 import { OnlineHeader } from '../../components/online/OnlineHeader';
 import { ProfileChip } from './ProfileChip';
 import styles from './home.module.css';
@@ -13,12 +16,14 @@ const ENTRIES: readonly (Entry & {
   readonly icon: string;
   readonly title: string;
   readonly blurb: string;
+  readonly art: ArtName;
 })[] = [
   {
     id: 'room',
     mode: 'race',
     discipline: 'room',
     icon: '👥',
+    art: 'room',
     title: '好友對戰',
     blurb: '建立房間、分享房號，最多 4 人在同一條賽道即時比賽。',
   },
@@ -27,6 +32,7 @@ const ENTRIES: readonly (Entry & {
     mode: 'race',
     discipline: 'circuit',
     icon: '🏁',
+    art: 'circuit',
     title: '賽道繞圈',
     blurb: '和 AI 跑多圈，壓車過彎、晚煞車，還有自己的幽靈車。',
   },
@@ -35,6 +41,7 @@ const ENTRIES: readonly (Entry & {
     mode: 'race',
     discipline: 'drag',
     icon: '🚦',
+    art: 'drag',
     title: '直線加速',
     blurb: '看燈號起跑，比反應、起步和換檔，402 m 一決勝負。',
   },
@@ -42,6 +49,7 @@ const ENTRIES: readonly (Entry & {
     id: 'street',
     mode: 'street',
     icon: '🏙',
+    art: 'street',
     title: '街景模式',
     blurb: '在真實的高雄楠梓街道自由騎乘，挑戰 9 個限時任務。',
   },
@@ -49,6 +57,7 @@ const ENTRIES: readonly (Entry & {
     id: 'simulator',
     mode: 'simulator',
     icon: '⚙️',
+    art: 'simulator',
     title: '馬力機模擬',
     blurb: '改普利珠、彈簧、齒比，看馬力曲線和加速成績怎麼變。',
   },
@@ -57,6 +66,7 @@ const ENTRIES: readonly (Entry & {
 /** The lobby: who you are at the top left, then pick what to play. */
 export function HomePage() {
   const setMode = useUiStore((s) => s.setMode);
+  useLobbyMusic();
 
   const open = (e: Entry) => {
     if (e.mode === 'race') {
@@ -70,16 +80,17 @@ export function HomePage() {
 
   return (
     <div className={styles.shell}>
+      <ArtBackdrop name="lobby" />
       <header className={styles.top}>
-        <ProfileChip />
+        <div className={styles.topLeft}>
+          <ProfileChip />
+          <FriendsButton />
+        </div>
         <div className={styles.topRight}>
-          <SoundToggle />
+          <MusicToggle />
           <OnlineHeader />
         </div>
       </header>
-      <nav className={styles.tabs}>
-        <ModeTabs />
-      </nav>
 
       <main className={styles.main}>
         <h1 className={styles.title}>機車模擬器</h1>
@@ -91,6 +102,7 @@ export function HomePage() {
               type="button"
               className={styles.card}
               data-feature={e.id === 'room' || undefined}
+              style={{ background: artBackground(e.art) }}
               onClick={() => open(e)}
               data-testid={`home-${e.id}`}
             >

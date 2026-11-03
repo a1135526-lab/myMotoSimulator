@@ -7,7 +7,7 @@ import {
   type TimeOfDay,
   type TrafficLevel,
 } from '@/application';
-import { ModeTabs } from '../components/common/ModeTabs';
+import { HomeButton } from '../components/common/HomeButton';
 import { SoundToggle } from '../components/common/SoundToggle';
 import { AppLayout } from '../layouts/AppLayout';
 import { BikeGrid } from '../race/setup/BikeGrid';
@@ -28,7 +28,7 @@ export function StreetSetup({ ready }: { ready: boolean }) {
     <AppLayout
       toolbar={
         <>
-          <ModeTabs />
+          <HomeButton />
           <SoundToggle />
         </>
       }

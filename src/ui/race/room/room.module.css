@@ -44,6 +44,9 @@
 }
 
 .code {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   font-family: var(--font-mono);
@@ -227,4 +230,56 @@
 .waiting {
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+.addFriend {
+  padding: 3px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.addFriend:disabled {
+  border-color: var(--border);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.friendTag {
+  color: var(--ok);
+  font-size: 0.75rem;
+}
+
+.friendList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.friendList li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.dot[data-online] {
+  background: var(--ok);
+  box-shadow: 0 0 6px var(--ok);
 }

@@ -7,8 +7,10 @@ import {
   useUiStore,
   type SyncState,
 } from '@/application';
-import { ModeTabs } from '../../components/common/ModeTabs';
-import { SoundToggle } from '../../components/common/SoundToggle';
+import { HomeButton } from '../../components/common/HomeButton';
+import { MusicToggle } from '../../components/common/MusicToggle';
+import { LobbyMusicPlayer } from '../../audio/LobbyMusicPlayer';
+import { ArtBackdrop } from '../../components/common/ArtBackdrop';
 import { AppLayout } from '../../layouts/AppLayout';
 import { BikeTable, KindTable, RecentMatches, RivalTable, TrackTable } from './ProfileTables';
 import styles from './profile.module.css';
@@ -68,11 +70,13 @@ export function ProfilePage() {
     <AppLayout
       toolbar={
         <>
-          <ModeTabs />
-          <SoundToggle />
+          <HomeButton />
+          <MusicToggle />
         </>
       }
     >
+      <LobbyMusicPlayer />
+      <ArtBackdrop name="lobby" />
       <section className={styles.header} data-testid="profile">
         <span className={styles.avatar} aria-hidden>
           {name.slice(0, 1)}

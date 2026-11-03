@@ -10,7 +10,7 @@ test.describe('desktop keyboard', () => {
 
   test('select bike → change rollers → hold ↑ → speed rises', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-simulator').click(); // from the lobby
+    await page.getByTestId('home-simulator').click();
     await page.getByTestId('bike-select').selectOption('sym-jet-sl-125');
     await expect(page.getByTestId('roller-set')).toHaveValue('12');
     await page.getByTestId('roller-set').selectOption('10');
@@ -32,7 +32,7 @@ test.describe('desktop keyboard', () => {
 
   test('Space times a launch; R resets', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-simulator').click(); // from the lobby
+    await page.getByTestId('home-simulator').click();
     await page.locator('h1').click();
     await page.keyboard.press('Space');
     await expect(page.getByTestId('timer-phase')).toHaveAttribute('data-phase', 'armed');
@@ -55,7 +55,7 @@ test.describe('manual bike', () => {
 
   test('clutch → 1st → rev → release clutch → upshift', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-simulator').click(); // from the lobby
+    await page.getByTestId('home-simulator').click();
     await page.getByTestId('kind-manual').click();
     await page.getByTestId('bike-select').selectOption('kawasaki-ninja-400');
     await page.locator('h1').click();
@@ -81,7 +81,7 @@ test.describe('manual bike', () => {
 
   test('dumping the clutch at idle stalls; Enter restarts in neutral', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-simulator').click(); // from the lobby
+    await page.getByTestId('home-simulator').click();
     await page.getByTestId('kind-manual').click();
     await page.locator('h1').click();
     await page.keyboard.down('Shift');
@@ -105,8 +105,7 @@ test.describe('drag race', () => {
   /** Garage: custom track at `distance` m, keep the bike, stock tune, novice opponent. */
   async function enterRace(page: Page, distance: number) {
     await page.goto('/');
-    await page.getByTestId('mode-race').click();
-    await page.getByTestId('discipline-drag').click();
+    await page.getByTestId('home-drag').click();
     await page.getByTestId('track-custom').click();
     await page.getByTestId('race-distance').fill(String(distance));
     await page.getByTestId('wizard-next').click(); // → bike
@@ -155,8 +154,7 @@ test.describe('circuit race', () => {
 
   test('lights out → throttle → camera toggle → steering keys lean the bike', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-race').click();
-    await page.getByTestId('discipline-circuit').click();
+    await page.getByTestId('home-circuit').click();
     await page.getByTestId('circuit-practice-park').click();
     for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
     await expect(page.getByTestId('circuit-canvas')).toBeVisible();
@@ -186,8 +184,7 @@ test.describe('circuit race', () => {
 
   test('going under the red lights is a jump start, served on the grid', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-race').click();
-    await page.getByTestId('discipline-circuit').click();
+    await page.getByTestId('home-circuit').click();
     for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
     await expect(page.getByTestId('circuit-canvas')).toBeVisible();
     await page.locator('h1').click();
@@ -209,7 +206,7 @@ test.describe('street mode', () => {
 
   test('pick a bike and conditions, ride off into the city', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-street').click();
+    await page.getByTestId('home-street').click();
     // Bikes are grouped by body style and displacement.
     await page.getByTestId('style-maxi-scooter').click();
     await page.getByTestId('band-to249').click();
@@ -231,7 +228,7 @@ test.describe('street mode', () => {
 
   test('open the big map, search a landmark and navigate there', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-street').click();
+    await page.getByTestId('home-street').click();
     await page.getByTestId('traffic-none').click();
     await page.getByTestId('street-go').click();
     await expect(page.getByTestId('street-road')).toHaveText('建楠路', { timeout: 30_000 });
@@ -251,7 +248,7 @@ test.describe('street mode', () => {
 
   test('start a mission from the list; ending it clears the sat-nav', async ({ page }) => {
     await page.goto('/');
-    await page.getByTestId('mode-street').click();
+    await page.getByTestId('home-street').click();
     await page.getByTestId('traffic-none').click();
     await page.getByTestId('street-go').click();
     await expect(page.getByTestId('street-road')).toHaveText('建楠路', { timeout: 30_000 });

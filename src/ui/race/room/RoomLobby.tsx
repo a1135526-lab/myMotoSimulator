@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MAX_ROOM_PLAYERS, useCircuits, useRoomStore } from '@/application';
 import { BikeSelector } from '../../components/config/BikeSelector';
+import { AddFriendButton, RoomFriends } from './RoomFriends';
 import styles from './room.module.css';
 
 const LAP_CHOICES = [1, 2, 3, 5] as const;
@@ -51,6 +52,7 @@ export function RoomLobby() {
             <strong>{p.name}</strong>
             {p.id === host?.id && <small className={styles.hostTag}>房主</small>}
             {p.id === me?.id && <small className={styles.meTag}>你</small>}
+            {p.id !== me?.id && <AddFriendButton player={p} />}
             <span className={styles.bike}>{p.bike}</span>
           </li>
         ))}
@@ -90,6 +92,8 @@ export function RoomLobby() {
           {circuit?.name ?? settings.circuitId} · {settings.laps} 圈
         </p>
       )}
+
+      <RoomFriends />
 
       <h3>你的機車</h3>
       <BikeSelector />

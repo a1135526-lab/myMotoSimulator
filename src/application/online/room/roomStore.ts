@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useUiStore } from '../../stores/uiStore';
 import { RemoteRiders } from './remoteRiders';
 import { SupabaseRoomTransport, type RoomTransport } from './roomTransport';
 import {
@@ -267,3 +268,10 @@ export const useRoomStore = create<RoomState>()((set, get) => {
 });
 
 export const amHost = () => isHost(useRoomStore.getState());
+
+// Leaving race mode (for the lobby, the simulator…) leaves the room too.
+useUiStore.subscribe((s, prev) => {
+  if (prev.mode === 'race' && s.mode !== 'race' && useRoomStore.getState().status !== 'idle') {
+    useRoomStore.getState().leave();
+  }
+});

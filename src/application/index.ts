@@ -158,6 +158,12 @@ export { useMatchStore, type SyncState } from './stats/matchStore';
 export { matchStats, type MatchStats, type Tally } from './stats/matchStats';
 export { MATCH_KIND_LABELS, type MatchKind, type MatchRecord } from './stats/matchTypes';
 export { ROOM_FINISH_WINDOW_S } from './online/room/circuitRoom';
+export {
+  useFriendsStore,
+  type Friend,
+  type FriendState,
+  type RoomInvite,
+} from './online/friends/friendsStore';
 export { amHost, useRoomStore, type RoomProfile, type RoomStatus } from './online/room/roomStore';
 export {
   CODE_LENGTH,

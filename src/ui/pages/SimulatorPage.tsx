@@ -9,7 +9,7 @@ import {
   useTimerView,
 } from '@/application';
 import { useEngineAudio } from '../audio/useEngineAudio';
-import { ModeTabs } from '../components/common/ModeTabs';
+import { HomeButton } from '../components/common/HomeButton';
 import { Panel } from '../components/common/Panel';
 import { SoundToggle } from '../components/common/SoundToggle';
 import { BikeSelector } from '../components/config/BikeSelector';
@@ -41,7 +41,7 @@ export function SimulatorPage() {
     <AppLayout
       toolbar={
         <>
-          <ModeTabs />
+          <HomeButton />
           <SoundToggle />
           <BikeSelector />
           <KeyHints manual={manual} />
