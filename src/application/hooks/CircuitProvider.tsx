@@ -8,6 +8,8 @@ import { circuitEnvironment } from '../services/lapService';
 import { useCircuitStore } from '../stores/circuitStore';
 import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
+import { roomFrame, useCircuitRoom } from '../online/room/circuitRoom';
+import { useRoomStore } from '../online/room/roomStore';
 import { loadGhost, saveGhost, useRecordsStore } from '../stores/recordsStore';
 import { useUiStore } from '../stores/uiStore';
 import { toCircuitView } from '../viewModels/circuit';
@@ -22,9 +24,15 @@ import { useSimulationLoop } from './useSimulationLoop';
 function useCircuitConfig(): CircuitConfig {
   const bike = useCurrentBike();
   const selection = useConfigStore((s) => s.selection);
-  const circuitId = useRaceStore((s) => s.circuitId);
-  const laps = useRaceStore((s) => s.laps);
-  const count = useRaceStore((s) => s.opponentCount);
+  // A friend room uses the host's circuit and laps, and has no AI riders.
+  const inRoom = useRaceStore((s) => s.discipline === 'room');
+  const roomSettings = useRoomStore((s) => s.settings);
+  const garageCircuit = useRaceStore((s) => s.circuitId);
+  const garageLaps = useRaceStore((s) => s.laps);
+  const garageCount = useRaceStore((s) => s.opponentCount);
+  const circuitId = inRoom ? roomSettings.circuitId : garageCircuit;
+  const laps = inRoom ? roomSettings.laps : garageLaps;
+  const count = inRoom ? 0 : garageCount;
   const assist = useRaceStore((s) => s.assist);
   const brakeAssist = useRaceStore((s) => s.brakeAssist);
   const autoShift = useRaceStore((s) => s.autoShift);
@@ -128,6 +136,7 @@ function recordLap(config: CircuitConfig, lap: CompletedLap): void {
 export function CircuitProvider({ children }: { children: ReactNode }) {
   const config = useCircuitConfig();
   const applied = useRef(config);
+  const inRoom = useRaceStore((s) => s.discipline === 'room');
   const [controller] = useState(
     () =>
       new CircuitController(
@@ -136,7 +145,15 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
           useCircuitStore
             .getState()
             .publish(
-              toCircuitView(race, geo, models, names, useUiStore.getState().ghostOn ? ghost : null),
+              roomFrame(
+                toCircuitView(
+                  race,
+                  geo,
+                  models,
+                  names,
+                  useUiStore.getState().ghostOn ? ghost : null,
+                ),
+              ),
             ),
         () => useCircuitStore.getState().toggleCamera(),
         Math.random,
@@ -156,6 +173,7 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
   useInputSources(controller, 'circuit');
   useFlickShift(controller);
   useTiltSteering(controller);
+  useCircuitRoom(controller, inRoom);
 
   return <CircuitContext.Provider value={controller}>{children}</CircuitContext.Provider>;
 }

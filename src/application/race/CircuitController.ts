@@ -60,6 +60,8 @@ export class CircuitController {
   private race!: CircuitRaceState;
   private config: CircuitConfig;
   private recorder = new LapRecorder();
+  /** Racing in a friend room: Space / the start button don't start the lights. */
+  private roomMode = false;
   private ghost: GhostLap | null = null;
 
   constructor(
@@ -82,13 +84,24 @@ export class CircuitController {
     this.restage();
   }
 
+  setRoomMode(on: boolean): void {
+    this.roomMode = on;
+  }
+
+  /** A friend-room start: fresh grid, lights on, the same hold as everyone else. */
+  startRoomRace(holdS: number): void {
+    this.restage(holdS);
+    this.update(startLights(this.race));
+  }
+
   /** "Brand Model" of the player's bike. */
   private get bikeLabel(): string {
     const bike = this.config.player.bike;
     return `${bike.brand} ${bike.model}`;
   }
 
-  restage(): void {
+  /** Back to the grid; `holdS` fixes the hold after the fifth red (else random). */
+  restage(holdS?: number): void {
     const { circuit, player, opponents, skill, laps, assist, brakeAssist, autoShift, autoClutch } =
       this.config;
     this.geo = buildCircuit(circuit.controlPoints, circuit.widthM / 2);
@@ -105,7 +118,7 @@ export class CircuitController {
     this.race = createCircuitRace(this.geo, this.models, {
       settings,
       aiSkills: opponents.map((_, i) => riderSkill(CIRCUIT_SKILLS[skill], i)),
-      holdS: lo + this.random() * (hi - lo),
+      holdS: holdS ?? lo + this.random() * (hi - lo),
     });
     // A rematch keeps the ghost, including a best set in the last race.
     this.recorder = new LapRecorder();
@@ -130,6 +143,8 @@ export class CircuitController {
 
   /** Space: start the lights from the grid; after the race, back to the grid. */
   go(): void {
+    // In a friend room only the host starts the race, for everyone at once.
+    if (this.roomMode) return;
     if (this.race.phase === 'grid') this.update(startLights(this.race));
     else if (this.race.phase === 'finished') this.restage();
   }

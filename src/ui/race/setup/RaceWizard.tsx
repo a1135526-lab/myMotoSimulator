@@ -40,6 +40,12 @@ const MODES = [
     blurb: '和 1～3 位 AI 跑多圈，壓車過彎、晚煞車、煞車甩尾。',
     meta: '3 條原創賽道・MotoGP 式起跑',
   },
+  {
+    id: 'room',
+    title: '好友對戰',
+    blurb: '建立房間、把房號給朋友，最多 4 人在同一條賽道即時比賽。',
+    meta: '需要網路・不用登入',
+  },
 ] as const;
 
 /** First step: which kind of race. Picking one moves straight on to the venue. */
@@ -58,12 +64,13 @@ function StepMode() {
           className={discipline === m.id ? styles.modeCardActive : styles.modeCard}
           onClick={() => {
             setDiscipline(m.id);
-            setStep('track');
+            // A room is set up in its own lobby, not the garage steps.
+            if (m.id !== 'room') setStep('track');
           }}
           data-testid={`discipline-${m.id}`}
         >
           <span className={styles.modeIcon} aria-hidden>
-            {m.id === 'drag' ? '🚦' : '🏁'}
+            {m.id === 'drag' ? '🚦' : m.id === 'room' ? '👥' : '🏁'}
           </span>
           <strong className={styles.modeTitle}>{m.title}</strong>
           <span className={styles.modeBlurb}>{m.blurb}</span>

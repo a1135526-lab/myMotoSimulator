@@ -45,6 +45,8 @@ export interface CircuitRiderView {
   /** Race time at the flag (since lights out), null while racing. */
   readonly finishTimeS: number | null;
   readonly bestLapS: number | null;
+  /** Another player in a friend room (their bike runs on their device). */
+  readonly remote?: boolean;
 }
 
 export interface CircuitPlayerView {

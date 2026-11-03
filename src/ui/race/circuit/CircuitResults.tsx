@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { CircuitView } from '@/application';
 import { fmtLap } from './format';
 import { LapBoard } from './LapBoard';
@@ -9,18 +9,20 @@ interface CircuitResultsProps {
   circuitId: string;
   onRematch: () => void;
   onGarage: () => void;
+  /** Replaces the rematch / garage buttons (a friend room has its own). */
+  actions?: ReactNode;
 }
 
 /** Final classification: finishers by time, then the rest by distance. */
-export function CircuitResults({ view, circuitId, onRematch, onGarage }: CircuitResultsProps) {
-  if (view.phase !== 'finished') return null;
-  return <Results view={view} circuitId={circuitId} onRematch={onRematch} onGarage={onGarage} />;
+export function CircuitResults(props: CircuitResultsProps) {
+  if (props.view.phase !== 'finished') return null;
+  return <Results {...props} />;
 }
 
 /** Seconds of slack before the race started, for marking its laps new. */
 const NEW_SLACK_MS = 10_000;
 
-function Results({ view, circuitId, onRematch, onGarage }: CircuitResultsProps) {
+function Results({ view, circuitId, onRematch, onGarage, actions }: CircuitResultsProps) {
   // Laps set during this race are new; it lasted about raceTimeS.
   const [newSince] = useState(() => Date.now() - view.raceTimeS * 1000 - NEW_SLACK_MS);
   const order = [...view.riders].sort((a, b) => a.position - b.position);
@@ -58,7 +60,9 @@ function Results({ view, circuitId, onRematch, onGarage }: CircuitResultsProps) 
                 <th scope="row">{r.name}</th>
                 <td>
                   {r.finishTimeS === null
-                    ? '未完賽'
+                    ? r.remote
+                      ? '比賽中'
+                      : '未完賽'
                     : r.position === 1 || winner === null
                       ? fmtLap(r.finishTimeS)
                       : `+${(r.finishTimeS - winner).toFixed(3)}`}
@@ -69,14 +73,16 @@ function Results({ view, circuitId, onRematch, onGarage }: CircuitResultsProps) 
           </tbody>
         </table>
         <LapBoard circuitId={circuitId} newSince={newSince} />
-        <div className={styles.resultActions}>
-          <button type="button" className={styles.secondary} onClick={onGarage}>
-            換車 / 改裝
-          </button>
-          <button type="button" className={styles.primary} onClick={onRematch} autoFocus>
-            再比一場 <kbd>Space</kbd>
-          </button>
-        </div>
+        {actions ?? (
+          <div className={styles.resultActions}>
+            <button type="button" className={styles.secondary} onClick={onGarage}>
+              換車 / 改裝
+            </button>
+            <button type="button" className={styles.primary} onClick={onRematch} autoFocus>
+              再比一場 <kbd>Space</kbd>
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

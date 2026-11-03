@@ -154,3 +154,10 @@ export {
   type OnlineSubmission,
 } from './online/leaderboard';
 export { missionCatalog } from './street/missionCatalog';
+export { amHost, useRoomStore, type RoomProfile, type RoomStatus } from './online/room/roomStore';
+export {
+  CODE_LENGTH,
+  MAX_ROOM_PLAYERS,
+  type RoomPlayer,
+  type RoomSettings,
+} from './online/room/roomTypes';
