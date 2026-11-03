@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { CityMap } from '@/domain';
+import { missionStars, missionTimeS, type CityMap, type MissionRun } from '@/domain';
 import { cityEnvironment, CITY_GRIP_G } from '../street/city';
 import { StreetController, type StreetConfig } from '../street/StreetController';
 import { useConfigStore } from '../stores/configStore';
+import { sendScore, submitMission } from '../online/leaderboard';
+import { useRecordsStore } from '../stores/recordsStore';
 import { TRAFFIC_CARS, useStreetStore } from '../stores/streetStore';
 import { toStreetView } from '../viewModels/street';
 import { StreetContext } from './streetContext';
@@ -38,9 +40,52 @@ function useStreetConfig(map: CityMap): StreetConfig {
   );
 }
 
+/** A finished mission run goes on its board and shows its result card. */
+function recordMission(config: StreetConfig, run: MissionRun): void {
+  if (run.finishedAtS === null) return;
+  const timeS = missionTimeS(run, run.finishedAtS);
+  const stars = missionStars(timeS, run.limitS);
+  const records = useRecordsStore.getState();
+  const previousBest = records.missions[run.id]?.[0]?.timeS ?? Infinity;
+  const bike = config.player.bike;
+  const place = records.addMissionRun(run.id, {
+    timeS,
+    stars,
+    bike: `${bike.brand} ${bike.model}`,
+    crashes: run.crashes,
+    at: Date.now(),
+  });
+  useStreetStore.getState().setMissionResult({
+    id: run.id,
+    timeS,
+    limitS: run.limitS,
+    stars,
+    crashes: run.crashes,
+    place,
+    best: timeS < previousBest,
+    online: { state: 'off' },
+  });
+  sendScore(
+    () =>
+      submitMission({
+        missionId: run.id,
+        timeS,
+        crashes: run.crashes,
+        bike: `${bike.brand} ${bike.model}`,
+      }),
+    (online) => {
+      const shown = useStreetStore.getState().missionResult;
+      if (shown?.id === run.id && shown.timeS === timeS) {
+        useStreetStore.getState().setMissionResult({ ...shown, online });
+      }
+    },
+  );
+}
+
 /** Runs a ride in a loaded city (see useCityMap). */
 export function StreetProvider({ map, children }: { map: CityMap; children: ReactNode }) {
   const config = useStreetConfig(map);
+  const applied = useRef(config);
   const [controller] = useState(
     () =>
       new StreetController(
@@ -52,11 +97,15 @@ export function StreetProvider({ map, children }: { map: CityMap; children: Reac
           const store = useStreetStore.getState();
           store.setMapOpen(!store.mapOpen);
         },
+        (run) => recordMission(applied.current, run),
       ),
   );
   const mapOpen = useStreetStore((s) => s.mapOpen);
-  useEffect(() => controller.setPaused(mapOpen), [controller, mapOpen]);
-  const applied = useRef(config);
+  const missionsOpen = useStreetStore((s) => s.missionsOpen);
+  useEffect(
+    () => controller.setPaused(mapOpen || missionsOpen),
+    [controller, mapOpen, missionsOpen],
+  );
 
   useEffect(() => {
     if (applied.current === config) return;

@@ -1,5 +1,6 @@
-import { formatDistance, type NavView } from '@/application';
+import { formatDistance, type NavView, type StreetMissionView } from '@/application';
 import type { ManeuverKind } from '@/domain';
+import { fmtClock } from './missions/format';
 import styles from './street.module.css';
 
 /** Arrow per manoeuvre, drawn pointing up = straight on. */
@@ -51,8 +52,16 @@ export function ManeuverIcon({ kind }: { kind: ManeuverKind }) {
 
 const minutes = (s: number) => Math.max(1, Math.round(s / 60));
 
+interface NavCardProps {
+  nav: NavView;
+  onCancel: () => void;
+  /** A timed mission is riding this route: its clock goes under the card. */
+  mission?: { readonly title: string; readonly view: StreetMissionView } | null;
+}
+
 /** Top-of-screen sat-nav: next turn and distance, then what's left and the ETA. */
-export function NavCard({ nav, onCancel }: { nav: NavView; onCancel: () => void }) {
+export function NavCard({ nav, onCancel, mission = null }: NavCardProps) {
+  const late = mission !== null && mission.view.elapsedS > mission.view.limitS;
   return (
     <div className={styles.navCard} data-testid="nav-card" data-arrived={nav.arrived}>
       <div className={styles.navMain}>
@@ -87,9 +96,17 @@ export function NavCard({ nav, onCancel }: { nav: NavView; onCancel: () => void 
           onClick={onCancel}
           data-testid="nav-cancel"
         >
-          {nav.arrived ? '完成' : '結束導航'}
+          {mission ? '結束任務' : nav.arrived ? '完成' : '結束導航'}
         </button>
       </div>
+      {mission && (
+        <div className={styles.missionClock} data-late={late || undefined}>
+          <span>🏁 {mission.title}</span>
+          <span data-testid="mission-clock">
+            ⏱ {fmtClock(mission.view.elapsedS)} / 限時 {fmtClock(mission.view.limitS)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

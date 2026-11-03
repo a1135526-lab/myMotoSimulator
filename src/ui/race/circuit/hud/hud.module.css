@@ -549,3 +549,45 @@
   transform: translateX(-50%) scale(0.75);
   transform-origin: bottom center;
 }
+
+/* After each lap: time and board place, mid-screen for a few seconds. */
+.lapNotice {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--glass);
+  backdrop-filter: blur(6px);
+  font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lapNotice[data-tone='best'] {
+  background: rgb(181 123 255 / 0.85);
+}
+
+.lapNotice[data-tone='void'] {
+  background: rgb(120 30 30 / 0.8);
+}
+
+.lapNoticeOnline {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Racing someone else's ghost from the global board. */
+.rivalTag {
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(127 212 255 / 0.3);
+  font-size: 0.8rem;
+  font-weight: 600;
+}

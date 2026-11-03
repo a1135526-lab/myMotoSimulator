@@ -12,6 +12,7 @@ import {
   type CircuitGeometry,
   type CircuitRaceState,
   type CircuitSettings,
+  type GhostLap,
   type RiderSkill,
   type SimConfig,
   type SimModel,
@@ -19,6 +20,7 @@ import {
 import type { CircuitSpec } from '@/data';
 import { CompositeInputSource, type InputAction } from '../input/InputSource';
 import { TouchInputSource } from '../input/TouchInputSource';
+import { LapRecorder, type CompletedLap } from './lapRecorder';
 
 export interface CircuitConfig {
   readonly circuit: CircuitSpec;
@@ -31,6 +33,8 @@ export interface CircuitConfig {
   readonly brakeAssist: boolean;
   readonly autoShift: boolean;
   readonly autoClutch: boolean;
+  /** Best lap so far on this circuit, to race against. */
+  readonly ghost: GhostLap | null;
 }
 
 export interface CircuitSnapshot {
@@ -38,7 +42,11 @@ export interface CircuitSnapshot {
   readonly geo: CircuitGeometry;
   readonly models: readonly SimModel[];
   readonly names: readonly string[];
+  readonly ghost: GhostLap | null;
 }
+
+/** Every lap the player completes, with whether it was clean and its line. */
+export type LapListener = (lap: CompletedLap) => void;
 
 /** Random hold after the fifth red light, s (MotoGP: 0.2–3 s). */
 export const LIGHTS_HOLD_RANGE_S: readonly [number, number] = [0.4, 2.5];
@@ -51,21 +59,33 @@ export class CircuitController {
   private models!: SimModel[];
   private race!: CircuitRaceState;
   private config: CircuitConfig;
+  private recorder = new LapRecorder();
+  private ghost: GhostLap | null = null;
 
   constructor(
     config: CircuitConfig,
     private readonly publish: (snapshot: CircuitSnapshot) => void,
     private readonly onToggleCamera: () => void = () => undefined,
     private readonly random: () => number = Math.random,
+    private readonly onLap: LapListener = () => undefined,
   ) {
     this.config = config;
+    this.ghost = config.ghost;
     this.input.add(this.touch);
     this.restage();
   }
 
+  /** New settings (or circuit): the ghost comes from them too. */
   configure(config: CircuitConfig): void {
     this.config = config;
+    this.ghost = config.ghost;
     this.restage();
+  }
+
+  /** "Brand Model" of the player's bike. */
+  private get bikeLabel(): string {
+    const bike = this.config.player.bike;
+    return `${bike.brand} ${bike.model}`;
   }
 
   restage(): void {
@@ -87,12 +107,25 @@ export class CircuitController {
       aiSkills: opponents.map((_, i) => riderSkill(CIRCUIT_SKILLS[skill], i)),
       holdS: lo + this.random() * (hi - lo),
     });
+    // A rematch keeps the ghost, including a best set in the last race.
+    this.recorder = new LapRecorder();
     this.emit();
   }
 
   tick(elapsedS: number): void {
     this.race = advanceCircuitRace(this.geo, this.models, this.race, this.input.read(), elapsedS);
+    const lap = this.recorder.observe(this.geo, this.race);
+    if (lap) this.lapCompleted(lap);
     this.emit();
+  }
+
+  /** A faster clean lap becomes the ghost straight away, for the next lap. */
+  private lapCompleted(lap: CompletedLap): void {
+    if (lap.clean && (!this.ghost || lap.lapS < this.ghost.lapS)) {
+      const manual = this.config.player.bike.kind === 'manual';
+      this.ghost = { lapS: lap.lapS, samples: lap.samples, bike: this.bikeLabel, manual };
+    }
+    this.onLap(lap);
   }
 
   /** Space: start the lights from the grid; after the race, back to the grid. */
@@ -106,6 +139,7 @@ export class CircuitController {
       case 'toggleTimer':
         return this.go();
       case 'reset':
+        this.recorder.markDirty();
         return this.update(resetPlayer(this.geo, this.models, this.race));
       case 'shiftUp':
         return this.update(shiftCircuitPlayer(this.models, this.race, 1));
@@ -119,7 +153,13 @@ export class CircuitController {
   };
 
   snapshot(): CircuitSnapshot {
-    return { race: this.race, geo: this.geo, models: this.models, names: this.config.names };
+    return {
+      race: this.race,
+      geo: this.geo,
+      models: this.models,
+      names: this.config.names,
+      ghost: this.ghost,
+    };
   }
 
   dispose(): void {

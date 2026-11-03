@@ -5,7 +5,12 @@ import { buildSimConfig } from '../hooks/useSimConfig';
 import { circuitEnvironment, computeLapEstimate } from '../services/lapService';
 import { createStockSelection } from '../tuning/selection';
 import { toCircuitView } from '../viewModels/circuit';
-import { CircuitController, type CircuitConfig, type CircuitSnapshot } from './CircuitController';
+import {
+  CircuitController,
+  type LapListener,
+  type CircuitConfig,
+  type CircuitSnapshot,
+} from './CircuitController';
 
 const circuit = getCircuit('practice-park');
 const env = circuitEnvironment(circuit);
@@ -23,12 +28,20 @@ const config: CircuitConfig = {
   brakeAssist: true,
   autoShift: true,
   autoClutch: true,
+  ghost: null,
 };
 
-function setup() {
+function setup(patch: Partial<CircuitConfig> = {}) {
   const publish = vi.fn<(s: CircuitSnapshot) => void>();
   const camera = vi.fn();
-  const controller = new CircuitController(config, publish, camera, () => 0);
+  const onLap = vi.fn<LapListener>();
+  const controller = new CircuitController(
+    { ...config, ...patch },
+    publish,
+    camera,
+    () => 0,
+    onLap,
+  );
   const view = () => {
     const s = publish.mock.lastCall?.[0];
     if (!s) throw new Error('nothing published');
@@ -39,12 +52,57 @@ function setup() {
     if (!s) throw new Error('nothing published');
     return s;
   };
-  return { controller, camera, view, snapshot };
+  return { controller, camera, view, snapshot, onLap };
 }
 
 const runFor = (c: CircuitController, seconds: number) => {
   for (let i = 0; i < seconds * 30; i++) c.tick(1 / 30);
 };
+
+/** Lights out, then full throttle (the assists ride the line) until a lap is done. */
+function rideFirstLap(
+  c: CircuitController,
+  onLap: ReturnType<typeof setup>['onLap'],
+  during = () => {},
+) {
+  c.go();
+  runFor(c, 7);
+  c.touch.press('throttle');
+  for (let i = 0; i < 30 * 200 && onLap.mock.calls.length === 0; i++) {
+    c.tick(1 / 30);
+    if (i === 30 * 20) during();
+  }
+  const lap = onLap.mock.calls[0]?.[0];
+  if (!lap) throw new Error('no lap completed');
+  return lap;
+}
+
+describe('CircuitController laps and the ghost', () => {
+  it('a clean lap is recorded tenth by tenth and becomes the ghost', () => {
+    // Two laps: once the race is over there's no ghost to show.
+    const { controller, snapshot, onLap } = setup({ laps: 2 });
+    const lap = rideFirstLap(controller, onLap);
+    expect(lap.clean).toBe(true);
+    expect(lap.lapS).toBeGreaterThan(20);
+    expect(lap.samples.length).toBeGreaterThan(lap.lapS * 9);
+    expect(lap.samples[lap.samples.length - 1]?.t).toBeCloseTo(lap.lapS, 6);
+    expect(snapshot().ghost?.lapS).toBe(lap.lapS);
+
+    // Next lap: the ghost rides alongside.
+    runFor(controller, 3);
+    const s = snapshot();
+    const v = toCircuitView(s.race, s.geo, s.models, s.names, s.ghost);
+    expect(v.ghost).not.toBeNull();
+    expect(v.ghost?.lapS).toBe(lap.lapS);
+  }, 60_000);
+
+  it('a lap with R pressed does not count', () => {
+    const { controller, snapshot, onLap } = setup();
+    const lap = rideFirstLap(controller, onLap, () => controller.handleAction('reset'));
+    expect(lap.clean).toBe(false);
+    expect(snapshot().ghost).toBeNull();
+  }, 60_000);
+});
 
 describe('CircuitController', () => {
   it('starts on the grid and runs the lights on Space', () => {

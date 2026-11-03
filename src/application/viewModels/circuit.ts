@@ -1,9 +1,12 @@
 import {
   DRIFT_SLIP_RAD,
+  ghostPoseAt,
   litLights,
   mpsToKmh,
-  toWorld,
+  riderPose,
   type CircuitGeometry,
+  type GhostLap,
+  type GhostPose,
   type CircuitPhase,
   type CircuitRaceState,
   type CircuitRider,
@@ -66,6 +69,15 @@ export interface CircuitPlayerView {
   readonly penaltyLeftS: number | null;
 }
 
+/** Your best lap, replayed alongside the current one. */
+export interface CircuitGhostView extends GhostPose {
+  readonly lapS: number;
+  readonly bike: string;
+  readonly manual: boolean;
+  /** Another rider's nickname, or null for your own best. */
+  readonly owner: string | null;
+}
+
 export interface CircuitView {
   readonly phase: CircuitPhase;
   readonly lightsLit: number;
@@ -78,6 +90,8 @@ export interface CircuitView {
   readonly player: CircuitPlayerView;
   /** The player's instrument cluster. */
   readonly dash: DashboardModel;
+  /** Where your best lap was at this point of the current one; null when off or none. */
+  readonly ghost: CircuitGhostView | null;
 }
 
 const best = (laps: readonly number[]) => (laps.length ? Math.min(...laps) : null);
@@ -110,22 +124,19 @@ export function toCircuitView(
   geo: CircuitGeometry,
   models: readonly SimModel[],
   names: readonly string[],
+  ghost: GhostLap | null = null,
 ): CircuitView {
   const pos = positions(race.riders);
   const riders = race.riders.map((r, i): CircuitRiderView => {
     const model = models[i] as SimModel;
     const bike = model.config.bike;
-    const w = toWorld(geo, r.lat.s, r.lat.d);
+    const pose = riderPose(geo, r);
     return {
       name: names[i] ?? `${bike.brand} ${bike.model}`,
       isPlayer: i === 0,
       manual: bike.kind === 'manual',
       cylinders: bike.engine.cylinders,
-      x: w.x,
-      z: w.z,
-      // ψ > 0 points left of the track, and left turns lower the heading.
-      heading: w.heading - r.lat.psi,
-      lean: r.lat.lean,
+      ...pose,
       slip: r.drift * DRIFT_SLIP_RAD,
       drift: Math.abs(r.drift),
       speedKmh: mpsToKmh(r.sim.speedMps),
@@ -143,7 +154,20 @@ export function toCircuitView(
   });
 
   const p = race.riders[0] as CircuitRider;
+  const lapT = p.lapStartedAtS === null ? null : race.clockS - p.lapStartedAtS;
+  const ghostPose =
+    ghost && race.phase === 'racing' && lapT !== null ? ghostPoseAt(ghost.samples, lapT) : null;
   return {
+    ghost:
+      ghost && ghostPose
+        ? {
+            ...ghostPose,
+            lapS: ghost.lapS,
+            bike: ghost.bike,
+            manual: ghost.manual,
+            owner: ghost.owner ?? null,
+          }
+        : null,
     phase: race.phase,
     lightsLit: litLights(race),
     raceTimeS: race.clockS - race.lightsOutAtS,
@@ -157,7 +181,7 @@ export function toCircuitView(
     ),
     player: {
       lap: Math.min(race.settings.laps, Math.max(1, p.crossings)),
-      currentLapS: p.lapStartedAtS === null ? null : race.clockS - p.lapStartedAtS,
+      currentLapS: lapT,
       lastLapS: p.lapTimesS[p.lapTimesS.length - 1] ?? null,
       bestLapS: best(p.lapTimesS),
       gearLabel: gearLabelOf(p.sim.gear),

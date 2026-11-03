@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildCity, citySurfaceAt, findRoute, placeAt } from '@/domain';
-import { NANZIH } from '../index';
+import { NANZIH, NANZIH_MISSIONS } from '../index';
 
 describe('Nanzih map (OpenStreetMap import)', () => {
   it('validates, credits OpenStreetMap and holds the real network', async () => {
@@ -26,4 +26,12 @@ describe('Nanzih map (OpenStreetMap import)', () => {
     expect(route?.lengthM).toBeLessThan(9000);
     expect(route?.maneuvers.some((m) => m.road !== null)).toBe(true);
   }, 30000);
+
+  it('every street mission ends at a landmark that is on the map', async () => {
+    const data = await NANZIH.load();
+    // POIs are [kind, name index, x, z].
+    const names = new Set(data.pois.map((p) => data.names[p[1] ?? -1]));
+    for (const m of NANZIH_MISSIONS) expect(names, m.place).toContain(m.place);
+    expect(new Set(NANZIH_MISSIONS.map((m) => m.id)).size).toBe(NANZIH_MISSIONS.length);
+  });
 });

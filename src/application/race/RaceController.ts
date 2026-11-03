@@ -3,11 +3,13 @@ import {
   buildModel,
   createRace,
   humanReaction,
+  raceResult,
   shiftPlayer,
   SKILLS,
   startCountdown,
   startPlayerEngine,
   type RaceModels,
+  type RaceResult,
   type RaceSettings,
   type RaceState,
   type RiderSkill,
@@ -42,11 +44,15 @@ export class RaceController {
   private models!: RaceModels;
   private race!: RaceState;
   private config: RaceConfig;
+  /** This race's result has been handed to onFinish. */
+  private reported = false;
 
   constructor(
     config: RaceConfig,
     private readonly publish: (snapshot: RaceSnapshot) => void,
     private readonly random: () => number = Math.random,
+    /** Once per race, when it's decided. */
+    private readonly onFinish: (result: RaceResult) => void = () => undefined,
   ) {
     this.config = config;
     this.input.add(this.touch);
@@ -72,11 +78,16 @@ export class RaceController {
       ),
       stageDelayS: lo + this.random() * (hi - lo),
     });
+    this.reported = false;
     this.emit();
   }
 
   tick(elapsedS: number): void {
     this.race = advanceRace(this.models, this.race, this.input.read(), elapsedS);
+    if (this.race.phase === 'finished' && !this.reported) {
+      this.reported = true;
+      this.onFinish(raceResult(this.race));
+    }
     this.emit();
   }
 

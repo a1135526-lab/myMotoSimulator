@@ -201,6 +201,22 @@
   opacity: 0.85;
 }
 
+.missionClock {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 14px;
+  border-top: 1px solid rgb(255 255 255 / 12%);
+  background: rgb(255 122 26 / 22%);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.missionClock[data-late] {
+  background: rgb(200 30 30 / 45%);
+}
+
 .navCancel {
   padding: 3px 10px;
   border: 1px solid rgb(255 255 255 / 40%);

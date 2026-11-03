@@ -244,4 +244,20 @@ test.describe('street mode', () => {
     await page.getByTestId('nav-cancel').click();
     await expect(page.getByTestId('nav-card')).toBeHidden();
   });
+
+  test('start a mission from the list; ending it clears the sat-nav', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('mode-street').click();
+    await page.getByTestId('traffic-none').click();
+    await page.getByTestId('street-go').click();
+    await expect(page.getByTestId('street-road')).toHaveText('建楠路', { timeout: 30_000 });
+    await page.getByTestId('street-missions').click();
+    await expect(page.getByTestId('mission-panel')).toBeVisible();
+    await page.getByTestId('mission-hospital-run').click();
+    await expect(page.getByTestId('mission-panel')).toBeHidden();
+    await expect(page.getByTestId('nav-card')).toContainText('健仁醫院');
+    await expect(page.getByTestId('mission-clock')).toContainText('限時');
+    await page.getByTestId('nav-cancel').click();
+    await expect(page.getByTestId('nav-card')).toBeHidden();
+  });
 });

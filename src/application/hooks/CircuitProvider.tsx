@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getBike, getCircuit } from '@/data';
 import { CircuitController, type CircuitConfig } from '../race/CircuitController';
+import { sendScore, submitLap } from '../online/leaderboard';
+import type { CompletedLap } from '../race/lapRecorder';
 import { selectionForLevel } from '../race/opponentSetup';
 import { circuitEnvironment } from '../services/lapService';
 import { useCircuitStore } from '../stores/circuitStore';
 import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
+import { loadGhost, saveGhost, useRecordsStore } from '../stores/recordsStore';
+import { useUiStore } from '../stores/uiStore';
 import { toCircuitView } from '../viewModels/circuit';
 import { CircuitContext } from './circuitContext';
 import { useFlickShift } from './useFlickShift';
@@ -26,6 +30,7 @@ function useCircuitConfig(): CircuitConfig {
   const autoShift = useRaceStore((s) => s.autoShift);
   const autoClutch = useRaceStore((s) => s.autoClutch);
   const opponent = useRaceStore((s) => s.opponent);
+  const rival = useUiStore((s) => s.rivalGhost);
 
   return useMemo(() => {
     const circuit = getCircuit(circuitId);
@@ -48,6 +53,8 @@ function useCircuitConfig(): CircuitConfig {
       brakeAssist,
       autoShift,
       autoClutch,
+      // Racing someone from the global board, else your own best.
+      ghost: rival?.circuitId === circuit.id ? rival.ghost : loadGhost(circuit.id),
     };
   }, [
     bike,
@@ -60,21 +67,82 @@ function useCircuitConfig(): CircuitConfig {
     autoShift,
     autoClutch,
     opponent,
+    rival,
   ]);
+}
+
+/**
+ * Clean laps go on this circuit's board; a new best also becomes its ghost.
+ * Every lap gets a short notice.
+ */
+function recordLap(config: CircuitConfig, lap: CompletedLap): void {
+  const circuitId = config.circuit.id;
+  const bike = config.player.bike;
+  const previousBest = useRecordsStore.getState().laps[circuitId]?.[0]?.lapS ?? Infinity;
+  const place = lap.clean
+    ? useRecordsStore.getState().addLap(circuitId, {
+        lapS: lap.lapS,
+        bike: `${bike.brand} ${bike.model}`,
+        manual: bike.kind === 'manual',
+        assisted: config.assist || config.brakeAssist,
+        at: Date.now(),
+      })
+    : null;
+  const best = lap.clean && lap.lapS < previousBest;
+  if (best) {
+    saveGhost(circuitId, {
+      lapS: lap.lapS,
+      samples: lap.samples,
+      bike: `${bike.brand} ${bike.model}`,
+      manual: bike.kind === 'manual',
+    });
+  }
+  const notice = {
+    lapS: lap.lapS,
+    place,
+    clean: lap.clean,
+    best,
+    atS: lap.atS,
+    online: { state: 'off' } as const,
+  };
+  useCircuitStore.getState().setLapNotice(notice);
+  if (!lap.clean) return;
+  sendScore(
+    () =>
+      submitLap({
+        circuitId,
+        assisted: config.assist || config.brakeAssist,
+        lapS: lap.lapS,
+        bike: `${bike.brand} ${bike.model}`,
+        manual: bike.kind === 'manual',
+        samples: lap.samples,
+      }),
+    (online) => {
+      // Only if it's still this lap's notice on screen.
+      const shown = useCircuitStore.getState().lapNotice;
+      if (shown?.atS === lap.atS) useCircuitStore.getState().setLapNotice({ ...shown, online });
+    },
+  );
 }
 
 export function CircuitProvider({ children }: { children: ReactNode }) {
   const config = useCircuitConfig();
+  const applied = useRef(config);
   const [controller] = useState(
     () =>
       new CircuitController(
         config,
-        ({ race, geo, models, names }) =>
-          useCircuitStore.getState().publish(toCircuitView(race, geo, models, names)),
+        ({ race, geo, models, names, ghost }) =>
+          useCircuitStore
+            .getState()
+            .publish(
+              toCircuitView(race, geo, models, names, useUiStore.getState().ghostOn ? ghost : null),
+            ),
         () => useCircuitStore.getState().toggleCamera(),
+        Math.random,
+        (lap) => recordLap(applied.current, lap),
       ),
   );
-  const applied = useRef(config);
 
   useEffect(() => {
     if (applied.current === config) return;

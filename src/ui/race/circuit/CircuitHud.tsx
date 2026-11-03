@@ -3,6 +3,7 @@ import { MIN_HUMAN_REACTION_S, type CameraMode, type CircuitView } from '@/appli
 import { CircuitMap } from './CircuitMap';
 import { fmtLap } from './format';
 import { Cluster } from './hud/Cluster';
+import { LapNoticeBanner } from './hud/LapNoticeBanner';
 import { LeanDrift } from './hud/LeanDrift';
 import { GO_FLASH_S, StartGantry } from './hud/StartGantry';
 import { TimingTower } from './hud/TimingTower';
@@ -84,6 +85,7 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
 
   return (
     <div className={styles.hud}>
+      <LapNoticeBanner />
       <div
         className={styles.vignette}
         style={{ opacity: vignette, '--drift': player.driftPct / PERCENT } as CSSProperties}
@@ -101,6 +103,11 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
 
       <div className={styles.topCenter}>
         <LapTimes view={view} />
+        {view.ghost?.owner && (
+          <p className={styles.rivalTag} data-testid="rival-tag">
+            👻 挑戰 {view.ghost.owner} · {fmtLap(view.ghost.lapS)}
+          </p>
+        )}
         {showGantry && <StartGantry lit={view.lightsLit} go={view.phase === 'racing'} />}
         {alert && (
           <p className={styles.alert} data-tone={alert.tone} data-testid="circuit-hint">

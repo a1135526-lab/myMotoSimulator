@@ -7,8 +7,10 @@ import {
   setStreetDestination,
   shiftStreetRider,
   startStreetEngine,
+  startStreetMission,
   type CityMap,
   type Destination,
+  type MissionRun,
   type SimConfig,
   type SimModel,
   type StreetSettings,
@@ -16,6 +18,7 @@ import {
 } from '@/domain';
 import { CompositeInputSource, type InputAction } from '../input/InputSource';
 import { TouchInputSource } from '../input/TouchInputSource';
+import type { StreetMission } from './missions';
 
 export interface StreetConfig {
   readonly player: SimConfig;
@@ -38,12 +41,16 @@ export class StreetController {
   private config: StreetConfig;
   /** While the big map is open the ride is frozen. */
   private paused = false;
+  /** The current mission's arrival has been handed to onMissionDone. */
+  private missionReported = false;
 
   constructor(
     config: StreetConfig,
     private readonly publish: (snapshot: StreetSnapshot) => void,
     private readonly onToggleCamera: () => void = () => undefined,
     private readonly onToggleMap: () => void = () => undefined,
+    /** Once per mission run, on arrival at the landmark. */
+    private readonly onMissionDone: (run: MissionRun) => void = () => undefined,
   ) {
     this.config = config;
     this.input.add(this.touch);
@@ -70,7 +77,22 @@ export class StreetController {
       this.input.read(),
       elapsedS,
     );
+    const run = this.state.mission;
+    if (run && run.finishedAtS !== null && !this.missionReported) {
+      this.missionReported = true;
+      this.onMissionDone(run);
+    }
     this.emit();
+  }
+
+  /** Back to the station, sat-nav set, clock running. False if there's no way there. */
+  startMission(mission: StreetMission): boolean {
+    const { map, settings } = this.config;
+    const state = startStreetMission(map, this.model, settings, mission.id, mission.destination);
+    if (!state) return false;
+    this.missionReported = false;
+    this.update(state);
+    return true;
   }
 
   setPaused(paused: boolean): void {

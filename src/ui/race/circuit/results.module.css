@@ -153,3 +153,67 @@
     animation: none;
   }
 }
+
+/* ---- Personal lap board ---- */
+.board {
+  width: 100%;
+  margin-top: 14px;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.board caption {
+  margin-bottom: 6px;
+  text-align: left;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.board td,
+.board th {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-weight: 500;
+}
+
+.board tr[data-new] td,
+.board tr[data-new] th {
+  background: var(--accent-soft);
+}
+
+.boardTime {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700 !important;
+}
+
+.boardDate {
+  color: var(--text-muted);
+  text-align: right !important;
+}
+
+.boardTag,
+.boardNew {
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.boardTag {
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.boardNew {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+}
+
+.boardEmpty {
+  margin: 14px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

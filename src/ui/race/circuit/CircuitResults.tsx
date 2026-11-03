@@ -1,16 +1,28 @@
+import { useState } from 'react';
 import type { CircuitView } from '@/application';
 import { fmtLap } from './format';
+import { LapBoard } from './LapBoard';
 import styles from './results.module.css';
 
 interface CircuitResultsProps {
   view: CircuitView;
+  circuitId: string;
   onRematch: () => void;
   onGarage: () => void;
 }
 
 /** Final classification: finishers by time, then the rest by distance. */
-export function CircuitResults({ view, onRematch, onGarage }: CircuitResultsProps) {
+export function CircuitResults({ view, circuitId, onRematch, onGarage }: CircuitResultsProps) {
   if (view.phase !== 'finished') return null;
+  return <Results view={view} circuitId={circuitId} onRematch={onRematch} onGarage={onGarage} />;
+}
+
+/** Seconds of slack before the race started, for marking its laps new. */
+const NEW_SLACK_MS = 10_000;
+
+function Results({ view, circuitId, onRematch, onGarage }: CircuitResultsProps) {
+  // Laps set during this race are new; it lasted about raceTimeS.
+  const [newSince] = useState(() => Date.now() - view.raceTimeS * 1000 - NEW_SLACK_MS);
   const order = [...view.riders].sort((a, b) => a.position - b.position);
   const winner = order[0]?.finishTimeS ?? null;
   const me = view.riders[0];
@@ -56,6 +68,7 @@ export function CircuitResults({ view, onRematch, onGarage }: CircuitResultsProp
             ))}
           </tbody>
         </table>
+        <LapBoard circuitId={circuitId} newSince={newSince} />
         <div className={styles.resultActions}>
           <button type="button" className={styles.secondary} onClick={onGarage}>
             換車 / 改裝

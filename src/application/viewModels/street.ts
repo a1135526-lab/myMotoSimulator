@@ -1,5 +1,6 @@
 import {
   DRIFT_SLIP_RAD,
+  missionTimeS,
   mpsToKmh,
   nextStep,
   placeAt,
@@ -14,6 +15,15 @@ import {
 import { maneuverText } from '../street/places';
 import { dashboardModel, type DashboardModel } from './dashboard';
 import { gearLabelOf } from './telemetry';
+
+export interface StreetMissionView {
+  readonly id: string;
+  /** Clock so far (stopped on arrival), s. */
+  readonly elapsedS: number;
+  readonly limitS: number;
+  readonly finished: boolean;
+  readonly crashes: number;
+}
 
 export interface StreetCarView {
   readonly id: number;
@@ -80,6 +90,8 @@ export interface StreetView {
   readonly tripKm: number;
   readonly topSpeedKmh: number;
   readonly dash: DashboardModel;
+  /** The timed run under way, if any. */
+  readonly mission: StreetMissionView | null;
 }
 
 /** Average town riding speed for arrival estimates, m/s (≈ 30 km/h). */
@@ -150,5 +162,12 @@ export function toStreetView(state: StreetState, model: SimModel, map: CityMap):
     tripKm: r.distanceM / 1000,
     topSpeedKmh: r.topSpeedKmh,
     dash: dashboardModel(bike, model.engine.revLimitRpm),
+    mission: state.mission && {
+      id: state.mission.id,
+      elapsedS: missionTimeS(state.mission, state.clockS),
+      limitS: state.mission.limitS,
+      finished: state.mission.finishedAtS !== null,
+      crashes: state.mission.crashes,
+    },
   };
 }

@@ -33,6 +33,7 @@ export * from './circuit/circuitAi';
 export * from './circuit/drift';
 export * from './circuit/circuitRace';
 export * from './circuit/lapEstimate';
+export * from './circuit/ghost';
 export * from './street/city';
 export {
   boundsOf,
@@ -54,3 +55,4 @@ export * from './street/trafficRoutes';
 export * from './street/freeRide';
 export * from './street/traffic';
 export * from './street/streetRide';
+export * from './street/missions';

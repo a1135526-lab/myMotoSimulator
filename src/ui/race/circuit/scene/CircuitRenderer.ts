@@ -3,6 +3,7 @@ import type { CameraMode, CircuitView } from '@/application';
 import { createBikeModel, createCockpit, type BikeModel } from '../../scene/models';
 import { SKY_PRESETS, type SceneTheme } from '../../scene/theme';
 import { buildCircuitTrack, type CircuitTrack } from './circuitTrack';
+import { GhostBike } from './ghostBike';
 import { TyreSmoke } from './tyreSmoke';
 
 const RIDER_COLORS = ['#ff7a1a', '#1e88e5', '#e53935', '#43a047'];
@@ -42,6 +43,7 @@ export class CircuitRenderer {
   private readonly camera = new THREE.PerspectiveCamera(BASE_FOV, 16 / 9, 0.1, 3000);
   private readonly cockpit = createCockpit();
   private readonly smoke = new TyreSmoke();
+  private readonly ghost = new GhostBike();
   private track: CircuitTrack | null = null;
   private riders: RiderObject[] = [];
   private readonly chase = new THREE.Vector3();
@@ -65,7 +67,7 @@ export class CircuitRenderer {
     this.camera.rotation.order = 'YXZ';
     this.camera.add(this.cockpit);
     this.scene.add(this.camera);
-    this.scene.add(this.smoke.group);
+    this.scene.add(this.smoke.group, this.ghost.group);
     this.resize();
   }
 
@@ -100,6 +102,7 @@ export class CircuitRenderer {
       }
     });
     this.smoke.update(dt);
+    this.ghost.update(view.ghost);
 
     const lit = view.lightsLit;
     this.track?.startLights.forEach((m, i) => (m.emissiveIntensity = i < lit ? 3 : 0));
@@ -112,6 +115,7 @@ export class CircuitRenderer {
   dispose(): void {
     this.track?.dispose();
     this.smoke.dispose();
+    this.ghost.dispose();
     this.renderer.dispose();
   }
 

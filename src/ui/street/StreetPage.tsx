@@ -21,6 +21,8 @@ import { AppLayout } from '../layouts/AppLayout';
 import { useImmersive } from '../layouts/useMediaQuery';
 import race from '../race/race.module.css';
 import { StreetMapOverlay } from './map/StreetMapOverlay';
+import { MissionPanel } from './missions/MissionPanel';
+import { MissionResultCard } from './missions/MissionResultCard';
 import { StreetHud } from './StreetHud';
 import { StreetScene } from './StreetScene';
 
@@ -48,6 +50,7 @@ export function StreetPage({ map }: { map: CityMap }) {
   const setStage = useStreetStore((s) => s.setStage);
   const mapOpen = useStreetStore((s) => s.mapOpen);
   const setMapOpen = useStreetStore((s) => s.setMapOpen);
+  const setMissionsOpen = useStreetStore((s) => s.setMissionsOpen);
   const northUp = useStreetStore((s) => s.northUp);
   const toggleNorthUp = useStreetStore((s) => s.toggleNorthUp);
   const bike = useCurrentBike();
@@ -94,6 +97,15 @@ export function StreetPage({ map }: { map: CityMap }) {
         >
           {immersive ? '🗺' : '🗺 地圖・導航（M）'}
         </button>
+        <button
+          type="button"
+          className={race.garageButton}
+          onClick={() => setMissionsOpen(true)}
+          aria-label="街景任務"
+          data-testid="street-missions"
+        >
+          {immersive ? '🏁' : '🏁 任務'}
+        </button>
         <TiltToggle className={race.garageButton} compact={immersive} />
         {manual && !autoShift && (
           <FlickShiftToggle className={race.garageButton} compact={immersive} />
@@ -118,6 +130,8 @@ export function StreetPage({ map }: { map: CityMap }) {
         {view && mapOpen && (
           <StreetMapOverlay map={map} view={view} onClose={() => setMapOpen(false)} />
         )}
+        <MissionPanel map={map} />
+        <MissionResultCard map={map} />
       </div>
       <div className={race.controls}>
         <TouchControls

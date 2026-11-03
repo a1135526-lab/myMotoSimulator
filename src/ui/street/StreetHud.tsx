@@ -1,4 +1,5 @@
-import type { CameraMode, StreetView } from '@/application';
+import { useMemo } from 'react';
+import { streetMissions, type CameraMode, type StreetView } from '@/application';
 import type { CityMap } from '@/domain';
 import { BikeDashboard } from '../components/dashboard/BikeDashboard';
 import { NavCard } from './NavCard';
@@ -42,6 +43,8 @@ export function StreetHud({
   const alert = alertFor(view);
   const lean = Math.round(Math.abs(r.lean) * RAD_TO_DEG);
   const { place } = view;
+  const missions = useMemo(() => streetMissions(map), [map]);
+  const missionTitle = view.mission && missions.find((m) => m.id === view.mission?.id)?.title;
   return (
     <div className={styles.hud}>
       <div className={styles.topLeft}>
@@ -53,13 +56,19 @@ export function StreetHud({
         <p className={styles.clock}>{clock()}</p>
       </div>
 
-      {view.nav && <NavCard nav={view.nav} onCancel={onCancelNav} />}
+      {view.nav && (
+        <NavCard
+          nav={view.nav}
+          onCancel={onCancelNav}
+          mission={view.mission && { title: missionTitle ?? '任務', view: view.mission }}
+        />
+      )}
       {alert && (
         <p
           className={styles.alert}
           data-tone={alert.tone}
           data-testid="street-alert"
-          style={view.nav ? { top: 130 } : undefined}
+          style={view.nav ? { top: view.mission ? 160 : 130 } : undefined}
         >
           {alert.text}
         </p>

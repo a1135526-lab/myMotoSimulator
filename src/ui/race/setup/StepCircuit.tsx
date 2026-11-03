@@ -5,8 +5,10 @@ import {
   useActiveCircuit,
   useCircuits,
   useRaceStore,
+  useRecordsStore,
 } from '@/application';
 import { CircuitMap } from '../circuit/CircuitMap';
+import { fmtLap } from '../circuit/format';
 import styles from './setup.module.css';
 
 const SKY_CLASS: Record<string, string | undefined> = {
@@ -18,6 +20,7 @@ const SKY_CLASS: Record<string, string | undefined> = {
 
 export function StepCircuit() {
   const circuits = useCircuits();
+  const boards = useRecordsStore((s) => s.laps);
   const active = useActiveCircuit();
   const laps = useRaceStore((s) => s.laps);
   const count = useRaceStore((s) => s.opponentCount);
@@ -44,6 +47,11 @@ export function StepCircuit() {
               data-testid={`circuit-${c.id}`}
             >
               <strong className={styles.trackName}>{c.name}</strong>
+              {boards[c.id]?.[0] && (
+                <span className={styles.trackBest} data-testid={`best-${c.id}`}>
+                  🏆 你的最快圈 {fmtLap(boards[c.id]?.[0]?.lapS ?? null)}
+                </span>
+              )}
               <span className={styles.trackTagline}>{c.tagline}</span>
               <CircuitMap samples={geo.samples} className={styles.cardMap} />
               <dl className={styles.trackStats}>

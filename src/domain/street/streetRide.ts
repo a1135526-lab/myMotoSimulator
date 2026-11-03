@@ -15,6 +15,7 @@ import {
   type FreeRideContext,
   type FreeRider,
 } from './freeRide';
+import { startMission, stepMission, type MissionRun } from './missions';
 import { startNavigation, updateNavigation, type Destination, type NavState } from './navigation';
 import { createTraffic, hitCar, stepTraffic, type TrafficState } from './traffic';
 
@@ -47,6 +48,8 @@ export interface StreetState {
   readonly accumulatorS: number;
   /** Sat-nav, when a destination is set. */
   readonly nav: NavState | null;
+  /** A timed run to a landmark, when one is on. */
+  readonly mission: MissionRun | null;
 }
 
 const TRAFFIC_EVERY = 4;
@@ -74,6 +77,7 @@ export function createStreetRide(
     playerInput: { throttle: 0, brake: 0, clutchLever: 0 },
     accumulatorS: 0,
     nav: null,
+    mission: null,
   };
 }
 
@@ -128,7 +132,11 @@ export function stepStreet(
       rider = crashRider(ctx, rider);
     }
   }
-  return { ...timed, rider, traffic, nav };
+  const justCrashed = state.rider.crashedUntilS === null && rider.crashedUntilS !== null;
+  const mission = state.mission
+    ? stepMission(state.mission, timed.clockS, nav?.arrived ?? false, justCrashed)
+    : null;
+  return { ...timed, rider, traffic, nav, mission };
 }
 
 const approach = (value: number, target: number, dt: number) => {
@@ -180,4 +188,21 @@ export function setStreetDestination(map: CityMap, state: StreetState, destinati
 }
 
 export const clearStreetDestination = (state: StreetState): StreetState =>
-  state.nav ? { ...state, nav: null } : state;
+  state.nav || state.mission ? { ...state, nav: null, mission: null } : state;
+
+/**
+ * A mission from the start: a fresh ride at the station, sat-nav to the
+ * landmark and the clock running. Null when there's no road there.
+ */
+export function startStreetMission(
+  map: CityMap,
+  model: SimModel,
+  settings: StreetSettings,
+  id: string,
+  destination: Destination,
+): StreetState | null {
+  const fresh = createStreetRide(map, model, settings);
+  const routed = setStreetDestination(map, fresh, destination);
+  if (!routed.nav) return null;
+  return { ...routed, mission: startMission(id, routed.clockS, routed.nav.route.lengthM) };
+}

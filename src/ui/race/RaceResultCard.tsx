@@ -1,4 +1,5 @@
-import { MIN_HUMAN_REACTION_S, type RaceView } from '@/application';
+import { MIN_HUMAN_REACTION_S, useRaceStore, type RaceView } from '@/application';
+import { onlineText } from '../components/online/onlineText';
 import styles from './race.module.css';
 
 type Result = NonNullable<RaceView['result']>;
@@ -53,6 +54,7 @@ interface RaceResultCardProps {
 }
 
 export function RaceResultCard({ view, onRematch, onGarage }: RaceResultCardProps) {
+  const record = useRaceStore((s) => s.dragRecord);
   const result = view.result;
   if (!result) return null;
   const won = result.winner === 'player';
@@ -94,6 +96,18 @@ export function RaceResultCard({ view, onRematch, onGarage }: RaceResultCardProp
             <Row label={`對手（${view.opponent.label}）`} r={result.opponent} />
           </tbody>
         </table>
+        {record && (
+          <p className={styles.margin} data-testid="drag-record">
+            ET {record.etS.toFixed(3)} 秒 ·{' '}
+            {record.place ? `本機排行第 ${record.place} 名` : '未進本機前 10 名'}
+            {onlineText(record.online) && (
+              <>
+                <br />
+                {onlineText(record.online)}
+              </>
+            )}
+          </p>
+        )}
         <p className={styles.legend}>
           起步反應：綠燈到你放煞車／放離合催油（低於 {MIN_HUMAN_REACTION_S}{' '}
           秒視為預判搶跑）；RT：綠燈到車輪離開起跑光束；ET：光束到終點；總時間 = RT + ET，決定勝負。

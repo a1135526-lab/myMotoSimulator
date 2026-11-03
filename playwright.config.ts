@@ -25,6 +25,8 @@ export default defineConfig({
     command: `npx vite build && npx vite preview --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
+    // Never touch the real global leaderboards from tests.
+    env: { VITE_ONLINE: 'off' },
     timeout: 120_000,
   },
 });

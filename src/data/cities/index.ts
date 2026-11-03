@@ -28,3 +28,5 @@ export const NANZIH: CitySource = {
 
 /** Dry city tarmac, g. */
 export const CITY_GRIP_G = 1.05;
+
+export { NANZIH_MISSIONS, type MissionSpec } from './missions';

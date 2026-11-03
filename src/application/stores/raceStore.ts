@@ -9,7 +9,16 @@ import {
   type TrackSpec,
 } from '@/data';
 import { defaultOpponent, type OpponentSetup } from '../race/opponentSetup';
+import type { OnlineSubmission } from '../online/leaderboard';
 import type { RaceView } from '../viewModels/race';
+
+export interface DragRunRecord {
+  readonly etS: number;
+  /** Place on this device's board for the strip, or null if not in the top 10. */
+  readonly place: number | null;
+  /** The global board (fixed strips only, not the custom distance). */
+  readonly online: OnlineSubmission;
+}
 
 export const DISTANCE_PRESETS_M = [201, 402, 1000] as const;
 
@@ -51,6 +60,9 @@ interface RaceStoreState {
   readonly opponent: OpponentSetup;
   /** Latest race frame for the HUD / 3D scene. Written every frame. */
   readonly view: RaceView | null;
+  /** The last finished run's place on the boards; null after a jump start or DNF. */
+  readonly dragRecord: DragRunRecord | null;
+  setDragRecord(record: DragRunRecord | null): void;
 
   setStep(step: RaceStep): void;
   setDiscipline(d: Discipline): void;
@@ -84,6 +96,8 @@ export const useRaceStore = create<RaceStoreState>()((set) => ({
   treeMode: 'sportsman',
   opponent: defaultOpponent(DEFAULT_BIKE_ID),
   view: null,
+  dragRecord: null,
+  setDragRecord: (dragRecord) => set({ dragRecord }),
 
   setStep: (step) => set({ step, ...(step !== 'race' && { view: null }) }),
   setTrack: (trackId) => set({ trackId }),

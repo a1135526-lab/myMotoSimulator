@@ -41,6 +41,10 @@ ui → application → domain
 - **手機橫向全螢幕**：3D 頁面用 `useImmersive()`（`(pointer: coarse) and (orientation: landscape) and (max-height: 540px)`），成立時 `AppLayout immersive` 不畫標題列，外層加上 `data-immersive`；各 CSS module 用 `[data-immersive] .xxx` 改成全螢幕和覆蓋式按鈕（`TouchControls overlay`）。HUD 要避開左右下角的拇指區。
 - **傾斜轉向**：`TiltInputSource` 送出類比的 `steerAxis`（−1～1），domain 用 `steerTarget()` 合併，按鈕優先。iOS 要從點擊呼叫 `requestTiltPermission()`，而且只在 https 有效。
 - **自訂按鈕／甩動換檔**：全螢幕按鈕由 `OverlayControls` 依 `controlLayoutStore` 擺放（位置是安全區域的 0–1 比例，存在 localStorage；沒存的用 `defaultAnchor` 的預設）。`FlickShiftSource` 從 `screenPitchDeg` 偵測快速前後甩動，送出 `shiftUp`／`shiftDown`。
+- **紀錄**：`recordsStore` 把圈速榜、任務成績存在 localStorage（`scooter-dyno:records`），幽靈車每條賽道一筆、分開存（`scooter-dyno:ghost:<id>`）。讀取時一律驗證格式，壞資料丟掉。沒有後端，全球排行榜需要另外接資料庫。
+- **幽靈車**：`LapRecorder` 每 0.1 秒記錄玩家姿態，一圈完成交給 `CircuitController`；摔車或按 R 的圈標為不乾淨，不進榜也不當幽靈。`ghostPoseAt` 補間播放。
+- **街景任務**：定義在 `src/data/cities/missions.ts`（用地標的確切名稱），`streetMissions(map)` 對應到地圖並算好路線；規則在 `domain/street/missions.ts`。
+- **全球排行榜**：Supabase，結構和所有規則在 `supabase/schema.sql`（資料表全鎖，只開放 RPC），前端在 `src/application/online/`。新增賽道／直線賽道／任務時，`schema.sql` 的規則表也要加（見 `docs/SUPABASE_SETUP.md`）。登入是選擇性的：不登入照常玩、只記本機紀錄；登入後沒有暱稱會自動問一次。測試一律離線：Vitest 不載入 `.env.*`，Playwright 用 `VITE_ONLINE=off`。絕不放 secret / service_role key。
 - **PWA**：`vite-plugin-pwa`，service worker 只存在於正式 build（`npm run dev` 沒有），e2e 用 `serviceWorkers: 'block'`。改了 `public/icon.svg` 要跑 `node scripts/icons/render-icons.mjs`。
 - **車款資料**：每個規格區塊都有 `provenance`；沒查證的數值 UI 會標「估計值」。不要把估計值寫成已查證。
 - **街景地圖**：`src/data/cities/nanzih/nanzih.json` 由 `scripts/osm/` 從 OpenStreetMap 產生，不要手改；資料 © OpenStreetMap 貢獻者（ODbL），README 的標示要保留。

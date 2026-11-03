@@ -5,6 +5,7 @@ import {
   useCircuitStore,
   useCurrentBike,
   useRaceStore,
+  useUiStore,
 } from '@/application';
 import { useEngineAudio } from '../../audio/useEngineAudio';
 import { ModeTabs } from '../../components/common/ModeTabs';
@@ -45,6 +46,8 @@ export function CircuitPage() {
   const setStep = useRaceStore((s) => s.setStep);
   const autoShift = useRaceStore((s) => s.autoShift);
   const circuit = useActiveCircuit();
+  const ghostOn = useUiStore((s) => s.ghostOn);
+  const setGhostOn = useUiStore((s) => s.setGhostOn);
   const bike = useCurrentBike();
   const manual = bike.kind === 'manual';
   const live = view?.phase === 'lights' || view?.phase === 'racing';
@@ -84,6 +87,17 @@ export function CircuitPage() {
         >
           {immersive ? '👁' : `${camera === 'first' ? '切到第三人稱' : '切到第一人稱'}（V）`}
         </button>
+        <button
+          type="button"
+          className={styles.garageButton}
+          aria-pressed={ghostOn}
+          aria-label="幽靈車"
+          title="和自己最快的一圈一起跑"
+          onClick={() => setGhostOn(!ghostOn)}
+          data-testid="ghost-toggle"
+        >
+          {immersive ? '👻' : `👻 幽靈車 ${ghostOn ? '開' : '關'}`}
+        </button>
         <TiltToggle className={styles.garageButton} compact={immersive} />
         {manual && !autoShift && (
           <FlickShiftToggle className={styles.garageButton} compact={immersive} />
@@ -98,6 +112,7 @@ export function CircuitPage() {
         {view && (
           <CircuitResults
             view={view}
+            circuitId={circuit.id}
             onRematch={() => controller.go()}
             onGarage={() => setStep('tune')}
           />

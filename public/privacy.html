@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>隱私權政策・機車模擬器</title>
+    <meta name="theme-color" content="#0d0f12" />
+    <link rel="icon" href="favicon-32.png" type="image/png" />
+    <style>
+      :root {
+        --bg: #f7f7f5;
+        --text: #1b1d21;
+        --muted: #5b6270;
+        --accent: #d45f0a;
+        --border: #dcdcd6;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d0f12;
+          --text: #e8eaed;
+          --muted: #9aa0aa;
+          --accent: #ff7a1a;
+          --border: #2a2f38;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Noto Sans TC',
+          'Microsoft JhengHei',
+          sans-serif;
+        line-height: 1.75;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 1.6rem;
+      }
+      h2 {
+        margin: 32px 0 8px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        font-size: 1.15rem;
+      }
+      p.meta {
+        margin: 0 0 24px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      li {
+        margin-bottom: 4px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
+      th,
+      td {
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>隱私權政策</h1>
+      <p class="meta">機車模擬器（Scooter Dyno Simulator）・最後更新：2026 年 11 月 3 日</p>
+
+      <p>
+        機車模擬器是一個免費的網頁遊戲，原始碼公開在
+        <a href="https://github.com/a1135526-lab/myMotoSimulator">GitHub</a>。
+        這份說明告訴你遊戲收集了哪些資料、用在哪裡，以及怎麼刪除。
+      </p>
+
+      <h2>不登入也能玩</h2>
+      <p>
+        所有模式都不需要登入。不登入時，遊戲<strong>不會把任何資料傳到我們的伺服器</strong>。
+        你的設定和本機成績（改裝設定、按鈕位置、本機排行榜、幽靈車）只存在你自己瀏覽器的
+        localStorage 裡，清除網站資料就會刪除。
+      </p>
+
+      <h2>用 Google 登入、上傳成績時收集的資料</h2>
+      <p>只有在你選擇用 Google 登入、參加全球排行榜時，才會收集以下資料：</p>
+      <table>
+        <thead>
+          <tr>
+            <th>資料</th>
+            <th>用途</th>
+            <th>誰看得到</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Google 帳號識別碼、電子郵件</td>
+            <td>辨認是你、讓你換裝置也能延續成績</td>
+            <td>不公開，只用於登入</td>
+          </tr>
+          <tr>
+            <td>你自己取的暱稱</td>
+            <td>顯示在排行榜上</td>
+            <td>所有玩家</td>
+          </tr>
+          <tr>
+            <td>成績：圈速、任務用時、直線加速 ET、使用的車款、是否開輔助</td>
+            <td>全球排行榜</td>
+            <td>所有玩家</td>
+          </tr>
+          <tr>
+            <td>賽道最佳圈的行車路線（幽靈車）</td>
+            <td>讓其他玩家下載來比賽；檢查成績是否合理</td>
+            <td>所有玩家</td>
+          </tr>
+          <tr>
+            <td>上傳時間</td>
+            <td>防止短時間大量上傳、顯示紀錄日期</td>
+            <td>所有玩家（只顯示日期）</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        我們<strong>不會</strong>取得你的 Google 密碼、聯絡人、相片或其他 Google
+        資料，也不會把資料賣給任何人或拿來投放廣告。
+      </p>
+
+      <h2>第三方服務</h2>
+      <ul>
+        <li><strong>GitHub Pages</strong>：放置遊戲網站。</li>
+        <li><strong>Supabase</strong>：存放排行榜和帳號資料，伺服器位於日本東京。</li>
+        <li><strong>Google</strong>：提供登入（Google 登入），以及網頁字型（Google Fonts）。</li>
+        <li>
+          <strong>OpenStreetMap</strong>：街景模式的地圖資料，已包含在遊戲裡，玩的時候不會向
+          OpenStreetMap 傳送資料。
+        </li>
+      </ul>
+      <p>遊戲沒有廣告，也沒有使用分析或追蹤工具。</p>
+
+      <h2>手機的動作感測器</h2>
+      <p>
+        「傾斜轉向」和「甩動換檔」會讀取手機的方向感測器，只在你的裝置上即時計算，
+        <strong>不會儲存，也不會上傳</strong>。
+      </p>
+
+      <h2>刪除你的資料</h2>
+      <ul>
+        <li>本機資料：清除瀏覽器裡這個網站的資料即可。</li>
+        <li>
+          排行榜和帳號：請到
+          <a href="https://github.com/a1135526-lab/myMotoSimulator/issues">GitHub Issues</a>
+          提出刪除要求並附上你的暱稱，我們會刪除你的帳號、暱稱和所有成績。
+        </li>
+      </ul>
+
+      <h2>兒童</h2>
+      <p>未滿 13 歲請在家長同意下使用登入功能。不登入也可以玩完整的遊戲。</p>
+
+      <h2>政策變更</h2>
+      <p>這份說明如果有修改，會更新本頁上方的日期。</p>
+
+      <p><a href="./">← 回到遊戲</a></p>
+    </main>
+  </body>
+</html>

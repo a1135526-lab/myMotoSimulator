@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getBike } from '@/data';
 import { selectionForLevel } from '../race/opponentSetup';
+import type { RaceResult } from '@/domain';
+import { sendScore, submitDrag } from '../online/leaderboard';
 import { RaceController, type RaceConfig } from '../race/RaceController';
 import { useConfigStore } from '../stores/configStore';
-import { useRaceStore } from '../stores/raceStore';
+import { activeTrack, useRaceStore } from '../stores/raceStore';
+import { useRecordsStore } from '../stores/recordsStore';
 import { toRaceView } from '../viewModels/race';
 import { RaceContext } from './raceContext';
 import { useFlickShift } from './useFlickShift';
@@ -37,15 +40,53 @@ function useRaceConfig(): RaceConfig {
   }, [bike, selection, track, distanceM, treeMode, autoClutch, opponent]);
 }
 
+/**
+ * A clean finish (no jump start) goes on the strip's board here, and on the
+ * global board when it's one of the fixed strips.
+ */
+function recordRun(config: RaceConfig, result: RaceResult): void {
+  const store = useRaceStore.getState();
+  const me = result.player;
+  if (me.falseStart || !me.finished || me.elapsedS === null || me.trapSpeedKmh === null) {
+    store.setDragRecord(null);
+    return;
+  }
+  const { track, distanceM } = activeTrack(store.trackId, store.customDistanceM);
+  const custom = track.distanceM === null;
+  const bike = config.player.bike;
+  const run = {
+    etS: me.elapsedS,
+    trapKmh: me.trapSpeedKmh,
+    bike: `${bike.brand} ${bike.model}`,
+    manual: bike.kind === 'manual',
+    at: Date.now(),
+  };
+  const place = useRecordsStore
+    .getState()
+    .addDragRun(custom ? `custom-${distanceM}` : track.id, run);
+  store.setDragRecord({ etS: run.etS, place, online: { state: 'off' } });
+  if (custom) return;
+  sendScore(
+    () => submitDrag({ trackId: track.id, ...run }),
+    (online) => {
+      const shown = useRaceStore.getState().dragRecord;
+      if (shown?.etS === run.etS) useRaceStore.getState().setDragRecord({ ...shown, online });
+    },
+  );
+}
+
 export function RaceProvider({ children }: { children: ReactNode }) {
   const config = useRaceConfig();
+  const applied = useRef(config);
   const [controller] = useState(
     () =>
-      new RaceController(config, ({ race, models }) =>
-        useRaceStore.getState().publish(toRaceView(race, models)),
+      new RaceController(
+        config,
+        ({ race, models }) => useRaceStore.getState().publish(toRaceView(race, models)),
+        Math.random,
+        (result) => recordRun(applied.current, result),
       ),
   );
-  const applied = useRef(config);
 
   useEffect(() => {
     if (applied.current === config) return;

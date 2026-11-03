@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { OnlineHeader } from '../components/online/OnlineHeader';
 import styles from './AppLayout.module.css';
 
 interface AppLayoutProps {
@@ -28,7 +29,10 @@ export function AppLayout({ toolbar, children, immersive = false }: AppLayoutPro
           </span>
           Scooter Dyno Simulator
         </h1>
-        <div className={styles.toolbar}>{toolbar}</div>
+        <div className={styles.toolbar}>
+          {toolbar}
+          <OnlineHeader />
+        </div>
       </header>
       <main className={styles.main}>{children}</main>
       <footer className={styles.footer}>

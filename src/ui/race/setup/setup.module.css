@@ -509,3 +509,13 @@
   color: var(--accent);
   font-weight: 600;
 }
+
+.trackBest {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgb(181 123 255 / 0.85);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}

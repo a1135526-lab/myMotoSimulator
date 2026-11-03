@@ -15,6 +15,7 @@ const view = (
   nav: NavView | null = null,
 ): StreetView => ({
   clockS: 12,
+  mission: null,
   rider: {
     x: map.spawn.x,
     z: map.spawn.z,

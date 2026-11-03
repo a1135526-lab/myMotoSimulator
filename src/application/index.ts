@@ -88,7 +88,20 @@ export { CircuitProvider } from './hooks/CircuitProvider';
 export { useCircuitController } from './hooks/circuitContext';
 export { useCircuitStore, type CameraMode } from './stores/circuitStore';
 export { readCircuitSound } from './viewModels/sound';
-export type { CircuitView, CircuitRiderView, CircuitPlayerView } from './viewModels/circuit';
+export type {
+  CircuitView,
+  CircuitRiderView,
+  CircuitPlayerView,
+  CircuitGhostView,
+} from './viewModels/circuit';
+export {
+  LAP_BOARD_SIZE,
+  MISSION_BOARD_SIZE,
+  useRecordsStore,
+  type LapRecord,
+  type MissionRecord,
+} from './stores/recordsStore';
+export type { LapNotice } from './stores/circuitStore';
 export { MAX_CIRCUIT_OPPONENTS, MAX_LAPS, type Discipline } from './stores/raceStore';
 export { useActiveCircuit, useCircuits, useVenue, type Estimate } from './hooks/useRaceSetup';
 export { circuitGeometry } from './services/lapService';
@@ -101,6 +114,7 @@ export {
   TIME_OF_DAY_LABELS,
   TRAFFIC_LABELS,
   useStreetStore,
+  type MissionResult,
   type TimeOfDay,
   type TrafficLevel,
 } from './stores/streetStore';
@@ -119,4 +133,24 @@ export {
   type PlaceResult,
 } from './street/places';
 export { readStreetSound } from './viewModels/sound';
-export type { NavView, StreetView, StreetCarView, StreetRiderView } from './viewModels/street';
+export type {
+  NavView,
+  StreetView,
+  StreetCarView,
+  StreetRiderView,
+  StreetMissionView,
+} from './viewModels/street';
+export { streetMissions, type StreetMission } from './street/missions';
+export { useAuthStore, type AuthStatus } from './online/authStore';
+export { onlineEnabled } from './online/supabase';
+export {
+  fetchDragBoard,
+  fetchLapBoard,
+  fetchLapGhost,
+  fetchMissionBoard,
+  type DragBoardRow,
+  type LapBoardRow,
+  type MissionBoardRow,
+  type OnlineSubmission,
+} from './online/leaderboard';
+export { missionCatalog } from './street/missionCatalog';
