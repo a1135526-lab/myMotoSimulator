@@ -13,6 +13,8 @@ export interface RankedMatch {
   readonly laps: number;
   /** Players who were matched (room races). */
   readonly size: number;
+  /** Against the AI: your tier when it started (sets how good the AI is, for the whole race). */
+  readonly aiTier?: number;
 }
 
 export interface RankedRecord {

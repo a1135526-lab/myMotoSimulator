@@ -4,7 +4,7 @@ import {
   RANKED_AI_OPPONENTS,
   RANKED_BIKES,
   rankedAiSkill,
-  tierOf,
+  type BikeSpec,
   type RankedGroup,
 } from '@/domain';
 import { useRankedStore } from '../online/ranked/rankedStore';
@@ -31,7 +31,6 @@ export function useCircuitConfig(): CircuitConfig {
   const discipline = useRaceStore((s) => s.discipline);
   const roomSettings = useRoomStore((s) => s.settings);
   const ranked = useRankedStore((s) => (discipline === 'ranked' ? s.match : null));
-  const rankedPoints = useRankedStore((s) => (ranked ? (s.mine[ranked.group]?.points ?? 0) : 0));
   const garageCircuit = useRaceStore((s) => s.circuitId);
   const garageLaps = useRaceStore((s) => s.laps);
   const garageCount = useRaceStore((s) => s.opponentCount);
@@ -84,7 +83,8 @@ export function useCircuitConfig(): CircuitConfig {
       opponents,
       names,
       skill: opponent.skill,
-      ...(ranked?.kind === 'ai' && { aiSkill: rankedAiSkill(tierOf(rankedPoints).index) }),
+      // Fixed at the start: points arriving after the flag mustn't restage the race.
+      ...(ranked?.kind === 'ai' && { aiSkill: rankedAiSkill(ranked.aiTier ?? 0) }),
       laps,
       assist: noAssists ? false : assist,
       brakeAssist: noAssists ? false : brakeAssist,
@@ -99,7 +99,6 @@ export function useCircuitConfig(): CircuitConfig {
     discipline,
     roomSettings,
     ranked,
-    rankedPoints,
     garageCircuit,
     garageLaps,
     garageCount,
@@ -110,4 +109,14 @@ export function useCircuitConfig(): CircuitConfig {
     opponent,
     rival,
   ]);
+}
+
+/** The bike you're racing: a ranked race's stock bike, else your garage bike. */
+export function useRaceBike(): BikeSpec {
+  const bike = useCurrentBike();
+  const discipline = useRaceStore((s) => s.discipline);
+  const matchGroup = useRankedStore((s) => s.match?.group ?? null);
+  const roomGroup = useRoomStore((s) => s.settings.ranked ?? null);
+  const group = discipline === 'ranked' ? (matchGroup ?? roomGroup) : null;
+  return useMemo(() => (group ? getBike(RANKED_BIKES[group]) : bike), [group, bike]);
 }

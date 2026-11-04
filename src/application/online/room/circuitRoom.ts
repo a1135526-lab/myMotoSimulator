@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { CircuitRaceState } from '@/domain';
 import type { CircuitController } from '../../race/CircuitController';
 import type { CircuitView } from '../../viewModels/circuit';
 import { recordRoomMatch } from '../../stats/matchRecorder';
@@ -24,17 +25,24 @@ export function roomDeadlineS(finishes: Readonly<Record<string, RoomFinish>>): n
   return times.length ? Math.min(...times) + ROOM_FINISH_WINDOW_S : null;
 }
 
-/** In a friend room: the host's start starts this race, Space doesn't, and the window ends it. */
-export function useCircuitRoom(controller: CircuitController, enabled: boolean): void {
+/**
+ * In a friend room: the host's start starts this race, Space doesn't, and the
+ * window ends it. Outside a room, `otherwise` decides when time's up.
+ */
+export function useCircuitRoom(
+  controller: CircuitController,
+  enabled: boolean,
+  otherwise: (race: CircuitRaceState) => boolean = () => false,
+): void {
   const raceId = useRoomStore((s) => s.race?.raceId ?? null);
   useEffect(() => {
     controller.setRoomMode(enabled);
     controller.setOutOfTime((race) => {
-      if (!enabled) return false;
+      if (!enabled) return otherwise(race);
       const deadline = roomDeadlineS(useRoomStore.getState().finishes);
       return deadline !== null && race.clockS - race.lightsOutAtS >= deadline;
     });
-  }, [controller, enabled]);
+  }, [controller, enabled, otherwise]);
   useEffect(() => {
     if (!enabled || raceId === null) return;
     const race = useRoomStore.getState().race;

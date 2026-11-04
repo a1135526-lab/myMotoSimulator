@@ -66,7 +66,9 @@ export class CircuitController {
   private recorder = new LapRecorder();
   /** Racing in a friend room: Space / the start button don't start the lights. */
   private roomMode = false;
-  /** A friend room's finish window has closed on you: end your race unfinished. */
+  /** One race only (ranked): Space after the flag doesn't put you back on the grid. */
+  private singleRace = false;
+  /** The finish window (a room, ranked) has closed: the race ends, finished or not. */
   private outOfTime: (race: CircuitRaceState) => boolean = () => false;
   private ghost: GhostLap | null = null;
 
@@ -92,6 +94,10 @@ export class CircuitController {
 
   setRoomMode(on: boolean): void {
     this.roomMode = on;
+  }
+
+  setSingleRace(on: boolean): void {
+    this.singleRace = on;
   }
 
   setOutOfTime(check: (race: CircuitRaceState) => boolean): void {
@@ -139,7 +145,7 @@ export class CircuitController {
 
   tick(elapsedS: number): void {
     this.race = advanceCircuitRace(this.geo, this.models, this.race, this.input.read(), elapsedS);
-    if (this.race.riders[0]?.finishedAtS === null && this.outOfTime(this.race)) {
+    if (this.race.phase === 'racing' && this.outOfTime(this.race)) {
       this.race = retireCircuitPlayer(this.race);
     }
     const lap = this.recorder.observe(this.geo, this.race);
@@ -161,7 +167,7 @@ export class CircuitController {
     // In a friend room only the host starts the race, for everyone at once.
     if (this.roomMode) return;
     if (this.race.phase === 'grid') this.update(startLights(this.race));
-    else if (this.race.phase === 'finished') this.restage();
+    else if (this.race.phase === 'finished' && !this.singleRace) this.restage();
   }
 
   handleAction = (action: InputAction): void => {

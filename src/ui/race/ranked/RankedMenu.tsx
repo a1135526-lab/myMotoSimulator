@@ -11,6 +11,7 @@ import {
 } from '@/application';
 import { TierBadge } from './TierBadge';
 import { RankedBoard } from './RankedBoard';
+import { RankedControls } from './RankedControls';
 import styles from './ranked.module.css';
 
 const GROUPS: readonly { id: RankedGroup; bike: string; icon: string }[] = [
@@ -95,11 +96,14 @@ export function RankedMenu() {
         })}
       </div>
 
+      <RankedControls />
+
       <details className={styles.rules}>
         <summary>規則</summary>
         <ul>
           <li>
-            賽道繞圈 {RANKED_LAPS} 圈，每場隨機換賽道；禁止轉向輔助和煞車輔助（可以用自動換檔）。
+            賽道繞圈 {RANKED_LAPS}{' '}
+            圈，每場隨機換賽道；禁止轉向輔助和煞車輔助（可以用自動換檔、傾斜轉向）。
           </li>
           <li>第一名過線後其他人只剩 15 秒，沒過線算未完賽（最後一名）。</li>
           <li>4 人：第 1 名 +30、第 2 名 +12、第 3 名 −6、第 4 名 −18；2 人：贏 +24、輸 −18。</li>

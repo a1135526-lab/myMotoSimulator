@@ -2,6 +2,7 @@
 export { SimulationProvider } from './hooks/SimulationProvider';
 export { useSimulationController } from './hooks/simulationContext';
 export { useCurrentBike, useSimConfig } from './hooks/useSimConfig';
+export { useRaceBike } from './hooks/useCircuitConfig';
 export {
   useBikeId,
   useDashboardModel,

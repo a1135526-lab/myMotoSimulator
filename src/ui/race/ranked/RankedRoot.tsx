@@ -9,11 +9,12 @@ import { CircuitPage } from '../circuit/CircuitPage';
 import { RankedMenu } from './RankedMenu';
 import { RankedWaiting } from './RankedWaiting';
 
-/** Against the AI there's nobody to start the lights: they come on by themselves. */
+/** Against the AI there's nobody to start the lights: they come on by themselves (once). */
 const AI_LIGHTS_DELAY_MS = 1500;
 function AutoStart() {
   const controller = useCircuitController();
   useEffect(() => {
+    controller.setSingleRace(true);
     const timer = window.setTimeout(() => controller.go(), AI_LIGHTS_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [controller]);

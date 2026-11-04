@@ -18,7 +18,9 @@ interface CircuitResultsProps {
 
 /** The finish splash, then the results: finishers by time, then the rest by distance. */
 export function CircuitResults(props: CircuitResultsProps) {
-  if (props.view.phase !== 'finished') return null;
+  // From your own flag: the others may still be racing (their times fill in).
+  const home = props.view.riders[0]?.finishTimeS != null;
+  if (props.view.phase !== 'finished' && !home) return null;
   return <Results {...props} />;
 }
 
@@ -32,6 +34,8 @@ function Results({ view, circuitId, onRematch, onGarage, actions, extra }: Circu
   const winner = order[0]?.finishTimeS ?? null;
   const me = view.riders[0];
   const won = me?.position === 1 && !me.dnf;
+  const final = view.phase === 'finished';
+  const left = view.finishCountdownS;
   const [splash, setSplash] = useState(true);
   const endSplash = useCallback(() => setSplash(false), []);
 
@@ -95,7 +99,7 @@ function Results({ view, circuitId, onRematch, onGarage, actions, extra }: Circu
                 <th scope="row">{r.name}</th>
                 <td>
                   {r.finishTimeS === null
-                    ? r.remote && !r.dnf
+                    ? (r.remote || !final) && !r.dnf
                       ? '比賽中'
                       : '未完賽'
                     : r.position === 1 || winner === null
@@ -107,6 +111,11 @@ function Results({ view, circuitId, onRematch, onGarage, actions, extra }: Circu
             ))}
           </tbody>
         </table>
+        {!final && (
+          <p className={styles.waitHost} role="status" data-testid="results-waiting">
+            等待其他車手完賽{left != null ? ` · 剩 ${Math.ceil(left)} 秒` : '…'}
+          </p>
+        )}
         {extra}
         {!extra && <LapBoard circuitId={circuitId} newSince={newSince} />}
         {actions ?? (
@@ -114,7 +123,13 @@ function Results({ view, circuitId, onRematch, onGarage, actions, extra }: Circu
             <button type="button" className={styles.secondary} onClick={onGarage}>
               換車 / 改裝
             </button>
-            <button type="button" className={styles.primary} onClick={onRematch} autoFocus>
+            <button
+              type="button"
+              className={styles.primary}
+              onClick={onRematch}
+              disabled={!final}
+              autoFocus
+            >
               再比一場 <kbd>Space</kbd>
             </button>
           </div>

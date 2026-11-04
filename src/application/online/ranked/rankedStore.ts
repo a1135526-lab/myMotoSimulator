@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { create } from 'zustand';
-import { RANKED_LAPS, type RankedGroup } from '@/domain';
+import { RANKED_LAPS, tierOf, type RankedGroup } from '@/domain';
 import { newMatchId } from '../../stats/matchTypes';
 import { useUiStore } from '../../stores/uiStore';
 import { useAuthStore } from '../authStore';
@@ -82,6 +82,7 @@ export const useRankedStore = create<RankedState>()((set, get) => {
         circuitId: randomCircuit(),
         laps: RANKED_LAPS,
         size: 1,
+        aiTier: tierOf(get().mine[group]?.points ?? 0).index,
       },
     });
   };

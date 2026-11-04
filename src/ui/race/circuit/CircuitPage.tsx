@@ -3,8 +3,8 @@ import {
   useActiveCircuit,
   useCircuitController,
   useCircuitStore,
-  useCurrentBike,
   useCircuits,
+  useRaceBike,
   useRaceStore,
   useRankedStore,
   useRoomStore,
@@ -66,7 +66,7 @@ export function CircuitPage({
   const circuit = circuits.find((c) => c.id === circuitId) ?? garageCircuit;
   const ghostOn = useUiStore((s) => s.ghostOn);
   const setGhostOn = useUiStore((s) => s.setGhostOn);
-  const bike = useCurrentBike();
+  const bike = useRaceBike();
   const manual = bike.kind === 'manual';
   const live = view?.phase === 'lights' || view?.phase === 'racing';
   const immersive = useImmersive();

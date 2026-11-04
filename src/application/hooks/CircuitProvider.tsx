@@ -11,6 +11,7 @@ import { useRoomStore } from '../online/room/roomStore';
 import { saveGhost, useRecordsStore } from '../stores/recordsStore';
 import { useUiStore } from '../stores/uiStore';
 import { toCircuitView } from '../viewModels/circuit';
+import { finishWindowClosed, withFinishWindow } from '../race/finishWindow';
 import { CircuitContext } from './circuitContext';
 import { useFlickShift } from './useFlickShift';
 import { useInputSources } from './useInputSources';
@@ -72,6 +73,10 @@ function recordLap(config: CircuitConfig, lap: CompletedLap): void {
   );
 }
 
+const noWindow = () => false;
+const isRankedAi = () =>
+  useRaceStore.getState().discipline === 'ranked' && useRankedStore.getState().match?.kind === 'ai';
+
 export function CircuitProvider({ children }: { children: ReactNode }) {
   const config = useCircuitConfig();
   const applied = useRef(config);
@@ -79,14 +84,21 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
   const discipline = useRaceStore((s) => s.discipline);
   const rankedRoom = useRankedStore((s) => s.match?.kind === 'room');
   const inRoom = discipline === 'room' || (discipline === 'ranked' && rankedRoom);
+  // Ranked against the AI: the same 15 s after the first flag as a room.
+  const rankedAi = useRankedStore((s) => discipline === 'ranked' && s.match?.kind === 'ai');
   const [controller] = useState(
     () =>
       new CircuitController(
         config,
         ({ race, geo, models, names, ghost }) => {
-          const view = roomFrame(
-            toCircuitView(race, geo, models, names, useUiStore.getState().ghostOn ? ghost : null),
+          const raw = toCircuitView(
+            race,
+            geo,
+            models,
+            names,
+            useUiStore.getState().ghostOn ? ghost : null,
           );
+          const view = isRankedAi() ? withFinishWindow(raw) : roomFrame(raw);
           const { circuit, laps, player } = applied.current;
           // Room races are filed by roomFrame once everyone is home.
           if (useRoomStore.getState().status !== 'racing') {
@@ -115,7 +127,7 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
   useInputSources(controller, 'circuit');
   useFlickShift(controller);
   useTiltSteering(controller);
-  useCircuitRoom(controller, inRoom);
+  useCircuitRoom(controller, inRoom, rankedAi ? finishWindowClosed : noWindow);
 
   return <CircuitContext.Provider value={controller}>{children}</CircuitContext.Provider>;
 }

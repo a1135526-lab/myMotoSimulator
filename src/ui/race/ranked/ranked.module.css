@@ -235,3 +235,25 @@
   color: var(--danger);
   font-weight: 700;
 }
+
+.controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.motion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.motion .secondary {
+  justify-self: start;
+}

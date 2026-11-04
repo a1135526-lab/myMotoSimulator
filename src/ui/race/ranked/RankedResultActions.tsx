@@ -12,7 +12,7 @@ export function RankedResultActions() {
   const nickname = useAuthStore((s) => s.nickname);
   const setMode = useUiStore((s) => s.setMode);
 
-  let summary = <p className={styles.points}>計算積分中…</p>;
+  let summary = <p className={styles.points}>{result ? '計算積分中…' : '比賽結束後計算積分'}</p>;
   if (result?.state === 'error') {
     summary = <p className={styles.points}>⚠ 積分沒有更新：{result.error}</p>;
   } else if (result?.state === 'done') {
@@ -43,6 +43,7 @@ export function RankedResultActions() {
             cancel();
             setMode('home');
           }}
+          disabled={result === null}
         >
           離開
         </button>
@@ -50,6 +51,7 @@ export function RankedResultActions() {
           type="button"
           className={resultStyles.primary}
           onClick={() => void queue(group, nickname ?? '玩家')}
+          disabled={result === null || result.state === 'sending'}
           autoFocus
           data-testid="ranked-again"
         >

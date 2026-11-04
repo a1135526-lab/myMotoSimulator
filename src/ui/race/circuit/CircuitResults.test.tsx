@@ -13,9 +13,9 @@ const rider = (name: string, position: number, finishTimeS: number | null, isPla
   dnf: finishTimeS === null,
 });
 
-const view = (me: number) =>
+const view = (me: number, phase = 'finished') =>
   ({
-    phase: 'finished',
+    phase,
     laps: 2,
     raceTimeS: 90,
     riders: [rider('你', me, 90 + me, true), rider('電腦 1', me === 1 ? 2 : 1, 91)],
@@ -54,5 +54,20 @@ describe('CircuitResults', () => {
     fireEvent.click(screen.getByTestId('finish-splash'));
     expect(screen.getByTestId('circuit-result')).toHaveTextContent('第 2 名');
     expect(screen.getByText('對手')).toBeInTheDocument();
+  });
+
+  it('shows up at your own flag while the others still race; rematch waits for the end', () => {
+    const racing = {
+      ...view(1, 'racing'),
+      finishCountdownS: 12.2,
+      riders: [rider('你', 1, 91, true), { ...rider('電腦 1', 2, null), dnf: false }],
+    } as unknown as CircuitView;
+    render(
+      <CircuitResults view={racing} circuitId="hill-town" onRematch={vi.fn()} onGarage={vi.fn()} />,
+    );
+    fireEvent.click(screen.getByTestId('finish-splash'));
+    expect(screen.getByTestId('results-waiting')).toHaveTextContent('剩 13 秒');
+    expect(screen.getByTestId('circuit-result')).toHaveTextContent('比賽中');
+    expect(screen.getByRole('button', { name: /再比一場/ })).toBeDisabled();
   });
 });
