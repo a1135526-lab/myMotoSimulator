@@ -25,6 +25,7 @@ import { TouchControls } from '../../components/controls/TouchControls';
 import { AppLayout } from '../../layouts/AppLayout';
 import { useImmersive } from '../../layouts/useMediaQuery';
 import { RankedResultActions } from '../ranked/RankedResultActions';
+import { RoomOpponents } from '../room/RoomOpponents';
 import { RoomResultActions } from '../room/RoomResultActions';
 import { CircuitHud } from './CircuitHud';
 import { CircuitResults } from './CircuitResults';
@@ -139,6 +140,7 @@ export function CircuitPage({
             onRematch={() => controller.go()}
             onGarage={() => setStep('tune')}
             actions={ranked ? <RankedResultActions /> : room ? <RoomResultActions /> : undefined}
+            extra={room || ranked ? <RoomOpponents /> : undefined}
           />
         )}
       </div>

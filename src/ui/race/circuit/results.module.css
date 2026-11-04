@@ -53,6 +53,36 @@
   color: transparent;
 }
 
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 0 0 14px;
+}
+
+.summary div {
+  padding: 8px 10px;
+  background: rgb(255 255 255 / 0.05);
+  border-left: 3px solid var(--accent);
+}
+
+.summary dt {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
+.summary dd {
+  margin: 2px 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.summary small {
+  font-size: 0.7em;
+  color: var(--text-muted);
+}
+
 .resultTable {
   width: 100%;
   border-collapse: separate;
@@ -140,6 +170,11 @@
 .secondary {
   background: rgb(255 255 255 / 0.1);
   color: var(--text);
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .primary kbd {

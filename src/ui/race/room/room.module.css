@@ -283,3 +283,42 @@
   background: var(--ok);
   box-shadow: 0 0 6px var(--ok);
 }
+
+/* ---- Opponents at the results ---- */
+.opponents h3 {
+  margin: 14px 0 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
+.opponents ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.opponents li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgb(255 255 255 / 0.05);
+}
+
+.oppName {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.oppName small {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

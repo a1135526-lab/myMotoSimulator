@@ -66,6 +66,8 @@ export type RoomMessage =
       readonly timeS: number;
       readonly bestLapS: number | null;
     }
+  /** Someone at the results wants another race. */
+  | { readonly type: 'again'; readonly id: string; readonly raceId: number }
   /** Host → all: race over, back to the lobby. */
   | { readonly type: 'lobby' };
 
@@ -164,6 +166,11 @@ export function parseMessage(raw: unknown): RoomMessage | null {
       return id && raceId !== null && timeS !== null
         ? { type: 'finish', id, raceId, timeS, bestLapS: num(o.bestLapS, 0, BIG) }
         : null;
+    }
+    case 'again': {
+      const id = str(o.id, 64);
+      const raceId = num(o.raceId, 0, Number.MAX_SAFE_INTEGER);
+      return id && raceId !== null ? { type: 'again', id, raceId } : null;
     }
     case 'lobby':
       return { type: 'lobby' };

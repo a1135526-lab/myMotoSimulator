@@ -89,6 +89,28 @@ describe('friend room', () => {
     expect(guest.useRoomStore.getState().status).toBe('lobby');
   });
 
+  it('at the results a guest asks for another race; the host sees it, a new start clears it', async () => {
+    const hub = new FakeHub();
+    const clock = { t: 1000 };
+    const host = await player(hub, clock);
+    await host.useRoomStore.getState().create(profile('阿明'), settings);
+    const guest = await player(hub, clock);
+    await guest.useRoomStore
+      .getState()
+      .join(host.useRoomStore.getState().code ?? '', profile('小華'));
+    host.useRoomStore.getState().startRace();
+
+    guest.useRoomStore.getState().wantAgain();
+    guest.useRoomStore.getState().wantAgain(); // once is enough
+    const guestId = guest.useRoomStore.getState().me?.id;
+    expect(host.useRoomStore.getState().again).toEqual([guestId]);
+    expect(guest.useRoomStore.getState().again).toEqual([guestId]);
+
+    host.useRoomStore.getState().startRace();
+    expect(host.useRoomStore.getState().again).toEqual([]);
+    expect(guest.useRoomStore.getState().again).toEqual([]);
+  });
+
   it('a wrong code finds no room; a fifth player finds it full', async () => {
     vi.useFakeTimers();
     try {

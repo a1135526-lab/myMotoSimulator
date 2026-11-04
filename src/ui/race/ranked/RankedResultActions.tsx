@@ -44,7 +44,7 @@ export function RankedResultActions() {
             setMode('home');
           }}
         >
-          回大廳
+          離開
         </button>
         <button
           type="button"
@@ -53,7 +53,7 @@ export function RankedResultActions() {
           autoFocus
           data-testid="ranked-again"
         >
-          再排一場
+          再來一場
         </button>
       </div>
     </>

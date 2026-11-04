@@ -211,3 +211,7 @@
   flex: 1;
   min-width: 180px;
 }
+
+.dialog > .primary {
+  min-height: 40px;
+}

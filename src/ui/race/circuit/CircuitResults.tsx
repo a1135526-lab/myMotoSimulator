@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import type { CircuitView } from '@/application';
+import { FinishSplash } from './FinishSplash';
 import { fmtLap } from './format';
 import { LapBoard } from './LapBoard';
 import styles from './results.module.css';
@@ -11,9 +12,11 @@ interface CircuitResultsProps {
   onGarage: () => void;
   /** Replaces the rematch / garage buttons (a friend room has its own). */
   actions?: ReactNode;
+  /** Above the actions: points won (ranked), who you raced (online). */
+  extra?: ReactNode;
 }
 
-/** Final classification: finishers by time, then the rest by distance. */
+/** The finish splash, then the results: finishers by time, then the rest by distance. */
 export function CircuitResults(props: CircuitResultsProps) {
   if (props.view.phase !== 'finished') return null;
   return <Results {...props} />;
@@ -22,13 +25,26 @@ export function CircuitResults(props: CircuitResultsProps) {
 /** Seconds of slack before the race started, for marking its laps new. */
 const NEW_SLACK_MS = 10_000;
 
-function Results({ view, circuitId, onRematch, onGarage, actions }: CircuitResultsProps) {
+function Results({ view, circuitId, onRematch, onGarage, actions, extra }: CircuitResultsProps) {
   // Laps set during this race are new; it lasted about raceTimeS.
   const [newSince] = useState(() => Date.now() - view.raceTimeS * 1000 - NEW_SLACK_MS);
   const order = [...view.riders].sort((a, b) => a.position - b.position);
   const winner = order[0]?.finishTimeS ?? null;
   const me = view.riders[0];
   const won = me?.position === 1 && !me.dnf;
+  const [splash, setSplash] = useState(true);
+  const endSplash = useCallback(() => setSplash(false), []);
+
+  if (splash && me) {
+    return (
+      <FinishSplash
+        position={me.position}
+        field={view.riders.length}
+        dnf={me.dnf === true}
+        onDone={endSplash}
+      />
+    );
+  }
 
   return (
     <div className={styles.resultBackdrop}>
@@ -38,10 +54,29 @@ function Results({ view, circuitId, onRematch, onGarage, actions }: CircuitResul
         aria-label="比賽結果"
         data-testid="circuit-result"
       >
-        <p className={styles.kicker}>FINAL CLASSIFICATION</p>
+        <p className={styles.kicker}>RACE RESULT · 結算</p>
         <h2 className={won ? styles.win : styles.lose}>
-          {me?.dnf ? '未完賽' : won ? '冠軍！' : `第 ${me?.position ?? '-'} 名`}
+          {me?.dnf ? '未完賽' : won ? 'VICTORY 冠軍！' : `第 ${me?.position ?? '-'} 名`}
         </h2>
+        {me && (
+          <dl className={styles.summary}>
+            <div>
+              <dt>名次</dt>
+              <dd>
+                {me.dnf ? '—' : me.position}
+                <small> / {view.riders.length}</small>
+              </dd>
+            </div>
+            <div>
+              <dt>總時間</dt>
+              <dd>{fmtLap(me.finishTimeS)}</dd>
+            </div>
+            <div>
+              <dt>最快圈</dt>
+              <dd>{fmtLap(me.bestLapS)}</dd>
+            </div>
+          </dl>
+        )}
         <table className={styles.resultTable}>
           <thead>
             <tr>
@@ -72,7 +107,8 @@ function Results({ view, circuitId, onRematch, onGarage, actions }: CircuitResul
             ))}
           </tbody>
         </table>
-        <LapBoard circuitId={circuitId} newSince={newSince} />
+        {extra}
+        {!extra && <LapBoard circuitId={circuitId} newSince={newSince} />}
         {actions ?? (
           <div className={styles.resultActions}>
             <button type="button" className={styles.secondary} onClick={onGarage}>

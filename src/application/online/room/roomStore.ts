@@ -40,6 +40,8 @@ interface RoomState {
   /** A race is on and you joined after it started: you'll be in the next one. */
   readonly waitingForNext: boolean;
   readonly finishes: Readonly<Record<string, RoomFinish>>;
+  /** Who wants another race, after this one (player ids). */
+  readonly again: readonly string[];
   readonly error: string | null;
   /** A new room; `code` to use a given one (a ranked match the matchmaker named). */
   create(profile: RoomProfile, settings: RoomSettings, code?: string): Promise<void>;
@@ -55,6 +57,8 @@ interface RoomState {
   backToLobby(): void;
   sendPose(pose: PosePayload): void;
   sendFinish(timeS: number, bestLapS: number | null): void;
+  /** At the results: you'd race again (the host sees who's in). */
+  wantAgain(): void;
 }
 
 /** Other players' bikes in the current race (kept outside React: updated ~10×/s each). */
@@ -89,6 +93,7 @@ const IDLE = {
   race: null,
   waitingForNext: false,
   finishes: {},
+  again: [],
 };
 
 export const useRoomStore = create<RoomState>()((set, get) => {
@@ -128,6 +133,11 @@ export const useRoomStore = create<RoomState>()((set, get) => {
             });
           }
           return;
+        case 'again':
+          if (s.race?.raceId === msg.raceId && !s.again.includes(msg.id)) {
+            set({ again: [...s.again, msg.id] });
+          }
+          return;
         case 'lobby':
           set({ status: 'lobby', race: null, waitingForNext: false });
           return;
@@ -143,6 +153,7 @@ export const useRoomStore = create<RoomState>()((set, get) => {
       race: { raceId, holdS },
       waitingForNext: false,
       finishes: {},
+      again: [],
     });
   };
 
@@ -264,6 +275,13 @@ export const useRoomStore = create<RoomState>()((set, get) => {
       if (!me || !race || finishes[me.id]) return;
       set({ finishes: { ...finishes, [me.id]: { timeS, bestLapS } } });
       transport?.send({ type: 'finish', id: me.id, raceId: race.raceId, timeS, bestLapS });
+    },
+
+    wantAgain: () => {
+      const { me, race, again } = get();
+      if (!me || !race || again.includes(me.id)) return;
+      set({ again: [...again, me.id] });
+      transport?.send({ type: 'again', id: me.id, raceId: race.raceId });
     },
   };
 });

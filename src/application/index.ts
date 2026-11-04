@@ -168,7 +168,12 @@ export {
   type RankedGroup,
   type Tier,
 } from '@/domain';
-export { fetchRankedBoard, type RankedBoardRow } from './online/ranked/rankedBoard';
+export {
+  fetchPlayerCard,
+  fetchRankedBoard,
+  type PlayerCard,
+  type RankedBoardRow,
+} from './online/ranked/rankedBoard';
 export {
   rankedProfile,
   type RankedMatch,
