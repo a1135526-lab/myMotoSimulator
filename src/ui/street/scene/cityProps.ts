@@ -92,7 +92,8 @@ export function alongEdges(
   place: (x: number, z: number, yaw: number, e: RoadEdge) => void,
 ) {
   for (const e of map.edges) {
-    if (!include(e)) continue;
+    // Elevated roads have parapets, not kerbside lamps and trees.
+    if (!include(e) || e.heights) continue;
     const t0 = (map.nodes[e.a]?.radius ?? 0) + 2 + phase;
     const t1 = e.length - (map.nodes[e.b]?.radius ?? 0) - 2;
     for (let s = t0; s < t1; s += every) {

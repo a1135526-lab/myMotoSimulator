@@ -9,7 +9,6 @@ import {
   placeAt,
   roadAt,
 } from './cityQueries';
-import { insidePolygon } from './geometry2d';
 import { lanePoint, pointAlong } from './roadNetwork';
 
 const map = buildCity(TEST_CITY_DATA, TEST_CITY_OPTIONS);
@@ -21,8 +20,9 @@ const edgeNamed = (n: string) => {
 
 describe('road network', () => {
   it('builds junctions and edges with widths by class', () => {
-    expect(map.nodes).toHaveLength(16);
-    expect(map.edges).toHaveLength(24);
+    // The 4 × 4 grid, plus 高架路's two ends.
+    expect(map.nodes).toHaveLength(18);
+    expect(map.edges).toHaveLength(25);
     const primary = edgeNamed('南北0路');
     const tertiary = edgeNamed('東西1路');
     expect(primary.widthM).toBeGreaterThan(tertiary.widthM);
@@ -90,35 +90,11 @@ describe('city queries', () => {
   });
 });
 
-describe('generated buildings', () => {
-  const generated = map.buildings.filter((b) => b.style !== 'mapped');
-
-  it('fills street fronts, deterministically', () => {
-    expect(generated.length).toBeGreaterThan(20);
+describe('buildings', () => {
+  it('are only the ones on the map: nothing is made up', () => {
+    expect(map.buildings).toHaveLength(TEST_CITY_DATA.buildings.length);
+    expect(map.buildings.every((b) => b.style === 'mapped')).toBe(true);
     const again = buildCity(TEST_CITY_DATA, TEST_CITY_OPTIONS);
     expect(again.buildings.map((b) => b.ring)).toEqual(map.buildings.map((b) => b.ring));
-  });
-
-  it('never builds on roads, sidewalks, the park or the pond, or over the mapped building', () => {
-    const mapped = map.buildings.find((b) => b.style === 'mapped');
-    for (const b of generated) {
-      const cx = b.ring.reduce((s, p) => s + p.x, 0) / b.ring.length;
-      const cz = b.ring.reduce((s, p) => s + p.z, 0) / b.ring.length;
-      for (const p of [...b.ring, { x: cx, z: cz }]) {
-        expect(roadAt(map, p.x, p.z)).toBeNull();
-        expect(insidePolygon(map.areas[0]?.ring ?? [], p.x, p.z)).toBe(false);
-        expect(insidePolygon(map.areas[1]?.ring ?? [], p.x, p.z)).toBe(false);
-        expect(insidePolygon(mapped?.ring ?? [], p.x, p.z)).toBe(false);
-      }
-    }
-  });
-
-  it('uses taller shop-houses on the main roads than 透天 rows on lanes', () => {
-    const shops = generated.filter((b) => b.style === 'shophouse' || b.style === 'tower');
-    const homes = generated.filter((b) => b.style === 'townhouse');
-    expect(shops.length).toBeGreaterThan(0);
-    expect(homes.length).toBeGreaterThan(0);
-    const avg = (l: typeof generated) => l.reduce((s, b) => s + b.heightM, 0) / l.length;
-    expect(avg(shops)).toBeGreaterThan(avg(homes));
   });
 });

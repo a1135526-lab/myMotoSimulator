@@ -1,6 +1,6 @@
 import type { AreaKind, CityMap, CitySurface, RoadEdge, Waterway } from './city';
 import { closestOnSegment, inBounds, insidePolygon, type Vec2 } from './geometry2d';
-import { lanePoint } from './roadNetwork';
+import { heightAlong, lanePoint } from './roadNetwork';
 import { cellAt, gather, SEG_STRIDE } from './spatialIndex';
 
 /** Lookups on a city: what is at a point, the nearest road and the place's name. */
@@ -98,19 +98,50 @@ function inWaterway(w: Waterway, seg: number, x: number, z: number): boolean {
   return closestOnSegment(x, z, p.x, p.z, q.x, q.z).d <= w.widthM / 2;
 }
 
-/** What is under a point. Beyond the edge of the map counts as solid (water). */
-export function citySurfaceAt(map: CityMap, x: number, z: number): CitySurface {
+/**
+ * A road reaches you only when its surface is about at your height: on a
+ * deck you're above the streets below, and under one you ride past it.
+ */
+export const LEVEL_TOLERANCE_M = 1.8;
+
+/** Height of the road surface under a point at about height `y`; null when there's none. */
+export function deckHeightAt(map: CityMap, x: number, z: number, y: number): number | null {
+  let best: number | null = null;
+  for (const key of segsAt(map, x, z)) {
+    const edge = map.edges[Math.floor(key / SEG_STRIDE)] as RoadEdge;
+    const hit = hitOn(edge, key % SEG_STRIDE, x, z);
+    if (hit.d > edge.widthM / 2 + edge.sidewalkM) continue;
+    const h = edge.heights ? heightAlong(edge, hit.s) : 0;
+    if (
+      Math.abs(h - y) <= LEVEL_TOLERANCE_M &&
+      (best === null || Math.abs(h - y) < Math.abs(best - y))
+    )
+      best = h;
+  }
+  return best;
+}
+
+/**
+ * What is under a point, for a rider at height `y` (0 = the street). Beyond
+ * the edge of the map counts as solid (water). Up on a deck, anything but
+ * the deck is its parapet: solid.
+ */
+export function citySurfaceAt(map: CityMap, x: number, z: number, y = 0): CitySurface {
   if (!inBounds(map.bounds, x, z)) return 'water';
   const cell = cellAt(map.index, x, z);
-  if (!cell) return 'grass';
+  const raised = y > LEVEL_TOLERANCE_M;
+  if (!cell) return raised ? 'building' : 'grass';
   let sidewalk = false;
   for (const key of cell.segs) {
     const edge = map.edges[Math.floor(key / SEG_STRIDE)] as RoadEdge;
-    const d = hitOn(edge, key % SEG_STRIDE, x, z).d;
-    if (d <= edge.widthM / 2) return 'road';
-    if (d <= edge.widthM / 2 + edge.sidewalkM) sidewalk = true;
+    const hit = hitOn(edge, key % SEG_STRIDE, x, z);
+    if (edge.heights && Math.abs(heightAlong(edge, hit.s) - y) > LEVEL_TOLERANCE_M) continue;
+    if (!edge.heights && raised) continue;
+    if (hit.d <= edge.widthM / 2) return 'road';
+    if (hit.d <= edge.widthM / 2 + edge.sidewalkM) sidewalk = true;
   }
   if (sidewalk) return 'sidewalk';
+  if (raised) return 'building';
   for (const i of cell.buildings) {
     const b = map.buildings[i];
     if (b && inBounds(b.bounds, x, z) && insidePolygon(b.ring, x, z)) return 'building';
@@ -154,6 +185,8 @@ export function placeAt(map: CityMap, x: number, z: number): PlaceName {
 export interface RoadPose {
   readonly x: number;
   readonly z: number;
+  /** Height of the road there (elevated roads), m. */
+  readonly y: number;
   readonly heading: number;
   readonly edge: RoadEdge;
 }
@@ -175,5 +208,5 @@ export function nearestRoadPose(
   const forward = edge.oneway || Math.cos(heading - hit.heading) >= 0;
   const s = Math.max(Math.min(3, edge.length / 2), Math.min(edge.length - 3, hit.s));
   const p = lanePoint(edge, s, forward, edge.lanesPerDirection - 1);
-  return { x: p.x, z: p.z, heading: p.heading, edge };
+  return { x: p.x, z: p.z, y: heightAlong(edge, s), heading: p.heading, edge };
 }

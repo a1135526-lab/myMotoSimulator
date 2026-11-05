@@ -20,6 +20,9 @@ export const CityDataSchema = z
     pois: z.array(flat.length(4)),
     places: z.array(flat.length(3)),
     villages: z.array(flat.min(3)),
+    elevated: z.array(flat.min(3)).optional(),
+    overpasses: z.array(flat.min(6)).optional(),
+    boundary: flat.optional(),
   })
   .superRefine((d, ctx) => {
     const nodeCount = d.nodes.length / 2;
@@ -34,6 +37,10 @@ export const CityDataSchema = z
       if (e.length % 2 !== 0) issue(`edge ${i}: odd point list`);
     });
     d.signals.forEach((s) => s >= nodeCount && issue(`signal ${s}: no such node`));
+    d.elevated?.forEach((r, i) => {
+      const e = d.edges[r[0] ?? -1];
+      if (!e || r.length - 1 !== (e.length - 6) / 2 + 2) issue(`elevated ${i}: bad edge`);
+    });
     d.areas.forEach((a, i) => {
       if ((a[0] ?? -1) < 0 || (a[0] ?? 0) >= AREA_KINDS.length || !nameOk(a[1]))
         issue(`area ${i}: bad kind/name`);

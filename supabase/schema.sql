@@ -48,7 +48,18 @@ create table public.circuits (
 insert into public.circuits (id, length_m, min_lap_ms) values
   ('practice-park', 1275, 1275 * 1000 / 90),
   ('hill-town', 2172, 2172 * 1000 / 90),
-  ('south-bay', 3446, 3446 * 1000 / 90);
+  ('south-bay', 3446, 3446 * 1000 / 90),
+  -- 006_more_circuits.sql adds these to a live database.
+  ('harbor-night', 2172, 2172 * 1000 / 90),
+  ('sugar-mill', 1555, 1555 * 1000 / 90),
+  ('lotus-lake', 1919, 1919 * 1000 / 90),
+  ('cloud-peak', 1506, 1506 * 1000 / 90),
+  ('gorge-run', 1695, 1695 * 1000 / 90),
+  ('cape-coast', 3635, 3635 * 1000 / 90),
+  ('lake-ridge', 1615, 1615 * 1000 / 90),
+  ('kart-oval', 1012, 1012 * 1000 / 90),
+  ('neon-streets', 1675, 1675 * 1000 / 90),
+  ('rift-valley', 3642, 3642 * 1000 / 90);
 
 create table public.drag_tracks (
   id text primary key,

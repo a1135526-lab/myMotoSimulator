@@ -46,13 +46,17 @@ function cumulative(points: readonly Vec2[]): number[] {
 
 export function buildRoads(data: CityData): { nodes: RoadNode[]; edges: RoadEdge[] } {
   const at = (i: number): Vec2 => ({ x: data.nodes[i * 2] ?? 0, z: data.nodes[i * 2 + 1] ?? 0 });
+  const raised = new Map((data.elevated ?? []).map((r) => [r[0] ?? -1, r.slice(1)]));
   const edges: RoadEdge[] = data.edges.map((e, id) => {
     const [a0 = 0, b0 = 0, name = -1, clsIdx = 0, lanes = 2, oneway = 0] = e;
     const inner = pointsOf(e, 6);
     let points = [at(a0), ...inner, at(b0)];
+    let heights = raised.get(id);
+    if (heights && heights.length !== points.length) heights = undefined;
     let [a, b] = [a0, b0];
     if (oneway < 0) {
       points = points.reverse();
+      heights = heights && [...heights].reverse();
       [a, b] = [b0, a0];
     }
     const cls = ROAD_CLASSES[clsIdx] ?? 'residential';
@@ -71,6 +75,7 @@ export function buildRoads(data: CityData): { nodes: RoadNode[]; edges: RoadEdge
       points,
       cum,
       length: cum[cum.length - 1] ?? 0,
+      heights: heights ?? null,
     };
   });
 
@@ -122,6 +127,23 @@ export function pointAlong(edge: RoadEdge, s: number): EdgePoint {
     z: p.z + (q.z - p.z) * t,
     heading: Math.atan2(q.z - p.z, q.x - p.x),
   };
+}
+
+/** Height of the road above the ground s metres from a (0 for roads at grade). */
+export function heightAlong(edge: RoadEdge, s: number): number {
+  const hs = edge.heights;
+  if (!hs) return 0;
+  const d = Math.max(0, Math.min(edge.length, s));
+  let lo = 0;
+  let hi = edge.points.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if ((edge.cum[mid] ?? 0) <= d) lo = mid;
+    else hi = mid;
+  }
+  const seg = (edge.cum[hi] ?? 0) - (edge.cum[lo] ?? 0);
+  const t = seg > 0 ? (d - (edge.cum[lo] ?? 0)) / seg : 0;
+  return (hs[lo] ?? 0) + ((hs[hi] ?? 0) - (hs[lo] ?? 0)) * t;
 }
 
 /** Distance right of the centreline of lane `lane` (0 = nearest the middle). */

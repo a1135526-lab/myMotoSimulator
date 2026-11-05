@@ -5,6 +5,7 @@ import {
   fetchLapGhost,
   fetchMissionBoard,
   missionCatalog,
+  RANKED_GROUP_LABELS,
   useAuthStore,
   useCircuits,
   useTracks,
@@ -12,12 +13,14 @@ import {
   type DragBoardRow,
   type LapBoardRow,
   type MissionBoardRow,
+  type RankedGroup,
 } from '@/application';
+import { RankedBoard } from '../../race/ranked/RankedBoard';
 import { fmtLap } from '../../race/circuit/format';
 import { fmtRunTime, starText } from '../../street/missions/format';
 import styles from './online.module.css';
 
-type Tab = 'laps' | 'drag' | 'missions';
+type Tab = 'ranked' | 'laps' | 'drag' | 'missions';
 
 type Board =
   | { kind: 'loading' }
@@ -31,7 +34,7 @@ const date = (ms: number) => {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 };
 
-/** Everyone's best times: circuits (with and without assists), drag strips, missions. */
+/** Everyone's best: ranked ladders, circuits (with and without assists), drag strips, missions. */
 export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
   const circuits = useCircuits();
   const tracks = useTracks().filter((t) => t.distanceM !== null);
@@ -43,10 +46,13 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
   const [assisted, setAssisted] = useState(false);
   const [trackId, setTrackId] = useState(tracks[0]?.id ?? '');
   const [missionId, setMissionId] = useState(missions[0]?.id ?? '');
+  const [group, setGroup] = useState<RankedGroup>('scooter');
   const [board, setBoard] = useState<Board>({ kind: 'loading' });
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
+    // The ranked ladder loads itself (RankedBoard).
+    if (tab === 'ranked') return;
     let live = true;
     setBoard({ kind: 'loading' });
     const load = async (): Promise<Board> => {
@@ -97,6 +103,7 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
             : '用右上角的「登入」，你的成績也能上榜。'}
         </p>
         <div className={styles.tabs}>
+          {pick<Tab>('ranked', tab, setTab, '🏆 排位')}
           {pick<Tab>('laps', tab, setTab, '賽道繞圈')}
           {pick<Tab>('drag', tab, setTab, '直線加速')}
           {pick<Tab>('missions', tab, setTab, '街景任務')}
@@ -124,7 +131,18 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        <BoardTable board={board} onRace={(row) => void race(row)} />
+        {tab === 'ranked' ? (
+          <>
+            <div className={styles.chips}>
+              {(['scooter', 'manual'] as const).map((g) =>
+                pick(g, group, setGroup, RANKED_GROUP_LABELS[g]),
+              )}
+            </div>
+            <RankedBoard group={group} />
+          </>
+        ) : (
+          <BoardTable board={board} onRace={(row) => void race(row)} />
+        )}
         {note && <p className={styles.note}>{note}</p>}
 
         <button type="button" className={styles.close} onClick={onClose} aria-label="關閉">

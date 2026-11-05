@@ -1,4 +1,3 @@
-import { generateBuildings } from './buildingGen';
 import {
   AREA_KINDS,
   POI_KINDS,
@@ -6,6 +5,7 @@ import {
   type Building,
   type CityData,
   type CityMap,
+  type Overpass,
   type Poi,
   type RoadEdge,
   type Village,
@@ -16,11 +16,12 @@ import { boundsOf, pointsOf, type Bounds, type Vec2 } from './geometry2d';
 import { buildRoads } from './roadNetwork';
 import { cellsIn, createIndex, SEG_STRIDE, type SpatialIndex } from './spatialIndex';
 
-/** Turn imported map data into a rideable city: roads, areas, buildings and a spatial index. */
+/**
+ * Turn imported map data into a rideable city: roads, areas, buildings and a
+ * spatial index. Only what the map holds is built — no made-up buildings.
+ */
 
 export interface CityOptions {
-  /** Seed for the buildings filled in where the map has none. */
-  readonly seed: number;
   /** Start near here (snapped onto the closest road)… */
   readonly spawnNear: Vec2;
   /** …with this name, if given. */
@@ -122,6 +123,13 @@ export function buildCity(data: CityData, options: CityOptions): CityMap {
     };
   });
 
+  const overpasses: Overpass[] = (data.overpasses ?? []).map((o) => ({
+    heightM: o[0] ?? 6.5,
+    widthM: o[1] ?? 10,
+    points: pointsOf(o, 2),
+  }));
+  const boundary = data.boundary ? pointsOf(data.boundary, 0) : [];
+
   const partial = {
     name: data.name,
     attribution: data.attribution,
@@ -134,13 +142,14 @@ export function buildCity(data: CityData, options: CityOptions): CityMap {
     pois,
     places,
     villages,
+    overpasses,
+    boundary: boundary.length >= 3 ? boundary : null,
     index,
     spawn: { x: 0, z: 0, heading: 0 },
   };
-  generateBuildings(partial, buildings, options.seed);
   const { spawnNear, spawnRoad } = options;
   const pose = nearestRoadPose(partial, spawnNear.x, spawnNear.z, 0, (e) =>
     spawnRoad ? e.name === spawnRoad : true,
   );
-  return { ...partial, spawn: { x: pose.x, z: pose.z, heading: pose.heading } };
+  return { ...partial, spawn: { x: pose.x, z: pose.z, y: pose.y, heading: pose.heading } };
 }

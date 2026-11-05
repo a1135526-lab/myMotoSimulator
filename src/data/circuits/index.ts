@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Vec2 } from '@/domain';
 import { airDensityAt, type Scenery, type SkyTheme } from '../tracks';
+import { MORE_CIRCUITS } from './moreCircuits';
 
 /**
  * Road-racing circuits (fictional). Control points are metres on the ground
@@ -144,6 +145,7 @@ const RAW_CIRCUITS: readonly CircuitSpec[] = [
     sky: 'day',
     scenery: 'stadium',
   }),
+  ...MORE_CIRCUITS.map(circuit),
 ];
 
 export const CIRCUITS: readonly CircuitSpec[] = RAW_CIRCUITS.map((c) => {

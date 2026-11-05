@@ -187,7 +187,7 @@ export class CarFleet {
       ids.forEach((id, i) => {
         const c = byId.get(id);
         if (!c) return;
-        this.tmp.position.set(c.x, 0, c.z);
+        this.tmp.position.set(c.x, c.y, c.z);
         // Face −Z along heading h (forward = cos h, sin h).
         this.tmp.rotation.set(0, Math.atan2(-Math.cos(c.heading), -Math.sin(c.heading)), 0);
         this.tmp.updateMatrix();

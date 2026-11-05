@@ -53,7 +53,8 @@ ui → application → domain
 - **導覽／美術／音樂**：模式只在大廳選，其他頁面只有 `HomeButton`（← 大廳）。背景圖在 `public/art/`，由 `scripts/art/capture-art.mjs` 從遊戲截圖（需要先 build + preview）；大廳音樂是 `ui/audio/lobbyMusic.ts` 即時合成，用 `<LobbyMusicPlayer />` 放進要播放的頁面。
 - **PWA**：`vite-plugin-pwa`，service worker 只存在於正式 build（`npm run dev` 沒有），e2e 用 `serviceWorkers: 'block'`。改了 `public/icon.svg` 要跑 `node scripts/icons/render-icons.mjs`。
 - **車款資料**：每個規格區塊都有 `provenance`；沒查證的數值 UI 會標「估計值」。不要把估計值寫成已查證。
-- **街景地圖**：`src/data/cities/nanzih/nanzih.json` 由 `scripts/osm/` 從 OpenStreetMap 產生，不要手改；資料 © OpenStreetMap 貢獻者（ODbL），README 的標示要保留。
+- **街景地圖**：`src/data/cities/nanzih/nanzih.json` 由 `scripts/osm/` 從 OpenStreetMap 產生，不要手改；資料 © OpenStreetMap 貢獻者（ODbL），README 的標示要保留。範圍是整個楠梓區（行政區界＋150 m），只畫 OSM 上的真實建築（不要再加自動生成的房子）。
+- **高架道路**：`RoadEdge.heights`（每個點的高度，null = 平面），騎士和車都有 `y`。`citySurfaceAt(map, x, z, y)`／`deckHeightAt` 只認高度差 `LEVEL_TOLERANCE_M` 內的路，所以橋上和橋下互不干擾；在高處離開橋面算撞到護欄。3D 在 `ui/street/scene/deckMeshes.ts`；不能騎的國道／鐵路高架是 `map.overpasses`。
 
 ## 測試
 

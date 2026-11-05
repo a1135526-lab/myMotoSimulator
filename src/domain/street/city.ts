@@ -100,6 +100,12 @@ export interface CityData {
   readonly places: readonly (readonly number[])[];
   /** 里: [name, centre x, centre z, …boundary ring (may be empty)]. */
   readonly villages: readonly (readonly number[])[];
+  /** Raised roads: [edge index, height m at each of its points a → b as listed]. */
+  readonly elevated?: readonly (readonly number[])[];
+  /** Viaducts you can't ride (freeway, rail): [height m, width m, …line]. */
+  readonly overpasses?: readonly (readonly number[])[];
+  /** The district's outline, flat. */
+  readonly boundary?: readonly number[];
 }
 
 export interface RoadNode {
@@ -132,6 +138,15 @@ export interface RoadEdge {
   /** Distance along the polyline at each point. */
   readonly cum: readonly number[];
   readonly length: number;
+  /** Height above the ground at each point (elevated roads and their ramps); null = at grade. */
+  readonly heights: readonly number[] | null;
+}
+
+/** A viaduct overhead that isn't part of the road network (freeway, railway). */
+export interface Overpass {
+  readonly heightM: number;
+  readonly widthM: number;
+  readonly points: readonly Vec2[];
 }
 
 export interface Area {
@@ -187,8 +202,17 @@ export interface CityMap {
   readonly pois: readonly Poi[];
   readonly places: readonly { readonly name: string; readonly x: number; readonly z: number }[];
   readonly villages: readonly Village[];
+  readonly overpasses: readonly Overpass[];
+  /** The district's outline, when the data has it. */
+  readonly boundary: readonly Vec2[] | null;
   readonly index: SpatialIndex;
-  readonly spawn: { readonly x: number; readonly z: number; readonly heading: number };
+  readonly spawn: {
+    readonly x: number;
+    readonly z: number;
+    readonly heading: number;
+    /** Height of the road there (0 unless it's an elevated road). */
+    readonly y?: number;
+  };
 }
 
 export type CitySurface = 'road' | 'sidewalk' | 'grass' | 'building' | 'water';

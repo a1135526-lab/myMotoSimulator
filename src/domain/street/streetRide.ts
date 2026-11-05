@@ -127,7 +127,7 @@ export function stepStreet(
       : state.nav;
 
   if (rider.crashedUntilS === null) {
-    const car = hitCar(traffic, rider.x, rider.z);
+    const car = hitCar(traffic, rider.x, rider.z, undefined, rider.y);
     if (car && (car.speedMps > CAR_HIT_MPS || rider.sim.speedMps > RIDER_BUMP_MPS)) {
       rider = crashRider(ctx, rider);
     }

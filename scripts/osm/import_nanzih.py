@@ -1,14 +1,15 @@
 """
-Turn OpenStreetMap tiles of central Nanzih (Kaohsiung) into the compact city
-data the street mode loads: a routable road network, land use, rivers,
-building outlines and named places.
+Turn OpenStreetMap data of Nanzih District (Kaohsiung) into the compact city
+data the street mode loads: a routable road network (with elevated roads
+raised), land use, rivers, the buildings that are mapped and named places.
+Everything inside the district boundary is kept, plus a short margin.
 
 Map data (c) OpenStreetMap contributors, ODbL 1.0 — https://www.openstreetmap.org/copyright
 
 Usage:
-    python scripts/osm/import_nanzih.py <dir with *.osm tiles> [--stats]
+    python scripts/osm/import_nanzih.py <dir with *.osm files> [--stats]
 
-Download the tiles first (see scripts/osm/README.md). Output:
+Download the data first (see scripts/osm/README.md). Output:
     src/data/cities/nanzih/nanzih.json
 """
 
@@ -20,11 +21,15 @@ import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
-# Area kept: central Nanzih. Origin of the local metric frame is its centre.
-LAT0, LAT1 = 22.705, 22.745
-LON0, LON1 = 120.285, 120.335
-ORIGIN_LAT = (LAT0 + LAT1) / 2
-ORIGIN_LON = (LON0 + LON1) / 2
+# Area kept: the district (OSM relation 楠梓區) and a margin around it; this
+# box just has to hold it. The metric frame's origin stays at the old map's
+# centre, so coordinates (and the street missions' places) don't move.
+DISTRICT_RELATION = 2106299
+MARGIN_M = 150
+LAT0, LAT1 = 22.6925, 22.7585
+LON0, LON1 = 120.2520, 120.3435
+ORIGIN_LAT = 22.725
+ORIGIN_LON = 120.31
 M_PER_DEG_LAT = 110574.0
 M_PER_DEG_LON = 111320.0 * math.cos(math.radians(ORIGIN_LAT))
 
@@ -58,7 +63,65 @@ def project(lat, lon):
 
 
 def inside(lat, lon, margin=0.0):
-    return LAT0 - margin <= lat <= LAT1 + margin and LON0 - margin <= lon <= LON1 + margin
+    """In the district (or within MARGIN_M of it); `margin` (degrees) widens that a little."""
+    if not (LAT0 - margin <= lat <= LAT1 + margin and LON0 - margin <= lon <= LON1 + margin):
+        return False
+    return DISTRICT.covers(*project(lat, lon), margin * M_PER_DEG_LAT)
+
+
+class Mask:
+    """The district on a grid, grown by MARGIN_M: a quick point test for millions of nodes."""
+    CELL = 20.0
+
+    def __init__(self):
+        self.rings, self.cells, self.x0, self.z0 = [], set(), 0.0, 0.0
+
+    def build(self, rings):
+        self.rings = rings
+        xs = [x for r in rings for x, _ in r]
+        zs = [z for r in rings for _, z in r]
+        self.x0, self.z0 = min(xs) - MARGIN_M * 2, min(zs) - MARGIN_M * 2
+        nx = int((max(xs) - self.x0 + MARGIN_M * 2) / self.CELL) + 1
+        nz = int((max(zs) - self.z0 + MARGIN_M * 2) / self.CELL) + 1
+        core = set()
+        for j in range(nz):
+            cz = self.z0 + (j + 0.5) * self.CELL
+            # Crossings of this row with the rings, for an even-odd fill.
+            xs_cross = []
+            for r in rings:
+                for i in range(len(r)):
+                    (ax, az), (bx, bz) = r[i], r[(i + 1) % len(r)]
+                    if (az > cz) != (bz > cz):
+                        xs_cross.append(ax + (cz - az) * (bx - ax) / (bz - az))
+            xs_cross.sort()
+            for k in range(0, len(xs_cross) - 1, 2):
+                i0 = int((xs_cross[k] - self.x0) / self.CELL)
+                i1 = int((xs_cross[k + 1] - self.x0) / self.CELL)
+                for i in range(i0, i1 + 1):
+                    core.add((i, j))
+        grow = int(MARGIN_M / self.CELL) + 1
+        disc = [(di, dj) for di in range(-grow, grow + 1) for dj in range(-grow, grow + 1)
+                if di * di + dj * dj <= grow * grow]
+        edge = {(i, j) for i, j in core
+                if any((i + di, j + dj) not in core for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)))}
+        self.cells = set(core)
+        for i, j in edge:
+            for di, dj in disc:
+                self.cells.add((i + di, j + dj))
+
+    def covers(self, x, z, extra_m=0.0):
+        if not self.rings:
+            return True
+        i, j = int((x - self.x0) / self.CELL), int((z - self.z0) / self.CELL)
+        if (i, j) in self.cells:
+            return True
+        if extra_m <= 0:
+            return False
+        r = int(extra_m / self.CELL) + 1
+        return any((i + di, j + dj) in self.cells for di in (-r, 0, r) for dj in (-r, 0, r))
+
+
+DISTRICT = Mask()
 
 
 def load(tile_dir):
@@ -133,8 +196,9 @@ def douglas_peucker(pts, eps):
 
 def build_roads(nodes, ways):
     """Split kept roads into edges between junctions; keep the biggest connected network."""
-    runs = []  # (node refs, tags, cls)
-    for refs, tags in ways.values():
+    runs = []  # (node refs, tags, cls); tags carry the way id as "_way"
+    for wid, (refs, way_tags) in ways.items():
+        tags = {**way_tags, "_way": wid}
         cls = road_class(tags)
         if not cls:
             continue
@@ -186,6 +250,167 @@ def build_roads(nodes, ways):
         if len(comp) > len(best):
             best = comp
     return [e for e in edges if e[0][0] in best]
+
+
+# ---- Elevated roads ------------------------------------------------------
+# A bridge counts as elevated (高架) only when it passes over another road or
+# a railway; bridges over rivers stay at street level. Decks sit DECK_M per
+# layer up, and ramps run at RAMP_GRADE down to the ground junctions.
+DECK_M = 6.5
+RAMP_GRADE = 0.07
+OVER = {"motorway", "trunk", "primary", "secondary", "tertiary", "unclassified", "residential",
+        "living_street", "service", "motorway_link", "trunk_link", "primary_link",
+        "secondary_link", "tertiary_link"}
+
+
+def _cross(p, q, r, t):
+    def orient(a, b, c):
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    return (orient(p, q, r) * orient(p, q, t) < 0) and (orient(r, t, p) * orient(r, t, q) < 0)
+
+
+def deck_heights(nodes, ways):
+    """Height (m) of each elevated bridge way, by way id."""
+    def line(refs):
+        return [project(*nodes[r][:2]) for r in refs if r in nodes]
+    grid = defaultdict(list)
+    for wid, (refs, tags) in ways.items():
+        if not (tags.get("highway") in OVER or tags.get("railway") in ("rail", "subway",
+                                                                       "light_rail")):
+            continue
+        if tags.get("bridge") or tags.get("tunnel"):
+            continue
+        pts = line(refs)
+        for i in range(len(pts) - 1):
+            (ax, az), (bx, bz) = pts[i], pts[i + 1]
+            for gx in range(int(min(ax, bx) // 50), int(max(ax, bx) // 50) + 1):
+                for gz in range(int(min(az, bz) // 50), int(max(az, bz) // 50) + 1):
+                    grid[(gx, gz)].append((pts[i], pts[i + 1], set(refs)))
+    decks = {}
+    for wid, (refs, tags) in ways.items():
+        if tags.get("bridge") not in ("yes", "viaduct") or not road_class(
+                {**tags, "bridge": None}):
+            continue
+        try:
+            layer = int(str(tags.get("layer", "1")).split(";")[0])
+        except ValueError:
+            layer = 1
+        if layer < 1:
+            continue
+        pts, own = line(refs), set(refs)
+        over = False
+        for i in range(len(pts) - 1):
+            (ax, az), (bx, bz) = pts[i], pts[i + 1]
+            for gx in range(int(min(ax, bx) // 50), int(max(ax, bx) // 50) + 1):
+                for gz in range(int(min(az, bz) // 50), int(max(az, bz) // 50) + 1):
+                    for r, t, others in grid[(gx, gz)]:
+                        if not (others & own) and _cross(pts[i], pts[i + 1], r, t):
+                            over = True
+        if over:
+            decks[wid] = DECK_M * min(2, layer)
+    return decks
+
+
+def overpasses(nodes, ways):
+    """Elevated things you can't ride but ride under: freeway and no-motorbike viaducts, rail
+    viaducts. [height m, width m, …line]."""
+    out = []
+    for refs, tags in ways.values():
+        bridge = tags.get("bridge") in ("yes", "viaduct")
+        try:
+            layer = int(str(tags.get("layer", "1")).split(";")[0])
+        except ValueError:
+            layer = 1
+        if not bridge or layer < 1:
+            continue
+        hw, rail = tags.get("highway"), tags.get("railway")
+        if hw in OVER and not road_class({**tags, "bridge": None}):
+            lanes = lanes_of(tags, "primary") if hw.startswith(("motorway", "trunk")) else 2
+            width = 3.4 * lanes + 2
+        elif rail in ("rail", "light_rail", "subway"):
+            width = 12 if "高速鐵路" in tags.get("name", "") else 8
+        else:
+            continue
+        run = [r for r in refs if r in nodes and inside(nodes[r][0], nodes[r][1])]
+        if len(run) < 2:
+            continue
+        pts = douglas_peucker([project(*nodes[r][:2]) for r in run], 1.0)
+        out.append([DECK_M * min(2, layer), round(width, 1)] + [c for p in pts for c in p])
+    return out
+
+
+def height_profiles(out_nodes, out_edges, pts_of, deck_of):
+    """Heights at every point of every edge: decks up, ramps down to the ground junctions."""
+    import heapq
+    n_nodes = len(out_nodes) // 2
+    length = [sum(math.dist(p[i], p[i + 1]) for i in range(len(p) - 1)) for p in pts_of]
+    incident = defaultdict(list)
+    for ei, e in enumerate(out_edges):
+        incident[e[0]].append(ei)
+        incident[e[1]].append(ei)
+    near_deck = set()
+    for ei, e in enumerate(out_edges):
+        if deck_of[ei]:
+            near_deck.add(e[0])
+            near_deck.add(e[1])
+    # Ground: a junction or dead end with a road that isn't a deck.
+    ground = {v for v in range(n_nodes) if incident[v] and (
+        len(incident[v]) != 2 and any(not deck_of[ei] for ei in incident[v]))}
+
+    def spread(sources, through):
+        dist = {v: 0.0 for v in sources}
+        heap = [(0.0, v) for v in sources]
+        while heap:
+            d, v = heapq.heappop(heap)
+            if d > dist.get(v, 1e18) or (d > 0 and not through(v)):
+                continue
+            for ei in incident[v]:
+                a, b = out_edges[ei][0], out_edges[ei][1]
+                w = b if a == v else a
+                nd = d + length[ei]
+                if nd < dist.get(w, 1e18):
+                    dist[w] = nd
+                    heapq.heappush(heap, (nd, w))
+        return dist
+
+    to_ground = spread(ground, lambda v: True)
+    to_deck = spread(near_deck, lambda v: v not in ground)
+    top = {}
+    for ei, e in enumerate(out_edges):
+        if deck_of[ei]:
+            for v in e[:2]:
+                top[v] = max(top.get(v, 0), deck_of[ei])
+    profiles = {}
+    for ei, e in enumerate(out_edges):
+        a, b = e[0], e[1]
+        h_deck = deck_of[ei] or max(top.get(a, 0), top.get(b, 0))
+        if not h_deck or (not deck_of[ei] and a not in to_deck and b not in to_deck):
+            continue
+        hs, s = [], 0.0
+        pts = densify(pts_of[ei], 15.0)
+        for i, p in enumerate(pts):
+            if i:
+                s += math.dist(pts[i - 1], p)
+            dg = min(to_ground.get(a, 1e9) + s, to_ground.get(b, 1e9) + length[ei] - s)
+            if deck_of[ei]:
+                db = 0.0
+            else:
+                db = min(to_deck.get(a, 1e9) + s, to_deck.get(b, 1e9) + length[ei] - s)
+            h = min(h_deck, RAMP_GRADE * dg, max(0.0, h_deck - RAMP_GRADE * db))
+            hs.append(round(h, 1))
+        if max(hs) > 0.3:
+            profiles[ei] = (pts, hs)
+    return profiles
+
+
+def densify(pts, step):
+    """Extra points so no segment is longer than `step` (a ramp needs its shape)."""
+    out = [pts[0]]
+    for p, q in zip(pts, pts[1:]):
+        n = max(1, math.ceil(math.dist(p, q) / step))
+        for k in range(1, n + 1):
+            out.append((round(p[0] + (q[0] - p[0]) * k / n, 1), round(p[1] + (q[1] - p[1]) * k / n, 1)))
+    return out
 
 
 def ring_area(pts):
@@ -291,6 +516,18 @@ def main():
     nodes, ways, rels = load(tile_dir)
     print(f"loaded {len(nodes)} nodes, {len(ways)} ways, {len(rels)} relations")
 
+    # The district boundary: what to keep, and the outline drawn on the map.
+    district_members, _ = rels[DISTRICT_RELATION]
+    outer = [ref for t, ref, role in district_members if t == "way" and role in ("outer", "")]
+    district_rings = [[project(*nodes[r][:2]) for r in ring[:-1]]
+                      for ring in join_rings(outer, ways) if all(r in nodes for r in ring)]
+    DISTRICT.build(district_rings)
+    main_ring = max(district_rings, key=len)
+    half = len(main_ring) // 2
+    boundary = douglas_peucker(main_ring[: half + 1], 4)[:-1] + douglas_peucker(
+        main_ring[half:] + main_ring[:1], 4)[:-1]
+    decks = deck_heights(nodes, ways)
+
     names, name_index = [], {}
 
     def name_id(n):
@@ -311,16 +548,24 @@ def main():
             out_nodes.extend(project(*nodes[ref][:2]))
         return node_ids[ref]
 
-    out_edges = []
+    out_edges, pts_of, deck_of = [], [], []
     total = defaultdict(float)
     for piece, tags, cls in edges:
         pts = douglas_peucker([project(*nodes[r][:2]) for r in piece], 0.6)
+        pts_of.append(pts)
+        deck_of.append(decks.get(tags["_way"], 0))
         a, b = node_of(piece[0]), node_of(piece[-1])
         flat = [c for p in pts[1:-1] for c in p]
         out_edges.append([a, b, name_id(tags.get("name")), ROAD_CLASSES.index(cls),
                           lanes_of(tags, cls), oneway_of(tags)] + flat)
         total[cls] += sum(math.dist(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
     signals = sorted({node_ids[r] for r in node_ids if nodes[r][2].get("highway") == "traffic_signals"})
+
+    # Elevated roads: the deck and its ramps get denser points and a height at each.
+    elevated = []
+    for ei, (pts, hs) in sorted(height_profiles(out_nodes, out_edges, pts_of, deck_of).items()):
+        out_edges[ei] = out_edges[ei][:6] + [c for p in pts[1:-1] for c in p]
+        elevated.append([ei] + hs)
 
     # Areas: closed ways and multipolygon relations.
     areas, buildings = [], []
@@ -445,8 +690,10 @@ def main():
                                                                               3)[:-1]
         villages.append([name_id(name), *project(lat, lon)] + [c for p in ring for c in p])
 
-    x1, z1 = project(LAT0, LON1)
-    x0, z0 = project(LAT1, LON0)
+    xs = [x for x, _ in main_ring]
+    zs = [z for _, z in main_ring]
+    x0, x1 = round(min(xs) - MARGIN_M - 50), round(max(xs) + MARGIN_M + 50)
+    z0, z1 = round(min(zs) - MARGIN_M - 50), round(max(zs) + MARGIN_M + 50)
     data = {
         "name": "高雄市楠梓區",
         "attribution": "地圖資料 © OpenStreetMap 貢獻者（ODbL）",
@@ -462,9 +709,19 @@ def main():
         "pois": pois,
         "places": places,
         "villages": villages,
+        "elevated": elevated,
+        "overpasses": overpasses(nodes, ways),
+        "boundary": [c for p in boundary for c in p],
     }
     print(f"bounds {x0},{z0} → {x1},{z1}")
     print(f"{len(out_nodes)//2} junctions, {len(out_edges)} road edges, {len(signals)} signals")
+    print(f"{len(data['overpasses'])} overpasses (no motorbikes / rail)")
+    print(f"{len(decks)} elevated bridge ways, {len(elevated)} edges with height "
+          f"({sum(1 for e in elevated if max(e[1:]) >= DECK_M - 0.1)} reach deck height)")
+    for e in elevated:
+        if max(e[1:]) >= DECK_M - 0.1:
+            nm = out_edges[e[0]][2]
+            print("   deck:", names[nm] if nm >= 0 else "(unnamed)", f"{max(e[1:])} m")
     for cls in ROAD_CLASSES:
         print(f"  {cls:14s} {total[cls]/1000:7.1f} km")
     print(f"{len(areas)} areas, {len(waterways)} waterways, {len(buildings)} buildings, "

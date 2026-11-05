@@ -19,6 +19,7 @@ const view = (
   rider: {
     x: map.spawn.x,
     z: map.spawn.z,
+    y: 0,
     heading: map.spawn.heading,
     lean: 0.4,
     slip: 0,
@@ -43,6 +44,7 @@ const view = (
       id: 0,
       kind: 'sedan',
       paint: 0.2,
+      y: 0,
       x: map.spawn.x,
       z: map.spawn.z - 40,
       heading: 0,

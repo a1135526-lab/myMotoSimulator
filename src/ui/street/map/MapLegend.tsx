@@ -1,4 +1,4 @@
-import { AREA_FILL, ROAD_COLOR } from './mapDraw';
+import { AREA_FILL, BOUNDARY_COLOR, OVERPASS_COLOR, ROAD_COLOR } from './mapDraw';
 import styles from './mapOverlay.module.css';
 
 const ROADS = [
@@ -28,6 +28,21 @@ export function MapLegend() {
           <dd>{label}</dd>
         </div>
       ))}
+      <div>
+        <dt
+          className={styles.legendRoad}
+          style={{ background: ROAD_COLOR.primary, outline: '2px solid #06080b' }}
+        />
+        <dd>高架道路（可騎）</dd>
+      </div>
+      <div>
+        <dt className={styles.legendRoad} style={{ background: OVERPASS_COLOR }} />
+        <dd>國道、鐵路高架（不能騎）</dd>
+      </div>
+      <div>
+        <dt className={styles.legendRoad} style={{ background: BOUNDARY_COLOR }} />
+        <dd>楠梓區界</dd>
+      </div>
       <div>
         <dt className={styles.legendRoad} style={{ background: '#2fb4ff' }} />
         <dd>導航路線</dd>

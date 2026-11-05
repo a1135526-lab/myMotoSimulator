@@ -1,4 +1,6 @@
 import { seededRandom, type CityMap, type RoadEdge } from './city';
+import { LEVEL_TOLERANCE_M } from './cityQueries';
+import { heightAlong } from './roadNetwork';
 import {
   bezier,
   choices,
@@ -57,6 +59,8 @@ export interface Car {
   readonly cruiseMps: number;
   readonly x: number;
   readonly z: number;
+  /** Up on an elevated road, m. */
+  readonly y: number;
   readonly heading: number;
 }
 
@@ -65,16 +69,26 @@ export interface TrafficState {
   readonly seed: number;
 }
 
-function placed(map: CityMap, car: Omit<Car, 'x' | 'z' | 'heading'>): Car {
+function placed(map: CityMap, car: Omit<Car, 'x' | 'z' | 'y' | 'heading'>): Car {
+  const here = map.edges[car.pos.edge];
+  const y = here ? heightAlong(here, car.pos.s) : 0;
   if (car.turn) {
     const { p0, p1, p2, t } = car.turn;
     const p = bezier(t, p0, p1, p2);
     const q = bezier(Math.min(1, t + 0.02), p0, p1, p2);
     const r = bezier(Math.max(0, t - 0.02), p0, p1, p2);
-    return { ...car, x: p.x, z: p.z, heading: Math.atan2(q.z - r.z, q.x - r.x) };
+    const next = map.edges[car.turn.next.edge];
+    const y1 = next ? heightAlong(next, car.turn.next.s) : y;
+    return {
+      ...car,
+      x: p.x,
+      z: p.z,
+      y: y + (y1 - y) * t,
+      heading: Math.atan2(q.z - r.z, q.x - r.x),
+    };
   }
   const p = lanePosPoint(map, car.pos);
-  return { ...car, x: p.x, z: p.z, heading: p.heading };
+  return { ...car, x: p.x, z: p.z, y, heading: p.heading };
 }
 
 const KINDS: readonly CarKind[] = ['sedan', 'sedan', 'sedan', 'hatch', 'hatch', 'van', 'bus'];
@@ -252,9 +266,16 @@ export function stepTraffic(
   return { ...traffic, cars };
 }
 
-/** Does a rider at (x, z) overlap any car (with a little body margin)? */
-export function hitCar(traffic: TrafficState, x: number, z: number, marginM = 0.45): Car | null {
+/** Does a rider at (x, z), height y, overlap any car (with a little body margin)? */
+export function hitCar(
+  traffic: TrafficState,
+  x: number,
+  z: number,
+  marginM = 0.45,
+  y = 0,
+): Car | null {
   for (const car of traffic.cars) {
+    if (Math.abs(car.y - y) > LEVEL_TOLERANCE_M) continue;
     const r = relative(car, x, z);
     const s = CAR_SIZE[car.kind];
     if (Math.abs(r.ahead) < s.length / 2 + marginM && Math.abs(r.side) < s.width / 2 + marginM)

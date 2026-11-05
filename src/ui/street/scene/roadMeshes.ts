@@ -1,6 +1,7 @@
 import { roadAt } from '@/application';
 import type { CityMap, RoadEdge, RoadNode } from '@/domain';
 import type { ChunkedBuilders } from './chunks';
+import { buildDeck, buildOverpass, nodeHeight } from './deckMeshes';
 import { band, dashes, kerb, slice, type Line } from './polyline';
 
 /**
@@ -129,6 +130,11 @@ function sidewalks(parts: ChunkedBuilders<RoadPart>, map: CityMap, e: RoadEdge, 
 
 export function buildRoads(parts: ChunkedBuilders<RoadPart>, map: CityMap) {
   for (const e of map.edges) {
+    // Elevated roads and their ramps: their own deck, no street furniture.
+    if (e.heights) {
+      buildDeck(parts, e, ASPHALT_TILE_M);
+      continue;
+    }
     const line: Line = { points: e.points, cum: e.cum, length: e.length };
     const mid = e.points[Math.floor(e.points.length / 2)] ?? { x: 0, z: 0 };
     band(
@@ -146,5 +152,8 @@ export function buildRoads(parts: ChunkedBuilders<RoadPart>, map: CityMap) {
     if (na?.signal && isJunction(na)) crossing(parts, e, line, true, na);
     if (nb?.signal && isJunction(nb)) crossing(parts, e, line, false, nb);
   }
-  for (const n of map.nodes) if (isJunction(n)) junctionPatch(parts, map, n);
+  for (const n of map.nodes) {
+    if (isJunction(n) && nodeHeight(map, n.id) < 0.3) junctionPatch(parts, map, n);
+  }
+  for (const o of map.overpasses) buildOverpass(parts, o, ASPHALT_TILE_M);
 }

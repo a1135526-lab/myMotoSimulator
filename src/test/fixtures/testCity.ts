@@ -5,7 +5,9 @@ import type { CityData } from '@/domain';
  * East–west streets (東西0路…) are two-lane tertiary roads; north–south ones
  * (南北0路…) are four-lane primaries, except the east edge, 單行巷, a
  * one-way lane running south. One block is a park, one a pond; there is a
- * mapped 6-storey building, a station and a school.
+ * mapped 6-storey building, a station and a school. 高架路 is a flyover
+ * along z = 60, over 南北1路 and 南北2路, ramping up from x = 60 to its
+ * 6.5 m deck and back down by x = 300 (its ends join nothing).
  */
 const STEP = 120;
 const names: string[] = [];
@@ -34,6 +36,33 @@ for (let i = 0; i < 4; i++) {
   }
 }
 
+// The flyover: two new nodes, points every 30 m, heights ramping 0 → 6.5 → 0.
+const FLYOVER = edges.length;
+nodes.push(60, 60, 300, 60);
+edges.push([
+  16,
+  17,
+  name('高架路'),
+  2,
+  2,
+  0,
+  90,
+  60,
+  120,
+  60,
+  150,
+  60,
+  180,
+  60,
+  210,
+  60,
+  240,
+  60,
+  270,
+  60,
+]);
+const FLYOVER_HEIGHTS = [0, 3, 6.5, 6.5, 6.5, 6.5, 6.5, 3, 0];
+
 const square = (x0: number, z0: number, x1: number, z1: number) => [x0, z0, x1, z0, x1, z1, x0, z1];
 
 export const TEST_CITY_DATA: CityData = {
@@ -59,6 +88,8 @@ export const TEST_CITY_DATA: CityData = {
     [name('甲里'), 60, 180, ...square(-100, -100, 180, 460)],
     [name('乙里'), 320, 180],
   ],
+  elevated: [[FLYOVER, ...FLYOVER_HEIGHTS]],
+  overpasses: [[8, 12, -100, 400, 460, 400]],
 };
 
-export const TEST_CITY_OPTIONS = { seed: 5, spawnNear: { x: 0, z: 200 } };
+export const TEST_CITY_OPTIONS = { spawnNear: { x: 0, z: 200 } };

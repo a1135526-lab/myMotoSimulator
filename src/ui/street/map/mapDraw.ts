@@ -1,6 +1,6 @@
 import type { NavView, PlaceResult, StreetView } from '@/application';
 import type { AreaKind, CityMap, RoadClass } from '@/domain';
-import { CHUNK_M, mapLayers, type RoadLabel } from './mapLayers';
+import { CHUNK_M, mapLayers, type Chunk, type RoadLabel } from './mapLayers';
 
 /** Draws the city map (roads, land use, route, rider, traffic) onto a canvas. */
 
@@ -32,6 +32,11 @@ export const AREA_FILL: Readonly<Record<AreaKind, string>> = {
 const WATER = '#1d4a66';
 const LAND = '#1c2026';
 const BUILDING = '#3a414b';
+/** Viaducts overhead that you can't ride: freeway, rail. */
+export const OVERPASS_COLOR = '#5d6672';
+/** The dark edge that makes a raised road read as a bridge over the streets. */
+const DECK_CASING = '#06080b';
+export const BOUNDARY_COLOR = '#c7a5ff';
 
 const ROAD_ORDER: readonly RoadClass[] = [
   'living_street',
@@ -157,9 +162,44 @@ export function drawMap(
       if (path) ctx.stroke(path);
     }
   }
+  drawRaised(ctx, v, visible);
+  if (layers.boundary) {
+    ctx.setLineDash([10 / v.scale, 6 / v.scale]);
+    ctx.strokeStyle = BOUNDARY_COLOR;
+    ctx.lineWidth = 2 / v.scale;
+    ctx.stroke(layers.boundary);
+    ctx.setLineDash([]);
+  }
   if (extras.nav) drawRoute(ctx, v, extras.nav);
   ctx.restore();
   drawOverlay(ctx, v, extras, layers.labels);
+}
+
+/** Viaducts, then the raised roads you ride: a dark casing so they sit over the streets. */
+function drawRaised(ctx: CanvasRenderingContext2D, v: MapViewport, visible: readonly Chunk[]) {
+  for (const c of visible) {
+    for (const [w, path] of c.overpasses) {
+      ctx.strokeStyle = DECK_CASING;
+      ctx.lineWidth = Math.max(w + 3, 4 / v.scale);
+      ctx.stroke(path);
+      ctx.strokeStyle = OVERPASS_COLOR;
+      ctx.lineWidth = Math.max(w, 2.5 / v.scale);
+      ctx.stroke(path);
+    }
+  }
+  for (const cls of ROAD_ORDER) {
+    const [m, px] = ROAD_W[cls];
+    for (const c of visible) {
+      const path = c.decks.get(cls);
+      if (!path) continue;
+      ctx.strokeStyle = DECK_CASING;
+      ctx.lineWidth = Math.max(m + 4, (px + 3) / v.scale);
+      ctx.stroke(path);
+      ctx.strokeStyle = ROAD_COLOR[cls];
+      ctx.lineWidth = Math.max(m, px / v.scale);
+      ctx.stroke(path);
+    }
+  }
 }
 
 function drawOverlay(

@@ -161,7 +161,7 @@ export class StreetRenderer {
     this.fleet?.update(view.cars);
 
     this.route.update(view.nav);
-    this.bikeYaw.position.set(r.x, ROAD_Y, r.z);
+    this.bikeYaw.position.set(r.x, ROAD_Y + r.y, r.z);
     this.bikeYaw.rotation.y = yawFor(r.heading - r.slip);
     if (this.bike) {
       this.bike.group.rotation.z = r.crashed ? Math.PI / 2.2 : r.lean;
@@ -230,7 +230,11 @@ export class StreetRenderer {
       const lx = Math.sin(p.heading);
       const lz = -Math.cos(p.heading);
       const side = Math.sin(p.lean) * EYE_HEIGHT_M;
-      this.camera.position.set(p.x + lx * side, Math.cos(p.lean) * EYE_HEIGHT_M, p.z + lz * side);
+      this.camera.position.set(
+        p.x + lx * side,
+        p.y + Math.cos(p.lean) * EYE_HEIGHT_M,
+        p.z + lz * side,
+      );
       this.camera.rotation.set(
         -0.04,
         yawFor(p.heading - p.slip * ONBOARD_SLIP_SHARE),
@@ -240,7 +244,11 @@ export class StreetRenderer {
       return;
     }
 
-    const target = new THREE.Vector3(p.x - fx * CHASE_BACK_M, CHASE_UP_M, p.z - fz * CHASE_BACK_M);
+    const target = new THREE.Vector3(
+      p.x - fx * CHASE_BACK_M,
+      p.y + CHASE_UP_M,
+      p.z - fz * CHASE_BACK_M,
+    );
     if (!this.chaseReady) {
       this.chase.copy(target);
       this.chaseReady = true;
@@ -249,6 +257,6 @@ export class StreetRenderer {
     }
     this.camera.position.copy(this.chase);
     this.camera.rotation.set(0, 0, 0);
-    this.camera.lookAt(p.x + fx * CHASE_LOOK_AHEAD_M, 1.0, p.z + fz * CHASE_LOOK_AHEAD_M);
+    this.camera.lookAt(p.x + fx * CHASE_LOOK_AHEAD_M, p.y + 1.0, p.z + fz * CHASE_LOOK_AHEAD_M);
   }
 }

@@ -15,6 +15,10 @@ export interface Chunk {
   readonly areas: Map<AreaKind, Path2D>;
   readonly buildings: Path2D;
   readonly water: Map<number, Path2D>;
+  /** Raised roads (and their ramps) you ride, by class: drawn as bridges over the rest. */
+  readonly decks: Map<RoadClass, Path2D>;
+  /** Viaducts you can't ride (freeway, rail), by width. */
+  readonly overpasses: Map<number, Path2D>;
 }
 
 export interface RoadLabel {
@@ -29,6 +33,8 @@ export interface RoadLabel {
 export interface MapLayers {
   readonly chunks: Map<string, Chunk>;
   readonly labels: readonly RoadLabel[];
+  /** The district's outline, if known. */
+  readonly boundary: Path2D | null;
 }
 
 const cache = new WeakMap<CityMap, MapLayers>();
@@ -48,6 +54,8 @@ function chunkFor(chunks: Map<string, Chunk>, x: number, z: number): Chunk {
       areas: new Map(),
       buildings: new Path2D(),
       water: new Map(),
+      decks: new Map(),
+      overpasses: new Map(),
     };
     chunks.set(k, c);
   }
@@ -115,9 +123,19 @@ export function mapLayers(map: CityMap): MapLayers | null {
   }
   for (const e of map.edges) {
     const c = centre(e.points);
-    line(pathIn(chunkFor(chunks, c.x, c.z).roads, e.cls), e.points);
+    const chunk = chunkFor(chunks, c.x, c.z);
+    line(pathIn(e.heights ? chunk.decks : chunk.roads, e.cls), e.points);
   }
-  const layers = { chunks, labels: roadLabels(map.edges) };
+  for (const o of map.overpasses) {
+    const c = centre(o.points);
+    line(pathIn(chunkFor(chunks, c.x, c.z).overpasses, o.widthM), o.points);
+  }
+  let boundary: Path2D | null = null;
+  if (map.boundary) {
+    boundary = new Path2D();
+    ring(boundary, map.boundary);
+  }
+  const layers = { chunks, labels: roadLabels(map.edges), boundary };
   cache.set(map, layers);
   return layers;
 }

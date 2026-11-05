@@ -14,7 +14,7 @@ import { createInitialState, step } from '../simulation/simulator';
 import type { SimInput, SimState } from '../simulation/types';
 import { mpsToKmh } from '../units';
 import type { CityMap, CitySurface } from './city';
-import { citySurfaceAt, isSolid, nearestRoadPose } from './cityQueries';
+import { citySurfaceAt, deckHeightAt, isSolid, nearestRoadPose } from './cityQueries';
 
 /**
  * One rider loose in the city, in world coordinates. The engine and gearbox
@@ -58,6 +58,8 @@ export interface FreeRider {
   readonly input: SimInput;
   readonly x: number;
   readonly z: number;
+  /** Height above the street: up on an elevated road or its ramp, m. */
+  readonly y: number;
   readonly heading: number;
   readonly lean: number;
   readonly drift: number;
@@ -80,12 +82,13 @@ export interface FreeRideContext {
 }
 
 export function createFreeRider(model: SimModel, map: CityMap): FreeRider {
-  const { x, z, heading } = map.spawn;
+  const { x, z, heading, y = 0 } = map.spawn;
   return {
     sim: createInitialState(model),
     input: { throttle: 0, brake: 0, clutchLever: 0 },
     x,
     z,
+    y,
     heading,
     lean: 0,
     drift: 0,
@@ -114,6 +117,7 @@ export function respawnRider(ctx: FreeRideContext, rider: FreeRider): FreeRider 
     },
     x: pose.x,
     z: pose.z,
+    y: pose.y,
     heading: pose.heading,
     lean: 0,
     drift: 0,
@@ -134,8 +138,8 @@ export function crashRider(ctx: FreeRideContext, rider: FreeRider): FreeRider {
   };
 }
 
-/** Hitting something solid: anywhere on the rider's body circle. */
-function blocked(map: CityMap, x: number, z: number): boolean {
+/** Hitting something solid (at the rider's level): anywhere on the body circle. */
+function blocked(map: CityMap, x: number, z: number, y: number): boolean {
   const r = RIDER_RADIUS_M;
   return [
     [x, z],
@@ -143,7 +147,7 @@ function blocked(map: CityMap, x: number, z: number): boolean {
     [x - r, z],
     [x, z + r],
     [x, z - r],
-  ].some(([px, pz]) => isSolid(citySurfaceAt(map, px ?? x, pz ?? z)));
+  ].some(([px, pz]) => isSolid(citySurfaceAt(map, px ?? x, pz ?? z, y)));
 }
 
 /** Backwards speed after one step of paddling (or putting the feet down). */
@@ -229,11 +233,13 @@ export function stepFreeRider(
     distanceM: rider.distanceM + Math.abs(v) * dt,
     topSpeedKmh: Math.max(rider.topSpeedKmh, mpsToKmh(forward)),
   };
-  if (blocked(ctx.map, x, z)) {
+  if (blocked(ctx.map, x, z, rider.y)) {
     // Walking pace into a wall just stops you; any faster and you're down.
     return Math.abs(v) > BUMP_MPS
       ? crashRider(ctx, moved)
       : { ...moved, sim: { ...sim, speedMps: 0 }, reverseMps: 0 };
   }
-  return { ...moved, x, z, surface: citySurfaceAt(ctx.map, x, z) };
+  // Up and down ramps with the road; off any road you're on the ground.
+  const y = deckHeightAt(ctx.map, x, z, rider.y) ?? 0;
+  return { ...moved, x, z, y, surface: citySurfaceAt(ctx.map, x, z, y) };
 }

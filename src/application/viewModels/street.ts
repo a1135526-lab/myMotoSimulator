@@ -31,6 +31,8 @@ export interface StreetCarView {
   readonly paint: number;
   readonly x: number;
   readonly z: number;
+  /** Up on an elevated road, m. */
+  readonly y: number;
   readonly heading: number;
   readonly speedKmh: number;
 }
@@ -38,6 +40,8 @@ export interface StreetCarView {
 export interface StreetRiderView {
   readonly x: number;
   readonly z: number;
+  /** Up on an elevated road, m. */
+  readonly y: number;
   readonly heading: number;
   /** Lean, rad (+ = left). */
   readonly lean: number;
@@ -128,6 +132,7 @@ export function toStreetView(state: StreetState, model: SimModel, map: CityMap):
     rider: {
       x: r.x,
       z: r.z,
+      y: r.y,
       heading: r.heading,
       lean: r.lean,
       slip: r.drift * DRIFT_SLIP_RAD,
@@ -152,6 +157,7 @@ export function toStreetView(state: StreetState, model: SimModel, map: CityMap):
       paint: c.paint,
       x: c.x,
       z: c.z,
+      y: c.y,
       heading: c.heading,
       speedKmh: mpsToKmh(c.speedMps),
     })),

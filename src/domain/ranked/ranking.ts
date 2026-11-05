@@ -92,6 +92,20 @@ export const RANKED_GROUP_LABELS: Readonly<Record<RankedGroup, string>> = {
 };
 
 export const RANKED_LAPS = 2;
-export const RANKED_CIRCUITS = ['practice-park', 'hill-town', 'south-bay'] as const;
+export const RANKED_CIRCUITS = [
+  'practice-park',
+  'hill-town',
+  'south-bay',
+  'harbor-night',
+  'sugar-mill',
+  'lotus-lake',
+  'cloud-peak',
+  'gorge-run',
+  'cape-coast',
+  'lake-ridge',
+  'kart-oval',
+  'neon-streets',
+  'rift-valley',
+] as const;
 /** Opponents in a race against the AI (a full grid of four). */
 export const RANKED_AI_OPPONENTS = 3;
