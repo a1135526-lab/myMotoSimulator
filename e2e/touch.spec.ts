@@ -98,13 +98,20 @@ test.describe('phone on its side', () => {
     await expect(page.getByTestId('race-go')).toHaveCount(0);
   });
 
-  test('tilt steering switches on from its button', async ({ page, context }) => {
+  test('tilt steering is on by default; switched off, it stays off', async ({ page, context }) => {
     // What a rider allowing motion sensors looks like to the page.
     await context.grantPermissions(['accelerometer', 'gyroscope', 'magnetometer']);
-    await page.goto('/');
-    await page.getByTestId('home-circuit').click();
-    for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
+    const enterCircuit = async () => {
+      await page.goto('/');
+      await page.getByTestId('home-circuit').click();
+      for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
+    };
+    await enterCircuit();
     const tilt = page.getByTestId('tilt-toggle');
+    await expect(tilt).toHaveAttribute('aria-pressed', 'true');
+    await tilt.tap();
+    await expect(tilt).toHaveAttribute('aria-pressed', 'false');
+    await enterCircuit();
     await expect(tilt).toHaveAttribute('aria-pressed', 'false');
     await tilt.tap();
     await expect(tilt).toHaveAttribute('aria-pressed', 'true');

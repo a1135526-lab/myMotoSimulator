@@ -68,6 +68,7 @@ const view = (patch: Partial<CircuitView> = {}, driftPct = 0): CircuitView => ({
     reactionS: 0.21,
     jumpStart: false,
     penaltyLeftS: null,
+    corner: { dir: 'left', kind: 'hairpin', turnDeg: 178, distanceM: 84 },
   },
   ...patch,
 });
@@ -82,6 +83,11 @@ describe('CircuitHud', () => {
     expect(screen.getByLabelText('壓車角 35 度')).toHaveTextContent('R35°');
     expect(screen.getByText(/\+0\.400/)).toBeInTheDocument(); // last lap vs best
     expect(screen.getByRole('list', { name: '即時名次' }).children).toHaveLength(2);
+  });
+
+  it('calls the next corner: which way, how tight, how far', () => {
+    render(<CircuitHud view={view({ phase: 'racing', raceTimeS: 30 })} camera="third" />);
+    expect(screen.getByTestId('corner-callout')).toHaveTextContent('左 髮夾彎 178°80 m');
   });
 
   it('flashes GO right after the lights go out, then hides it', () => {

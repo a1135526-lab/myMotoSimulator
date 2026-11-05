@@ -4,7 +4,7 @@ import { AccountButton } from './AccountButton';
 import { LeaderboardDialog } from './LeaderboardDialog';
 import styles from './online.module.css';
 
-/** Header corner: the global leaderboard and the Google account. Absent offline. */
+/** Header corner: the global leaderboard and the account. Absent offline. */
 export function OnlineHeader() {
   const [open, setOpen] = useState(false);
   if (!onlineEnabled) return null;

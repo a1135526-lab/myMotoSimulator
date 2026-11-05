@@ -16,7 +16,12 @@ interface AuthState {
   readonly profile: ProfileStatus;
   /** Look the nickname up again (after a failed attempt). */
   reloadProfile(): void;
+  /** The sign-in dialog (Google, or an account and password) is open. */
+  readonly loginOpen: boolean;
+  /** Open the sign-in dialog. */
   signIn(): Promise<void>;
+  closeLogin(): void;
+  signInWithGoogle(): Promise<void>;
   signOut(): Promise<void>;
   /** Null when saved, else why not (in words for the player). */
   setNickname(name: string): Promise<string | null>;
@@ -83,7 +88,12 @@ export const useAuthStore = create<AuthState>()((set) => ({
   nickname: null,
   profile: 'unknown',
   reloadProfile: loadProfile,
+  loginOpen: false,
   signIn: async () => {
+    if (supabase) set({ loginOpen: true });
+  },
+  closeLogin: () => set({ loginOpen: false }),
+  signInWithGoogle: async () => {
     if (!supabase) return;
     // Google's page, then back here; the session is picked up on return.
     await supabase.auth.signInWithOAuth({
@@ -125,6 +135,7 @@ if (supabase) {
     const wasSignedIn = useAuthStore.getState().status === 'signedIn';
     useAuthStore.setState({
       status: 'signedIn',
+      loginOpen: false,
       email: session.user.email ?? null,
       userId: session.user.id,
     });

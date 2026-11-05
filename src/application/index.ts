@@ -48,6 +48,7 @@ export {
 } from './stores/controlLayoutStore';
 export type { TouchControl } from './input/TouchInputSource';
 export { requestTiltPermission, type TiltPermission } from './input/TiltInputSource';
+export { saveTiltWanted, useDefaultTilt } from './input/defaultTilt';
 export type { Preset } from './services/presetService';
 export { isStock, type SelectableCategory } from './tuning/selection';
 export type {
@@ -94,6 +95,7 @@ export type {
   CircuitRiderView,
   CircuitPlayerView,
   CircuitGhostView,
+  CornerCall,
 } from './viewModels/circuit';
 export {
   LAP_BOARD_SIZE,
@@ -143,6 +145,12 @@ export type {
 } from './viewModels/street';
 export { streetMissions, type StreetMission } from './street/missions';
 export { useAuthStore, type AuthStatus } from './online/authStore';
+export {
+  accountLabel,
+  PASSWORD_MIN,
+  signInWithPassword,
+  signUpWithPassword,
+} from './online/passwordAuth';
 export { onlineEnabled } from './online/supabase';
 export {
   fetchDragBoard,

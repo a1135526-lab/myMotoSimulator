@@ -18,7 +18,7 @@ describe('friends', () => {
   it('signed out: the dialog explains and offers Google sign-in', () => {
     useAuthStore.setState({ status: 'signedOut' });
     render(<FriendsDialog onClose={() => undefined} />);
-    expect(screen.getByTestId('friends-dialog')).toHaveTextContent('Google 登入');
+    expect(screen.getByTestId('friends-dialog')).toHaveTextContent('登入');
     expect(screen.queryByTestId('friend-name')).toBeNull();
   });
 

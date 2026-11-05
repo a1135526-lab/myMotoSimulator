@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useAuthStore } from '@/application';
+import { accountLabel, useAuthStore } from '@/application';
 import { NicknameDialog } from './NicknameDialog';
 import styles from './online.module.css';
 
 const PRIVACY_URL = `${import.meta.env.BASE_URL}privacy.html`;
 
 /**
- * Header: sign in with Google to join the global boards; once signed in,
+ * Header: sign in (Google, or a game account) to join the global boards; once signed in,
  * the nickname, with changing it, the privacy policy and signing out.
  */
 export function AccountButton() {
@@ -37,10 +37,10 @@ export function AccountButton() {
         className={styles.headerButton}
         data-primary=""
         onClick={() => void signIn()}
-        title="用 Google 登入，成績就能上全球排行榜"
+        title="登入後成績就能上全球排行榜"
         data-testid="sign-in"
       >
-        🔑 Google 登入
+        🔑 登入
       </button>
     );
   }
@@ -60,7 +60,7 @@ export function AccountButton() {
           <div className={styles.dialog}>
             <h2>👤 {nickname ?? '還沒有暱稱'}</h2>
             <p className={styles.lead}>
-              已用 Google 登入{email ? `（${email}，不會公開）` : ''}
+              已登入{email ? `（${accountLabel(email)}，不會公開）` : ''}
               。跑出的成績會自動上傳到全球排行榜。
             </p>
             <div className={styles.actions}>

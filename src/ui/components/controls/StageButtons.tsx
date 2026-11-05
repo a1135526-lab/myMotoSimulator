@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { requestTiltPermission, useControlLayoutStore, useUiStore } from '@/application';
+import {
+  requestTiltPermission,
+  saveTiltWanted,
+  useControlLayoutStore,
+  useUiStore,
+} from '@/application';
 import { PHONE_PORTRAIT_QUERY, useMediaQuery } from '../../layouts/useMediaQuery';
 import styles from './controls.module.css';
 
@@ -124,7 +129,11 @@ function MotionToggle({
 /** Steer by turning the phone like a wheel. */
 export function TiltToggle({ className, compact }: { className?: string; compact?: boolean }) {
   const on = useUiStore((s) => s.tiltOn);
-  const setOn = useUiStore((s) => s.setTiltOn);
+  const setTiltOn = useUiStore((s) => s.setTiltOn);
+  const setOn = (next: boolean) => {
+    saveTiltWanted(next);
+    setTiltOn(next);
+  };
   return (
     <MotionToggle
       on={on}

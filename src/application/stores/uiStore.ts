@@ -72,8 +72,8 @@ interface UiState {
   setDynoView(view: DynoView): void;
   setComparePreset(id: string | null): void;
   /**
-   * Steer by turning the phone. Not remembered across visits: iOS asks for
-   * permission again each time, and only from a tap.
+   * Steer by turning the phone: on by default on phones (useDefaultTilt);
+   * iOS asks for permission again each visit, and only from a tap.
    */
   readonly tiltOn: boolean;
   setTiltOn(on: boolean): void;

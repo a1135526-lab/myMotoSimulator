@@ -170,19 +170,18 @@
 /* ---- Lap timing ---- */
 .laps {
   display: grid;
-  justify-items: center;
-  padding: 4px 26px 6px;
+  justify-items: end;
+  padding: 3px 18px 4px 14px;
   background: var(--glass);
   backdrop-filter: blur(6px);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 14px 100%);
+  clip-path: var(--skew);
   border-top: 2px solid var(--hud-accent);
-  min-width: 13em;
 }
 
 .lapHead {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.15em;
   opacity: 0.85;
 }
 
@@ -192,7 +191,7 @@
 }
 
 .lapNow {
-  font-size: clamp(1.3rem, 3vw, 2rem);
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
   font-weight: 700;
   line-height: 1;
 }
@@ -200,9 +199,9 @@
 .lapList {
   display: grid;
   grid-template-columns: auto auto;
-  gap: 0 10px;
-  margin: 3px 0 0;
-  font-size: 0.82rem;
+  gap: 0 8px;
+  margin: 2px 0 0;
+  font-size: 0.72rem;
 }
 
 .lapList dt {
@@ -537,6 +536,22 @@
   transform-origin: top right;
 }
 
+/* Laps beside the minimap, not under it: below is the right thumb's buttons. */
+[data-immersive] .topRight {
+  grid-template-columns: auto auto;
+  align-items: start;
+}
+
+[data-immersive] .topRight .minimap {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+[data-immersive] .topRight .laps,
+[data-immersive] .topRight .gapAhead {
+  grid-column: 1;
+}
+
 [data-immersive] .bottomLeft {
   display: none;
 }
@@ -592,36 +607,26 @@
   font-weight: 600;
 }
 
-/* ---- Friend room: finish window after the winner's flag ---- */
+/* ---- Finish window after the first flag: a small pill at the top ---- */
 .countdown {
-  position: absolute;
-  top: 22%;
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  padding: 10px 26px;
-  border-radius: 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 3px 14px;
+  border-radius: 999px;
   background: var(--glass);
   backdrop-filter: blur(6px);
-  border: 2px solid var(--hud-accent);
-}
-
-.countdown span {
-  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  border: 1.5px solid var(--hud-accent);
+  font-size: 0.8rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .countdown strong {
-  font-size: clamp(2.6rem, 8vw, 4.5rem);
+  font-size: 1.35rem;
   line-height: 1;
   font-weight: 800;
-}
-
-.countdown small {
-  font-size: 0.75rem;
-  opacity: 0.85;
 }
 
 .countdown[data-urgent] {
@@ -633,14 +638,57 @@
 }
 
 .countdownWait {
-  position: absolute;
-  top: 22%;
-  left: 50%;
-  transform: translateX(-50%);
   margin: 0;
-  padding: 6px 16px;
+  padding: 3px 12px;
   border-radius: 999px;
   background: var(--glass);
+  font-size: 0.8rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+/* ---- Next corner ---- */
+.corner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 14px 3px 8px;
+  border-radius: 999px;
+  background: var(--glass);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--glass-edge);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.corner small {
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.corner strong {
+  font-variant-numeric: tabular-nums;
+  color: var(--hud-accent);
+}
+
+.cornerArrow {
+  display: grid;
+  place-items: center;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.15);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.corner[data-slow] {
+  border-color: var(--led-y);
+}
+
+.corner[data-slow] .cornerArrow {
+  background: var(--led-y);
+  color: #111;
+  text-shadow: none;
 }

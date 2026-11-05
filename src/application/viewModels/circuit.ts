@@ -1,10 +1,14 @@
 import {
   DRIFT_SLIP_RAD,
+  findCorners,
   ghostPoseAt,
+  nextCorner,
   litLights,
   mpsToKmh,
   riderPose,
   type CircuitGeometry,
+  type Corner,
+  type CornerKind,
   type GhostLap,
   type GhostPose,
   type CircuitPhase,
@@ -16,6 +20,27 @@ import { dashboardModel, type DashboardModel } from './dashboard';
 import { gearLabelOf } from './telemetry';
 
 const PERCENT = 100;
+/** The next corner is called out from this far, m. */
+const CORNER_CALL_M = 250;
+
+/** Corners per circuit, worked out once. */
+const cornerCache = new WeakMap<CircuitGeometry, Corner[]>();
+function cornersOf(geo: CircuitGeometry): Corner[] {
+  let corners = cornerCache.get(geo);
+  if (!corners) {
+    corners = findCorners(geo);
+    cornerCache.set(geo, corners);
+  }
+  return corners;
+}
+
+/** The corner ahead (or the one you're in, distance 0). */
+export interface CornerCall {
+  readonly dir: 'left' | 'right';
+  readonly kind: CornerKind;
+  readonly turnDeg: number;
+  readonly distanceM: number;
+}
 const RAD_TO_DEG = 180 / Math.PI;
 
 export interface CircuitRiderView {
@@ -73,6 +98,8 @@ export interface CircuitPlayerView {
   readonly jumpStart: boolean;
   /** Seconds left on a jump-start hold (null when not serving one). */
   readonly penaltyLeftS: number | null;
+  /** The next corner, once it's within call-out range; null on a long straight. */
+  readonly corner: CornerCall | null;
 }
 
 /** Your best lap, replayed alongside the current one. */
@@ -127,6 +154,13 @@ function gapAhead(riders: readonly CircuitRider[], pos: readonly number[]): numb
   const me = riders[0];
   const ahead = riders.find((_, i) => pos[i] === (pos[0] ?? 1) - 1);
   return me && ahead ? Math.max(0, ahead.progressM - me.progressM) : null;
+}
+
+function cornerCall(geo: CircuitGeometry, s: number): CornerCall | null {
+  const next = nextCorner(geo, cornersOf(geo), s);
+  if (!next || next.distanceM > CORNER_CALL_M) return null;
+  const { dir, kind, turnDeg } = next.corner;
+  return { dir, kind, turnDeg, distanceM: next.distanceM };
 }
 
 export function toCircuitView(
@@ -208,6 +242,7 @@ export function toCircuitView(
         race.penaltyUntilS !== null && race.clockS < race.penaltyUntilS
           ? race.penaltyUntilS - race.clockS
           : null,
+      corner: cornerCall(geo, p.lat.s),
     },
   };
 }

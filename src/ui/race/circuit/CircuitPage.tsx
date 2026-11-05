@@ -69,8 +69,10 @@ export function CircuitPage({
   const bike = useRaceBike();
   const manual = bike.kind === 'manual';
   const live = view?.phase === 'lights' || view?.phase === 'racing';
+  // From your flag on, the results are up: no riding controls or HUD behind them.
+  const done = view?.phase === 'finished' || view?.riders[0]?.finishTimeS != null;
   const immersive = useImmersive();
-  const showGo = !room && !ranked && (!immersive || (!live && view?.phase !== 'finished'));
+  const showGo = !room && !ranked && !done && (!immersive || !live);
   useEngineAudio(readCircuitSound);
 
   return (
@@ -103,36 +105,40 @@ export function CircuitPage({
         <p className={styles.raceTitle}>
           {circuit.name} · {view?.laps ?? '-'} 圈 · {bike.brand} {bike.model}
         </p>
-        <button
-          type="button"
-          className={styles.garageButton}
-          onClick={toggleCamera}
-          data-testid="camera-toggle"
-        >
-          {immersive ? '👁' : `${camera === 'first' ? '切到第三人稱' : '切到第一人稱'}（V）`}
-        </button>
-        <button
-          type="button"
-          className={styles.garageButton}
-          aria-pressed={ghostOn}
-          aria-label="幽靈車"
-          title="和自己最快的一圈一起跑"
-          onClick={() => setGhostOn(!ghostOn)}
-          data-testid="ghost-toggle"
-        >
-          {immersive ? '👻' : `👻 幽靈車 ${ghostOn ? '開' : '關'}`}
-        </button>
-        <TiltToggle className={styles.garageButton} compact={immersive} />
-        {manual && !autoShift && (
-          <FlickShiftToggle className={styles.garageButton} compact={immersive} />
+        {!done && (
+          <>
+            <button
+              type="button"
+              className={styles.garageButton}
+              onClick={toggleCamera}
+              data-testid="camera-toggle"
+            >
+              {immersive ? '👁' : `${camera === 'first' ? '切到第三人稱' : '切到第一人稱'}（V）`}
+            </button>
+            <button
+              type="button"
+              className={styles.garageButton}
+              aria-pressed={ghostOn}
+              aria-label="幽靈車"
+              title="和自己最快的一圈一起跑"
+              onClick={() => setGhostOn(!ghostOn)}
+              data-testid="ghost-toggle"
+            >
+              {immersive ? '👻' : `👻 幽靈車 ${ghostOn ? '開' : '關'}`}
+            </button>
+            <TiltToggle className={styles.garageButton} compact={immersive} />
+            {manual && !autoShift && (
+              <FlickShiftToggle className={styles.garageButton} compact={immersive} />
+            )}
+            <FullscreenButton className={styles.garageButton} />
+            {immersive && <LayoutEditButton className={styles.garageButton} />}
+          </>
         )}
-        <FullscreenButton className={styles.garageButton} />
-        {immersive && <LayoutEditButton className={styles.garageButton} />}
       </div>
       <RotateHint />
       <div className={styles.stage}>
         <CircuitScene theme={{ sky: circuit.sky, scenery: circuit.scenery }} />
-        {view && <CircuitHud view={view} camera={camera} />}
+        {view && !done && <CircuitHud view={view} camera={camera} />}
         {view && (
           <CircuitResults
             view={view}
@@ -153,19 +159,21 @@ export function CircuitPage({
             disabled={live}
             data-testid="circuit-go"
           >
-            {view?.phase === 'finished' ? '回起跑格' : '開始亮燈'}
+            開始亮燈
           </button>
         )}
-        <TouchControls
-          manual={manual && !autoShift}
-          steering
-          overlay={immersive}
-          onPress={(c) => controller.touch.press(c)}
-          onRelease={(c) => controller.touch.release(c)}
-          onReset={() => controller.handleAction('reset')}
-          onShift={(d) => controller.handleAction(d > 0 ? 'shiftUp' : 'shiftDown')}
-          onStart={() => controller.handleAction('startEngine')}
-        />
+        {!done && (
+          <TouchControls
+            manual={manual && !autoShift}
+            steering
+            overlay={immersive}
+            onPress={(c) => controller.touch.press(c)}
+            onRelease={(c) => controller.touch.release(c)}
+            onReset={() => controller.handleAction('reset')}
+            onShift={(d) => controller.handleAction(d > 0 ? 'shiftUp' : 'shiftDown')}
+            onStart={() => controller.handleAction('startEngine')}
+          />
+        )}
       </div>
     </AppLayout>
   );

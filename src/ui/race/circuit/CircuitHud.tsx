@@ -3,6 +3,7 @@ import { MIN_HUMAN_REACTION_S, type CameraMode, type CircuitView } from '@/appli
 import { CircuitMap } from './CircuitMap';
 import { fmtLap } from './format';
 import { Cluster } from './hud/Cluster';
+import { CornerCallout } from './hud/CornerCallout';
 import { FinishCountdown } from './hud/FinishCountdown';
 import { LapNoticeBanner } from './hud/LapNoticeBanner';
 import { LeanDrift } from './hud/LeanDrift';
@@ -87,7 +88,6 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
   return (
     <div className={styles.hud}>
       <LapNoticeBanner />
-      <FinishCountdown view={view} />
       <div
         className={styles.vignette}
         style={{ opacity: vignette, '--drift': player.driftPct / PERCENT } as CSSProperties}
@@ -104,7 +104,8 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
       </div>
 
       <div className={styles.topCenter}>
-        <LapTimes view={view} />
+        <FinishCountdown view={view} />
+        {view.phase === 'racing' && <CornerCallout corner={player.corner} />}
         {view.ghost?.owner && (
           <p className={styles.rivalTag} data-testid="rival-tag">
             👻 挑戰 {view.ghost.owner} · {fmtLap(view.ghost.lapS)}
@@ -125,6 +126,7 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
             dots={view.riders.map((r) => ({ x: r.x, z: r.z, player: r.isPlayer }))}
           />
         </div>
+        <LapTimes view={view} />
         {player.gapAheadM !== null && (
           <div className={styles.gapAhead}>
             前車 <strong>{player.gapAheadM.toFixed(0)}</strong> m

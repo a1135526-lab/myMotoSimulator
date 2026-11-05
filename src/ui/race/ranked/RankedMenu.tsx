@@ -49,11 +49,11 @@ export function RankedMenu() {
       <section className={styles.panel} data-testid="ranked-menu">
         <h2>🏆 排位賽</h2>
         <p className={styles.note}>
-          排位賽的段位和積分存在你的帳號裡，要先用 Google 登入並取一個暱稱。
+          排位賽的段位和積分存在你的帳號裡，要先登入（Google 或遊戲帳號）並取一個暱稱。
         </p>
         {status === 'signedOut' && (
           <button type="button" className={styles.primary} onClick={() => void signIn()}>
-            🔑 Google 登入
+            🔑 登入
           </button>
         )}
       </section>

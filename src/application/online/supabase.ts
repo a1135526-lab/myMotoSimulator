@@ -19,7 +19,7 @@ export const onlineEnabled = supabase !== null;
 
 /** Server error codes (raised in supabase/schema.sql) as words for the player. */
 const MESSAGES: Readonly<Record<string, string>> = {
-  not_signed_in: '請先用 Google 登入',
+  not_signed_in: '請先登入',
   no_nickname: '請先設定暱稱',
   too_fast: '上傳太頻繁，請稍後再試',
   implausible_time: '成績沒有通過伺服器檢查',

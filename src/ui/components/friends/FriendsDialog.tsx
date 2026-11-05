@@ -48,11 +48,11 @@ export function FriendsDialog({ onClose }: { onClose: () => void }) {
             <p className={styles.note}>
               {status === 'signedIn'
                 ? '先到右上角的帳號設定一個暱稱，朋友才找得到你。'
-                : '好友功能要用 Google 登入：登入後可以用暱稱加好友、邀請好友一起比賽、看好友的戰績。'}
+                : '好友功能要先登入：登入後可以用暱稱加好友、邀請好友一起比賽、看好友的戰績。'}
             </p>
             {status === 'signedOut' && (
               <button type="button" className={styles.primary} onClick={() => void signIn()}>
-                🔑 Google 登入
+                🔑 登入
               </button>
             )}
           </>

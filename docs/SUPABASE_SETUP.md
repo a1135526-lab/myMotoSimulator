@@ -1,6 +1,6 @@
 # 全球排行榜（Supabase）設定
 
-遊戲本體是 GitHub Pages 上的靜態網站；全球排行榜和 Google 登入用 [Supabase](https://supabase.com)（免費方案）。
+遊戲本體是 GitHub Pages 上的靜態網站；全球排行榜和登入（Google、遊戲帳號）用 [Supabase](https://supabase.com)（免費方案）。
 
 ## 已經設定好的東西
 
@@ -14,6 +14,16 @@
 `VITE_SUPABASE_KEY` 是 **publishable（anon）key**，本來就公開在網頁裡；安全性由 `schema.sql` 的權限規則保護。
 
 ⛔ 永遠不要把這兩個放進專案或給別人：Supabase 的 **secret / service_role key**、Google 的 **Client Secret**。
+
+## 遊戲帳號（帳號密碼登入）
+
+玩家可以用帳號名稱或 e-mail 加密碼註冊。帳號名稱在 Supabase 裡存成 `<帳號>@players.zouhui.game`（這個網域收不到信），所以要在後台：
+
+1. **Authentication** → **Sign In / Providers** → **Email**：確認 **Enable Email provider** 是開的。
+2. 同一頁把 **Confirm email** 關掉，按 **Save**。開著的話，註冊後要點確認信才能登入，帳號名稱就永遠無法登入。
+3. 密碼最短長度用預設的 6 個字即可（遊戲也檢查 6 個字）。
+
+用帳號名稱註冊的玩家忘記密碼時無法自行重設；可以在 **Authentication** → **Users** 找到 `<帳號>@players.zouhui.game`，按 **Send password recovery** 沒有用，只能刪除帳號讓他重新註冊。
 
 ## 資料庫檔案（依序執行）
 

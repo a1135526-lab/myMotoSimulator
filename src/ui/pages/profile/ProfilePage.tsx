@@ -24,7 +24,7 @@ const hours = (s: number) => {
 
 function syncText(sync: SyncState, signedIn: boolean): string {
   if (!onlineEnabled) return '對戰紀錄存在這台裝置上';
-  if (!signedIn) return '對戰紀錄存在這台裝置上。登入 Google 後會同步到你的帳號，換裝置也看得到。';
+  if (!signedIn) return '對戰紀錄存在這台裝置上。登入後會同步到你的帳號，換裝置也看得到。';
   switch (sync.state) {
     case 'off':
       return '已登入，對戰紀錄會同步到你的帳號';
@@ -88,7 +88,7 @@ export function ProfilePage() {
         <div className={styles.headerActions}>
           {onlineEnabled && !signedIn && (
             <button type="button" className={styles.primary} onClick={() => void signIn()}>
-              🔑 Google 登入
+              🔑 登入
             </button>
           )}
           {signedIn && (

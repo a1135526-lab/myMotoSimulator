@@ -34,7 +34,7 @@ export function NicknameDialog({ onClose }: { onClose: () => void }) {
       >
         <h2>{current ? '修改暱稱' : '取一個暱稱'}</h2>
         <p className={styles.lead}>
-          暱稱會顯示在全球排行榜上，其他玩家看得到；你的 Google 帳號和信箱不會公開。
+          暱稱會顯示在全球排行榜上，其他玩家看得到；你的登入帳號和信箱不會公開。
         </p>
         <label className={styles.field}>
           暱稱（2～16 個字）

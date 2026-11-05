@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react';
-import { SimulationProvider, useUiStore } from '@/application';
+import { SimulationProvider, useDefaultTilt, useUiStore } from '@/application';
 import { UpdatePrompt } from '@/ui/components/common/UpdatePrompt';
 import { InviteToasts } from '@/ui/components/friends/InviteToasts';
+import { LoginDialog } from '@/ui/components/online/LoginDialog';
 import { HomePage } from '@/ui/pages/home/HomePage';
 import { ProfilePage } from '@/ui/pages/profile/ProfilePage';
 import { SimulatorPage } from '@/ui/pages/SimulatorPage';
@@ -14,11 +15,13 @@ const StreetRoot = lazy(() => import('@/ui/street/StreetRoot'));
  * keyboard and the animation loop.
  */
 export function App() {
+  useDefaultTilt();
   return (
     <>
       <ModeRoot />
       <UpdatePrompt />
       <InviteToasts />
+      <LoginDialog />
     </>
   );
 }

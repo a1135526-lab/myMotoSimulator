@@ -94,7 +94,7 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
         <p className={styles.lead}>
           {signedIn
             ? '你的成績會自動上傳，每個榜只留你的最佳成績。'
-            : '用右上角的「Google 登入」，你的成績也能上榜。'}
+            : '用右上角的「登入」，你的成績也能上榜。'}
         </p>
         <div className={styles.tabs}>
           {pick<Tab>('laps', tab, setTab, '賽道繞圈')}

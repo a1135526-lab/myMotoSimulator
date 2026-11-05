@@ -34,6 +34,7 @@ export * from './circuit/drift';
 export * from './circuit/circuitRace';
 export * from './circuit/lapEstimate';
 export * from './circuit/ghost';
+export * from './circuit/corners';
 export * from './ranked/ranking';
 export * from './street/city';
 export {
