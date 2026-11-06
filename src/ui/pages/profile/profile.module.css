@@ -159,8 +159,6 @@
 
 .matches li {
   display: grid;
-  gap: 2px;
-  padding: 10px 12px;
   border: 1px solid var(--border);
   border-left: 4px solid var(--border);
   border-radius: 10px;
@@ -199,4 +197,91 @@
 .matchRiders {
   color: var(--text-muted);
   font-size: 0.8rem;
+}
+
+/* The whole entry opens the race's details. */
+.matchButton {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.matchButton:hover,
+.matchButton:focus-visible {
+  background: rgb(255 255 255 / 4%);
+}
+
+/* ---- One race's details ---- */
+.matchFacts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+}
+
+.matchFacts dt {
+  color: var(--text-muted);
+}
+
+.matchFacts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detailRiders {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.detailRiders li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 3%);
+}
+
+.detailRiders li[data-me] {
+  background: rgb(255 122 26 / 14%);
+}
+
+.detailPos {
+  width: 1.5em;
+  font-weight: 800;
+  text-align: center;
+}
+
+.detailName {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detailName small {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.detailActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }

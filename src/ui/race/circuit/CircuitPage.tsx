@@ -4,6 +4,7 @@ import {
   useCircuitController,
   useCircuitStore,
   useCircuits,
+  useMirrorKey,
   useRaceBike,
   useRaceStore,
   useRankedStore,
@@ -22,7 +23,7 @@ import {
   TiltToggle,
 } from '../../components/controls/StageButtons';
 import { TouchControls } from '../../components/controls/TouchControls';
-import { MirrorToggle } from '../../components/hud/RearMirrorSlot';
+import { MirrorButton } from '../../components/hud/RearMirrorSlot';
 import { AppLayout } from '../../layouts/AppLayout';
 import { useImmersive } from '../../layouts/useMediaQuery';
 import { RankedResultActions } from '../ranked/RankedResultActions';
@@ -41,6 +42,7 @@ const CIRCUIT_KEYS: [string, string][] = [
   ['E / Q', '升 / 降檔'],
   ['Shift', '離合'],
   ['V', '視角'],
+  ['B（按住）', '後照鏡'],
   ['R', '回賽道'],
   ['Space', '起跑'],
 ];
@@ -73,6 +75,7 @@ export function CircuitPage({
   // From your flag on, the results are up: no riding controls or HUD behind them.
   const done = view?.phase === 'finished' || view?.riders[0]?.finishTimeS != null;
   const immersive = useImmersive();
+  useMirrorKey();
   const showGo = !room && !ranked && !done && (!immersive || !live);
   useEngineAudio(readCircuitSound);
 
@@ -127,7 +130,7 @@ export function CircuitPage({
             >
               {immersive ? '👻' : `👻 幽靈車 ${ghostOn ? '開' : '關'}`}
             </button>
-            <MirrorToggle className={styles.garageButton} compact={immersive} />
+            <MirrorButton className={styles.garageButton} compact={immersive} />
             <TiltToggle className={styles.garageButton} compact={immersive} />
             {manual && !autoShift && (
               <FlickShiftToggle className={styles.garageButton} compact={immersive} />

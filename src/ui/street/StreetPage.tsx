@@ -1,6 +1,7 @@
 import {
   readStreetSound,
   useCurrentBike,
+  useMirrorKey,
   useStreetController,
   useStreetStore,
 } from '@/application';
@@ -16,7 +17,7 @@ import {
   TiltToggle,
 } from '../components/controls/StageButtons';
 import { TouchControls } from '../components/controls/TouchControls';
-import { MirrorToggle } from '../components/hud/RearMirrorSlot';
+import { MirrorButton } from '../components/hud/RearMirrorSlot';
 import type { CityMap } from '@/domain';
 import { AppLayout } from '../layouts/AppLayout';
 import { useImmersive } from '../layouts/useMediaQuery';
@@ -37,6 +38,7 @@ const STREET_KEYS: [string, string][] = [
   ['Shift', '離合'],
   ['Enter', '發動'],
   ['V', '視角'],
+  ['B（按住）', '後照鏡'],
   ['M', '大地圖・導航'],
   ['R', '回到道路'],
 ];
@@ -57,6 +59,7 @@ export function StreetPage({ map }: { map: CityMap }) {
   const bike = useCurrentBike();
   const manual = bike.kind === 'manual';
   const immersive = useImmersive();
+  useMirrorKey();
   useEngineAudio(readStreetSound);
 
   return (
@@ -107,7 +110,7 @@ export function StreetPage({ map }: { map: CityMap }) {
         >
           {immersive ? '🏁' : '🏁 任務'}
         </button>
-        <MirrorToggle className={race.garageButton} compact={immersive} />
+        <MirrorButton className={race.garageButton} compact={immersive} />
         <TiltToggle className={race.garageButton} compact={immersive} />
         {manual && !autoShift && (
           <FlickShiftToggle className={race.garageButton} compact={immersive} />

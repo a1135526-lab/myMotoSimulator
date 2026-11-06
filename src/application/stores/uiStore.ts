@@ -4,9 +4,8 @@ import type { GhostLap } from '@/domain';
 const SOUND_KEY = 'scooter-dyno:sound';
 const GHOST_KEY = 'scooter-dyno:ghost-on';
 const MUSIC_KEY = 'scooter-dyno:music';
-const MIRROR_KEY = 'scooter-dyno:mirror';
 
-/** A setting that's on unless turned off (music, ghost, mirror). */
+/** A setting that's on unless turned off (music, ghost). */
 function loadOn(key: string): boolean {
   try {
     return globalThis.localStorage?.getItem(key) !== 'off';
@@ -74,9 +73,9 @@ interface UiState {
   /** Race your best lap's ghost on circuits. */
   readonly ghostOn: boolean;
   setGhostOn(on: boolean): void;
-  /** Rear-view mirror in the 3D modes. */
-  readonly mirrorOn: boolean;
-  setMirrorOn(on: boolean): void;
+  /** Rear-view mirror in the 3D modes: shown only while held (B, or the 🪞 button). */
+  readonly mirrorHeld: boolean;
+  setMirrorHeld(held: boolean): void;
   /** Someone's lap from the global board to race on its circuit (this visit only). */
   readonly rivalGhost: { readonly circuitId: string; readonly ghost: GhostLap } | null;
   setRivalGhost(rival: { readonly circuitId: string; readonly ghost: GhostLap } | null): void;
@@ -110,9 +109,6 @@ export const useUiStore = create<UiState>()((set) => ({
     saveOn(GHOST_KEY, ghostOn);
     set({ ghostOn });
   },
-  mirrorOn: loadOn(MIRROR_KEY),
-  setMirrorOn: (mirrorOn) => {
-    saveOn(MIRROR_KEY, mirrorOn);
-    set({ mirrorOn });
-  },
+  mirrorHeld: false,
+  setMirrorHeld: (mirrorHeld) => set({ mirrorHeld }),
 }));

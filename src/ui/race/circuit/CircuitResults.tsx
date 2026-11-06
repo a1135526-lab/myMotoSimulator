@@ -1,5 +1,6 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import type { CircuitView } from '@/application';
+import { AddFriend } from '../../components/friends/AddFriend';
 import { FinishSplash } from './FinishSplash';
 import { fmtLap } from './format';
 import { LapBoard } from './LapBoard';
@@ -96,7 +97,9 @@ function Results({ view, circuitId, onRematch, onGarage, actions, extra }: Circu
                 <td className={styles.pos} data-podium={r.position <= 3 ? r.position : undefined}>
                   {r.position}
                 </td>
-                <th scope="row">{r.name}</th>
+                <th scope="row">
+                  {r.name} <AddFriend accountName={r.accountName} testId="result-add-friend" />
+                </th>
                 <td>
                   {r.finishTimeS === null
                     ? (r.remote || !final) && !r.dnf

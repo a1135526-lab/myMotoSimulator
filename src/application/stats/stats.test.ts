@@ -97,6 +97,17 @@ describe('match records', () => {
     expect(parseMatch({ ...match(), position: 0 })).toBeNull();
     expect(parseMatch('x')).toBeNull();
   });
+
+  it('keep the account names of signed-in opponents, to add them later', () => {
+    const riders = [
+      { name: '你', bike: 'A', position: 1, timeS: 60, isMe: true },
+      { name: '小華', bike: 'B', position: 2, timeS: 61, isMe: false, accountName: 'hua' },
+      { name: '路人', bike: 'C', position: 3, timeS: 62, isMe: false, accountName: 7 },
+    ];
+    const parsed = parseMatch(JSON.parse(JSON.stringify({ ...match({ kind: 'room' }), riders })));
+    expect(parsed?.riders[1]?.accountName).toBe('hua');
+    expect(parsed?.riders[2]).not.toHaveProperty('accountName');
+  });
 });
 
 describe('match store (this device)', () => {

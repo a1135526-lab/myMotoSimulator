@@ -42,7 +42,7 @@ ui → application → domain
 - **傾斜轉向**：`TiltInputSource` 送出類比的 `steerAxis`（−1～1），domain 用 `steerTarget()` 合併，按鈕優先。手機上預設開啟（`useDefaultTilt`，關掉會存 `scooter-dyno:tilt`）；iOS 要從點擊呼叫 `requestTiltPermission()`，所以是第一次點畫面時才開，而且只在 https 有效。
 - **自訂按鈕／甩動換檔**：全螢幕按鈕由 `OverlayControls` 依 `controlLayoutStore` 擺放（位置是安全區域的 0–1 比例，存在 localStorage；沒存的用 `defaultAnchor` 的預設）。`FlickShiftSource` 從 `screenPitchDeg` 偵測快速前後甩動，送出 `shiftUp`／`shiftDown`。
 - **碰撞不重置**：所有模式都沒有「摔車→倒數→放回去」。賽道撞護欄是 `bounceOffBarrier`（反彈＋掉速），車與車是 `domain/circuit/contacts.ts` 的 `resolveContacts`（好友對戰的對手經 `CircuitController.setRemoteBikes` 當成不會動的物體）；街景撞牆停下＋小反彈、撞車是 `street/impacts.ts` 的 `bumpCar`。明顯的碰撞只記 `hitAtS`（HUD 顯示「碰撞！」、圈不乾淨、任務碰撞次數）。只有按 R 才會重置。
-- **後照鏡**：HUD 放 `RearMirrorSlot`（`data-mirror-slot` 的空框，`uiStore.mirrorOn`，存 `scooter-dyno:mirror`），renderer 每幀用 `mirrorSlot()` 找到它的位置，`RearMirror` 把往後看的畫面畫進去（左右反轉）。軟體 WebGL（CI）不畫。
+- **後照鏡**：HUD 放 `RearMirrorSlot`（`data-mirror-slot` 的空框，只在按住時出現：`uiStore.mirrorHeld`，鍵盤 B 由 `useMirrorKey()`、按鈕是 `MirrorButton`），renderer 每幀用 `mirrorSlot()` 找到它的位置，`RearMirror` 把往後看的畫面畫進去（左右反轉）。軟體 WebGL（CI）不畫。
 - **賽道**：`src/data/circuits/` 的測試要求每個彎半徑 ≥ 40 m、超過 120° 的彎 ≥ 50 m，不同路段不能太靠近。改了既有賽道的形狀，要把它加進 `recordsStore` 的 `RELAID`（並把 `LAYOUT` 加一），舊的本機圈速和幽靈車才會被清掉。
 - **紀錄**：`recordsStore` 把圈速榜、任務成績存在 localStorage（`scooter-dyno:records`），幽靈車每條賽道一筆、分開存（`scooter-dyno:ghost:<id>`）。讀取時一律驗證格式，壞資料丟掉。沒有後端，全球排行榜需要另外接資料庫。
 - **幽靈車**：`LapRecorder` 每 0.1 秒記錄玩家姿態，一圈完成交給 `CircuitController`；有明顯碰撞（`hitAtS` 變了）或按 R 的圈標為不乾淨，不進榜也不當幽靈。`ghostPoseAt` 補間播放。

@@ -1,24 +1,15 @@
+import { useState } from 'react';
 import {
   MATCH_KIND_LABELS,
   type MatchKind,
   type MatchRecord,
   type MatchStats,
 } from '@/application';
-import { fmtLap } from '../../race/circuit/format';
+import { MatchDetailDialog } from './MatchDetailDialog';
+import { dateTime, fmtRaceTime, resultLabel } from './matchFormat';
 import styles from './profile.module.css';
 
 const pct = (rate: number) => `${Math.round(rate * 100)}%`;
-
-/** Race time: m:ss.000 on circuits, seconds on a drag strip. */
-const fmtRaceTime = (kind: MatchKind, s: number | null) =>
-  s === null ? '—' : kind === 'drag' ? `${s.toFixed(3)} s` : fmtLap(s);
-
-const dateTime = (ms: number) => {
-  const d = new Date(ms);
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
-};
 
 export function KindTable({ stats }: { stats: MatchStats }) {
   const kinds: MatchKind[] = ['ranked', 'room', 'circuit', 'drag'];
@@ -131,40 +122,48 @@ export function RivalTable({ stats }: { stats: MatchStats }) {
   );
 }
 
-function resultLabel(m: MatchRecord): string {
-  if (m.dnf) return m.kind === 'drag' ? '搶跑' : '未完賽';
-  return m.won ? '🏆 第 1 名' : `第 ${m.position} 名`;
-}
-
 export function RecentMatches({ matches }: { matches: readonly MatchRecord[] }) {
+  const [open, setOpen] = useState<MatchRecord | null>(null);
   if (matches.length === 0) {
     return <p className={styles.empty}>還沒有對戰紀錄。跑完一場比賽就會出現在這裡。</p>;
   }
   return (
-    <ol className={styles.matches} data-testid="profile-matches">
-      {matches.slice(0, 30).map((m) => (
-        <li key={m.id} data-result={m.dnf ? 'dnf' : m.won ? 'win' : 'loss'}>
-          <div className={styles.matchHead}>
-            <strong>{resultLabel(m)}</strong>
-            <span className={styles.muted}>
-              {m.field} 人 · {MATCH_KIND_LABELS[m.kind]}
-            </span>
-            <span className={styles.matchDate}>{dateTime(m.at)}</span>
-          </div>
-          <div className={styles.matchBody}>
-            {m.trackName}
-            {m.kind === 'drag' ? '' : ` · ${m.laps} 圈`} · {m.bike} · {fmtRaceTime(m.kind, m.timeS)}
-          </div>
-          {m.kind === 'room' && (
-            <div className={styles.matchRiders}>
-              {[...m.riders]
-                .sort((a, b) => a.position - b.position)
-                .map((r) => `${r.position}. ${r.isMe ? '你' : r.name}`)
-                .join('　')}
-            </div>
-          )}
-        </li>
-      ))}
-    </ol>
+    <>
+      <ol className={styles.matches} data-testid="profile-matches">
+        {matches.slice(0, 30).map((m) => (
+          <li key={m.id} data-result={m.dnf ? 'dnf' : m.won ? 'win' : 'loss'}>
+            <button
+              type="button"
+              className={styles.matchButton}
+              onClick={() => setOpen(m)}
+              aria-label={`${m.trackName} ${resultLabel(m)}，查看這場比賽`}
+              data-testid="profile-match"
+            >
+              <span className={styles.matchHead}>
+                <strong>{resultLabel(m)}</strong>
+                <span className={styles.muted}>
+                  {m.field} 人 · {MATCH_KIND_LABELS[m.kind]}
+                </span>
+                <span className={styles.matchDate}>{dateTime(m.at)} ›</span>
+              </span>
+              <span className={styles.matchBody}>
+                {m.trackName}
+                {m.kind === 'drag' ? '' : ` · ${m.laps} 圈`} · {m.bike} ·{' '}
+                {fmtRaceTime(m.kind, m.timeS)}
+              </span>
+              {(m.kind === 'room' || m.kind === 'ranked') && (
+                <span className={styles.matchRiders}>
+                  {[...m.riders]
+                    .sort((a, b) => a.position - b.position)
+                    .map((r) => `${r.position}. ${r.isMe ? '你' : r.name}`)
+                    .join('　')}
+                </span>
+              )}
+            </button>
+          </li>
+        ))}
+      </ol>
+      {open && <MatchDetailDialog match={open} onClose={() => setOpen(null)} />}
+    </>
   );
 }

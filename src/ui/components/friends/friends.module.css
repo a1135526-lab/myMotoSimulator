@@ -215,3 +215,21 @@
 .dialog > .primary {
   min-height: 40px;
 }
+
+.addFriend {
+  padding: 3px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.friendTag {
+  color: var(--ok);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}

@@ -49,6 +49,7 @@ export {
 export type { TouchControl } from './input/TouchInputSource';
 export { requestTiltPermission, type TiltPermission } from './input/TiltInputSource';
 export { saveFlickWanted, saveTiltWanted, useDefaultTilt } from './input/defaultTilt';
+export { useMirrorKey } from './input/mirrorKey';
 export type { Preset } from './services/presetService';
 export { isStock, type SelectableCategory } from './tuning/selection';
 export type {
@@ -175,7 +176,12 @@ export {
 export { missionCatalog } from './street/missionCatalog';
 export { useMatchStore, type SyncState } from './stats/matchStore';
 export { matchStats, type MatchStats, type Tally } from './stats/matchStats';
-export { MATCH_KIND_LABELS, type MatchKind, type MatchRecord } from './stats/matchTypes';
+export {
+  MATCH_KIND_LABELS,
+  type MatchKind,
+  type MatchRecord,
+  type MatchRider,
+} from './stats/matchTypes';
 export { ROOM_FINISH_WINDOW_S } from './online/room/circuitRoom';
 export { useRankedStore } from './online/ranked/rankedStore';
 // Tiers and rules for the ranked screens (the UI can't reach into domain).

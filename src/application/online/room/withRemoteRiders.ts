@@ -53,6 +53,7 @@ export function withRemoteRiders(
       bestLapS: finish?.bestLapS ?? pose.bestLapS,
       remote: true,
       bike: player.bike,
+      ...(player.accountName && { accountName: player.accountName }),
       dnf: timeS === null && window.closed,
     };
   });

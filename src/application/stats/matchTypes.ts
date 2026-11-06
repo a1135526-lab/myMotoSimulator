@@ -20,6 +20,8 @@ export interface MatchRider {
   /** Race time at the flag; null = did not finish. */
   readonly timeS: number | null;
   readonly isMe: boolean;
+  /** Their account, if they were signed in: to look them up or add them as a friend. */
+  readonly accountName?: string;
 }
 
 export interface MatchRecord {
@@ -65,6 +67,7 @@ function parseRider(raw: unknown): MatchRider | null {
     position: r.position,
     timeS: numOrNull(r.timeS),
     isMe: r.isMe === true,
+    ...(isStr(r.accountName, 40) && { accountName: r.accountName }),
   };
 }
 

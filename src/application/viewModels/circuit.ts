@@ -78,6 +78,8 @@ export interface CircuitRiderView {
   readonly dnf?: boolean;
   /** "Brand Model", for another player in a friend room. */
   readonly bike?: string;
+  /** Another player's account name, when they're signed in (to add as a friend). */
+  readonly accountName?: string;
 }
 
 export interface CircuitPlayerView {

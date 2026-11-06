@@ -7,6 +7,7 @@ import {
   type RankedGroup,
 } from '@/application';
 import { TierBadge } from '../../race/ranked/TierBadge';
+import { AddFriend } from './AddFriend';
 import { FriendProfileDialog } from './FriendProfileDialog';
 import styles from './friends.module.css';
 
@@ -53,7 +54,9 @@ export function PlayerCardDialog({
     <div className={styles.backdrop} role="dialog" aria-label={`${name} 的資訊`}>
       <section className={styles.dialog} data-testid="player-card">
         <h2>👤 {accountName ?? name}</h2>
-        <p className={styles.note}>這場騎 {bike}</p>
+        <p className={styles.note}>
+          這場騎 {bike} <AddFriend accountName={accountName} testId="card-add-friend" />
+        </p>
         {!accountName && <p className={styles.note}>對方沒有登入，沒有段位資料。</p>}
         {error && (
           <p className={styles.message} data-bad="">

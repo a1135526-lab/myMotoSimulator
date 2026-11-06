@@ -32,6 +32,7 @@ function ridersOf(view: CircuitView, myBike: string): MatchRider[] {
     position: r.position,
     timeS: r.dnf ? null : r.finishTimeS,
     isMe: r.isPlayer,
+    ...(r.accountName && { accountName: r.accountName }),
   }));
 }
 

@@ -1,30 +1,11 @@
 import { useState } from 'react';
 import { useAuthStore, useFriendsStore, useRoomStore, type RoomPlayer } from '@/application';
+import { AddFriend } from '../../components/friends/AddFriend';
 import styles from './room.module.css';
 
 /** In a room: add another signed-in player as a friend. */
 export function AddFriendButton({ player }: { player: RoomPlayer }) {
-  const friends = useFriendsStore((s) => s.friends);
-  const add = useFriendsStore((s) => s.add);
-  const signedIn = useAuthStore((s) => s.status === 'signedIn' && s.nickname !== null);
-  const [sent, setSent] = useState<string | null>(null);
-  const name = player.accountName;
-  if (!signedIn || !name) return null;
-  const known = friends.find((f) => f.nickname.toLowerCase() === name.toLowerCase());
-  if (known?.state === 'friend') return <small className={styles.friendTag}>好友</small>;
-  if (known || sent) {
-    return <small className={styles.friendTag}>{sent ?? '已送出邀請'}</small>;
-  }
-  return (
-    <button
-      type="button"
-      className={styles.addFriend}
-      onClick={() => void add(name).then((r) => setSent(r.ok ? '已送出邀請' : r.message))}
-      data-testid="room-add-friend"
-    >
-      ＋好友
-    </button>
-  );
+  return <AddFriend accountName={player.accountName} testId="room-add-friend" />;
 }
 
 /** In a room: send your online friends its code. */
