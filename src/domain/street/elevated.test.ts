@@ -64,7 +64,7 @@ describe('elevated roads', () => {
   it('a rider climbs the ramp and stays up over the crossing streets', () => {
     let r = placed(62, 60, 0, 0, 8);
     r = ride(r, 30, (x) => x.x >= 200);
-    expect(r.crashedUntilS).toBeNull();
+    expect(r.hitAtS).toBeNull();
     expect(r.x).toBeGreaterThan(200);
     expect(r.y).toBeCloseTo(6.5, 1);
     // Back down the far ramp to the ground.
@@ -75,7 +75,7 @@ describe('elevated roads', () => {
   it('a rider on the street below passes under it', () => {
     let r = placed(120, 10, Math.PI / 2, 0, 8);
     r = ride(r, 30, (x) => x.z >= 110);
-    expect(r.crashedUntilS).toBeNull();
+    expect(r.hitAtS).toBeNull();
     expect(r.z).toBeGreaterThan(110);
     expect(r.y).toBe(0);
   });
@@ -84,7 +84,7 @@ describe('elevated roads', () => {
     // On the deck, aimed a little to the right: into the parapet before the far ramp.
     let r = placed(125, 60, 0.08, 6.5, 12);
     r = ride(r, 30, (x) => x.x >= 235);
-    expect(r.crashedUntilS).toBeNull();
+    expect(r.hitAtS).toBeNull();
     expect(r.x).toBeGreaterThan(235);
     expect(r.y).toBeCloseTo(6.5, 1);
   });

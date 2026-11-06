@@ -22,6 +22,7 @@ import {
   TiltToggle,
 } from '../../components/controls/StageButtons';
 import { TouchControls } from '../../components/controls/TouchControls';
+import { MirrorToggle } from '../../components/hud/RearMirrorSlot';
 import { AppLayout } from '../../layouts/AppLayout';
 import { useImmersive } from '../../layouts/useMediaQuery';
 import { RankedResultActions } from '../ranked/RankedResultActions';
@@ -126,6 +127,7 @@ export function CircuitPage({
             >
               {immersive ? '👻' : `👻 幽靈車 ${ghostOn ? '開' : '關'}`}
             </button>
+            <MirrorToggle className={styles.garageButton} compact={immersive} />
             <TiltToggle className={styles.garageButton} compact={immersive} />
             {manual && !autoShift && (
               <FlickShiftToggle className={styles.garageButton} compact={immersive} />

@@ -1,5 +1,5 @@
 import { wantsDrift } from '../circuit/drift';
-import { steerTarget, type CircuitCommand } from '../circuit/circuitRace';
+import { steerTarget, type CircuitCommand } from '../circuit/circuitAdvance';
 import { shiftGear, startEngine } from '../simulation/controls';
 import { MAX_STEPS_PER_ADVANCE } from '../simulation/fixedStep';
 import { shapeInput } from '../simulation/inputShaping';
@@ -8,13 +8,13 @@ import type { SimInput } from '../simulation/types';
 import { clamp } from '../units';
 import type { CityMap } from './city';
 import {
-  crashRider,
   createFreeRider,
   respawnRider,
   stepFreeRider,
   type FreeRideContext,
   type FreeRider,
 } from './freeRide';
+import { bumpCar } from './impacts';
 import { startMission, stepMission, type MissionRun } from './missions';
 import { startNavigation, updateNavigation, type Destination, type NavState } from './navigation';
 import { createTraffic, hitCar, stepTraffic, type TrafficState } from './traffic';
@@ -55,9 +55,6 @@ export interface StreetState {
 const TRAFFIC_EVERY = 4;
 /** Re-check position on the route this often (steps). */
 const NAV_EVERY = 12;
-/** A car moving faster than this, or a rider faster than BUMP, means a crash. */
-const CAR_HIT_MPS = 3;
-const RIDER_BUMP_MPS = 1.5;
 const STEER_RATE_PER_S = 6;
 const STEER_RETURN_PER_S = 8;
 
@@ -112,29 +109,18 @@ export function stepStreet(
 
   const traffic =
     timed.steps % TRAFFIC_EVERY === 0
-      ? stepTraffic(
-          map,
-          state.traffic,
-          dt * TRAFFIC_EVERY,
-          rider.crashedUntilS === null ? rider : null,
-          timed.steps,
-          rider,
-        )
+      ? stepTraffic(map, state.traffic, dt * TRAFFIC_EVERY, rider, timed.steps, rider)
       : state.traffic;
   const nav =
     state.nav && timed.steps % NAV_EVERY === 0
       ? updateNavigation(map, state.nav, rider.x, rider.z)
       : state.nav;
 
-  if (rider.crashedUntilS === null) {
-    const car = hitCar(traffic, rider.x, rider.z, undefined, rider.y);
-    if (car && (car.speedMps > CAR_HIT_MPS || rider.sim.speedMps > RIDER_BUMP_MPS)) {
-      rider = crashRider(ctx, rider);
-    }
-  }
-  const justCrashed = state.rider.crashedUntilS === null && rider.crashedUntilS !== null;
+  const car = hitCar(traffic, rider.x, rider.z, undefined, rider.y);
+  if (car) rider = bumpCar(rider, car, timed.clockS);
+  const justHit = rider.hitAtS !== state.rider.hitAtS;
   const mission = state.mission
-    ? stepMission(state.mission, timed.clockS, nav?.arrived ?? false, justCrashed)
+    ? stepMission(state.mission, timed.clockS, nav?.arrived ?? false, justHit)
     : null;
   return { ...timed, rider, traffic, nav, mission };
 }

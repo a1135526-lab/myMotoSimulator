@@ -15,6 +15,7 @@ import {
   type CircuitSettings,
   type CircuitSkill,
   type GhostLap,
+  type RemoteBike,
   type RiderSkill,
   type SimConfig,
   type SimModel,
@@ -70,6 +71,7 @@ export class CircuitController {
   private singleRace = false;
   /** The finish window (a room, ranked) has closed: the race ends, finished or not. */
   private outOfTime: (race: CircuitRaceState) => boolean = () => false;
+  private remoteBikes: () => readonly RemoteBike[] = () => [];
   private ghost: GhostLap | null = null;
 
   constructor(
@@ -102,6 +104,11 @@ export class CircuitController {
 
   setOutOfTime(check: (race: CircuitRaceState) => boolean): void {
     this.outOfTime = check;
+  }
+
+  /** Other players' bikes (a friend room), to bump into. */
+  setRemoteBikes(source: () => readonly RemoteBike[]): void {
+    this.remoteBikes = source;
   }
 
   /** A friend-room start: fresh grid, lights on, the same hold as everyone else. */
@@ -144,7 +151,14 @@ export class CircuitController {
   }
 
   tick(elapsedS: number): void {
-    this.race = advanceCircuitRace(this.geo, this.models, this.race, this.input.read(), elapsedS);
+    this.race = advanceCircuitRace(
+      this.geo,
+      this.models,
+      this.race,
+      this.input.read(),
+      elapsedS,
+      this.remoteBikes(),
+    );
     if (this.race.phase === 'racing' && this.outOfTime(this.race)) {
       this.race = retireCircuitPlayer(this.race);
     }

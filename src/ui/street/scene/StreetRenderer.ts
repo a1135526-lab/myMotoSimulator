@@ -4,6 +4,7 @@ import type { CameraMode, StreetView, TimeOfDay } from '@/application';
 import type { CityMap } from '@/domain';
 import { TyreSmoke } from '../../race/circuit/scene/tyreSmoke';
 import { createBikeModel, createCockpit, type BikeModel } from '../../race/scene/models';
+import { isSoftwareRenderer, mirrorSlot, RearMirror } from '../../race/scene/rearMirror';
 import { CarFleet } from './carFleet';
 import { buildCityScene, ROAD_Y, type CityScene } from './cityScene';
 import { LIGHTING, type Lighting } from './lighting';
@@ -36,15 +37,6 @@ const SOFTWARE_PIXEL_RATIO = 0.5;
 
 const yawFor = (heading: number) => Math.atan2(-Math.cos(heading), -Math.sin(heading));
 
-/** SwiftShader / llvmpipe and friends: WebGL emulated on the CPU. */
-function isSoftwareRenderer(gl: WebGLRenderingContext | WebGL2RenderingContext): boolean {
-  const info = gl.getExtension('WEBGL_debug_renderer_info');
-  const name = String(
-    gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ?? '',
-  ).toLowerCase();
-  return /swiftshader|llvmpipe|softpipe|software|basic render/.test(name);
-}
-
 export class StreetRenderer {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
@@ -58,6 +50,7 @@ export class StreetRenderer {
   private readonly envTarget: THREE.WebGLRenderTarget;
   private readonly sky = new Sky();
   private readonly route = new RouteMarker();
+  private readonly mirror: RearMirror;
   private fleet: CarFleet | null = null;
   private fleetKey = '';
   private bike: BikeModel | null = null;
@@ -82,6 +75,7 @@ export class StreetRenderer {
     // Without a GPU the whole city is drawn on the CPU; trade sharpness and
     // shadows for a frame rate that still lets the page respond.
     const software = isSoftwareRenderer(this.renderer.getContext());
+    this.mirror = new RearMirror(this.renderer);
     this.renderer.setPixelRatio(
       software ? SOFTWARE_PIXEL_RATIO : Math.min(window.devicePixelRatio, 2),
     );
@@ -164,10 +158,10 @@ export class StreetRenderer {
     this.bikeYaw.position.set(r.x, ROAD_Y + r.y, r.z);
     this.bikeYaw.rotation.y = yawFor(r.heading - r.slip);
     if (this.bike) {
-      this.bike.group.rotation.z = r.crashed ? Math.PI / 2.2 : r.lean;
+      this.bike.group.rotation.z = r.lean;
       this.bike.update(r.distanceM, r.speedKmh / KMH_PER_MPS);
     }
-    if (r.drift > SMOKE_MIN_DRIFT && !r.crashed) {
+    if (r.drift > SMOKE_MIN_DRIFT) {
       const h = r.heading - r.slip;
       this.smoke.emit(
         r.x - Math.cos(h) * REAR_WHEEL_M,
@@ -186,6 +180,7 @@ export class StreetRenderer {
     this.placeCamera(r, mode, dt);
     this.sky.position.copy(this.camera.position);
     this.renderer.render(this.scene, this.camera);
+    this.mirror.render(this.scene, r, mirrorSlot(this.canvas), [this.cockpit, this.bikeYaw]);
   }
 
   dispose(): void {
@@ -194,6 +189,7 @@ export class StreetRenderer {
     this.fleet?.dispose();
     this.smoke.dispose();
     this.envTarget.dispose();
+    this.mirror.dispose();
     this.renderer.dispose();
   }
 

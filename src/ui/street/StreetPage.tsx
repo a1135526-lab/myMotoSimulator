@@ -16,6 +16,7 @@ import {
   TiltToggle,
 } from '../components/controls/StageButtons';
 import { TouchControls } from '../components/controls/TouchControls';
+import { MirrorToggle } from '../components/hud/RearMirrorSlot';
 import type { CityMap } from '@/domain';
 import { AppLayout } from '../layouts/AppLayout';
 import { useImmersive } from '../layouts/useMediaQuery';
@@ -106,6 +107,7 @@ export function StreetPage({ map }: { map: CityMap }) {
         >
           {immersive ? '🏁' : '🏁 任務'}
         </button>
+        <MirrorToggle className={race.garageButton} compact={immersive} />
         <TiltToggle className={race.garageButton} compact={immersive} />
         {manual && !autoShift && (
           <FlickShiftToggle className={race.garageButton} compact={immersive} />

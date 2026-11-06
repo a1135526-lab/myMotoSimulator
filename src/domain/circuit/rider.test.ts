@@ -53,7 +53,7 @@ describe('rider control', () => {
     for (let i = 0; i < seconds * 240; i++) {
       r = stepRider(ctx, r, { ...input, clutchLever: 0 }, steer, drift);
       stats.maxDrift = Math.max(stats.maxDrift, Math.abs(r.drift));
-      stats.hitBarrier ||= r.crashedUntilS !== null;
+      stats.hitBarrier ||= r.hitAtS !== null;
     }
     return { r, ...stats };
   };
@@ -67,13 +67,22 @@ describe('rider control', () => {
     expect(r.surface).toBe('track');
   });
 
+  it('braking into a turn slides and turns tighter than leaning alone (assist off)', () => {
+    const start = riding(0, 0, 30);
+    const leaning = ride(start, 0.6, { throttle: 0, brake: 0 }, 1).r;
+    const sliding = ride(start, 0.6, { throttle: 0, brake: 1 }, 1, true).r;
+    expect(Math.abs(sliding.drift)).toBeGreaterThan(0.9);
+    expect(sliding.lat.lean).toBeGreaterThan(0.5);
+    expect(sliding.lat.psi).toBeGreaterThan(leaning.lat.psi);
+  });
+
   it('a slide is held for as long as the brake is', () => {
     const start = riding(0, 0, 30);
-    const kicked = ride(start, 0.5, { throttle: 0, brake: 1 }, 1, true).r;
+    const kicked = ride(start, 0.3, { throttle: 0, brake: 1 }, 1, true).r;
     expect(Math.abs(kicked.drift)).toBeGreaterThan(0.9);
     // Steer centred, a dab of throttle: still sideways two seconds later, still moving.
     const held = ride(
-      { ...kicked, lat: { ...kicked.lat, d: 0, psi: 0 } },
+      { ...kicked, lat: { ...kicked.lat, d: 0, psi: 0, lean: 0 } },
       2,
       { throttle: 0.4, brake: 1 },
       0,

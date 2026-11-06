@@ -1,5 +1,6 @@
 import {
   DRIFT_SLIP_RAD,
+  HIT_SHOWN_S,
   missionTimeS,
   mpsToKmh,
   nextStep,
@@ -58,7 +59,8 @@ export interface StreetRiderView {
   readonly revLimiter: boolean;
   /** Paddling backwards; speedKmh is then the backwards speed. */
   readonly reversing: boolean;
-  readonly crashed: boolean;
+  /** Just hit a wall or a car (shown briefly; nobody falls off). */
+  readonly hit: boolean;
   readonly offRoad: boolean;
   readonly manual: boolean;
   readonly cylinders: number;
@@ -145,7 +147,7 @@ export function toStreetView(state: StreetState, model: SimModel, map: CityMap):
       engineRunning: r.sim.engineRunning,
       revLimiter: r.sim.revLimiterActive,
       reversing,
-      crashed: r.crashedUntilS !== null,
+      hit: r.hitAtS !== null && state.clockS - r.hitAtS < HIT_SHOWN_S,
       offRoad: r.surface !== 'road',
       manual: bike.kind === 'manual',
       cylinders: bike.engine.cylinders,

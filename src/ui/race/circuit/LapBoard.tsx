@@ -20,7 +20,7 @@ export function LapBoard({ circuitId, limit = 5, newSince = Infinity }: LapBoard
   if (laps.length === 0) {
     return (
       <p className={styles.boardEmpty} data-testid="lap-board">
-        還沒有紀錄：跑完一圈不摔車、不按重置，就會記下來
+        還沒有紀錄：跑完一圈不撞護欄或別的車、不按重置，就會記下來
       </p>
     );
   }

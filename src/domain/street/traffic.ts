@@ -147,7 +147,8 @@ export function createTraffic(
 }
 
 /** Distance ahead of `car` to a point, and how far off its line it is. */
-function relative(car: Car, x: number, z: number) {
+/** A point in a car's frame: metres ahead of its centre and to its right. */
+export function carFrame(car: Car, x: number, z: number) {
   const fx = Math.cos(car.heading);
   const fz = Math.sin(car.heading);
   const dx = x - car.x;
@@ -166,7 +167,7 @@ function targetSpeed(map: CityMap, car: Car, cars: readonly Car[], rider: Point 
   const halfLen = CAR_SIZE[car.kind].length / 2;
   for (const other of cars) {
     if (other.id === car.id) continue;
-    const r = relative(car, other.x, other.z);
+    const r = carFrame(car, other.x, other.z);
     if (r.ahead <= 0 || r.ahead > FOLLOW_LOOK_M + halfLen || Math.abs(r.side) > 1.6) continue;
     const gap = r.ahead - halfLen - CAR_SIZE[other.kind].length / 2;
     target = Math.min(target, gap < FOLLOW_GAP_M ? 0 : other.speedMps);
@@ -174,7 +175,7 @@ function targetSpeed(map: CityMap, car: Car, cars: readonly Car[], rider: Point 
   if (rider) {
     // Look far enough ahead to stop from the current speed, plus a margin.
     const look = (car.speedMps * car.speedMps) / (2 * DECEL_MPS2) + STOP_FOR_RIDER_M;
-    const r = relative(car, rider.x, rider.z);
+    const r = carFrame(car, rider.x, rider.z);
     if (r.ahead > 0 && r.ahead < look + halfLen && Math.abs(r.side) < 1.8) target = 0;
   }
   return target;
@@ -276,7 +277,7 @@ export function hitCar(
 ): Car | null {
   for (const car of traffic.cars) {
     if (Math.abs(car.y - y) > LEVEL_TOLERANCE_M) continue;
-    const r = relative(car, x, z);
+    const r = carFrame(car, x, z);
     const s = CAR_SIZE[car.kind];
     if (Math.abs(r.ahead) < s.length / 2 + marginM && Math.abs(r.side) < s.width / 2 + marginM)
       return car;

@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { MIN_HUMAN_REACTION_S, type CameraMode, type CircuitView } from '@/application';
+import { RearMirrorSlot } from '../../components/hud/RearMirrorSlot';
 import { CircuitMap } from './CircuitMap';
 import { fmtLap } from './format';
 import { Cluster } from './hud/Cluster';
@@ -27,7 +28,7 @@ type Alert = { text: string; tone: 'info' | 'warn' | 'danger' };
 function alertFor(view: CircuitView): Alert | null {
   const me = view.riders[0];
   if (!me) return null;
-  if (me.crashed) return { text: '摔車！稍後回到賽道', tone: 'danger' };
+  if (me.hit) return { text: '碰撞！', tone: 'danger' };
   if (!me.engineRunning) return { text: '熄火 · 空檔或拉離合後按 Enter', tone: 'warn' };
   const { penaltyLeftS, reactionS, jumpStart } = view.player;
   if (penaltyLeftS !== null) {
@@ -104,6 +105,7 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
       </div>
 
       <div className={styles.topCenter}>
+        <RearMirrorSlot />
         <FinishCountdown view={view} />
         {view.phase === 'racing' && <CornerCallout corner={player.corner} />}
         {view.ghost?.owner && (

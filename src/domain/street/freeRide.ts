@@ -43,10 +43,10 @@ const SURFACE_GRIP: Readonly<Record<CitySurface, number>> = {
 const GRASS_ROLLING_COEFF = 0.09;
 /** Grip never drops fully to zero, so a leaned bike can still creep forward. */
 const MIN_GRIP_SHARE = 0.12;
-/** Time on the ground after a crash before the bike is put back on a road. */
-export const STREET_CRASH_S = 1.5;
-/** Below this, hitting a wall is a bump, not a crash. */
-const BUMP_MPS = 2;
+/** Below this, hitting a wall is a bump, not a hit worth counting. */
+export const BUMP_MPS = 2;
+/** Bounced back off a wall hit head-on, m. */
+const WALL_BOUNCE_M = 0.3;
 /** Body radius for hitting walls, m. */
 export const RIDER_RADIUS_M = 0.6;
 /** Paddling backwards tops out at a slow walk, m/s (≈ 4 km/h). */
@@ -72,7 +72,8 @@ export interface FreeRider {
   /** Backwards speed while paddling in reverse, m/s (≥ 0). */
   readonly reverseMps: number;
   readonly surface: CitySurface;
-  readonly crashedUntilS: number | null;
+  /** Clock time of the last real hit (wall or car); nobody falls off or is moved. */
+  readonly hitAtS: number | null;
   readonly distanceM: number;
   readonly topSpeedKmh: number;
 }
@@ -100,13 +101,13 @@ export function createFreeRider(model: SimModel, map: CityMap): FreeRider {
     drift: 0,
     reverseMps: 0,
     surface: 'road',
-    crashedUntilS: null,
+    hitAtS: null,
     distanceM: 0,
     topSpeedKmh: 0,
   };
 }
 
-/** Back on the nearest road at your level (deck or street), stopped, engine running, in a low gear. */
+/** R key: back on the nearest road at your level (deck or street), stopped, engine running, in a low gear. */
 export function respawnRider(ctx: FreeRideContext, rider: FreeRider): FreeRider {
   const raised = rider.y > PARAPET_FROM_M;
   const pose = nearestRoadPose(ctx.map, rider.x, rider.z, rider.heading, (e) =>
@@ -132,18 +133,6 @@ export function respawnRider(ctx: FreeRideContext, rider: FreeRider): FreeRider 
     drift: 0,
     reverseMps: 0,
     surface: 'road',
-    crashedUntilS: null,
-  };
-}
-
-export function crashRider(ctx: FreeRideContext, rider: FreeRider): FreeRider {
-  return {
-    ...rider,
-    sim: { ...rider.sim, speedMps: 0 },
-    lean: 0,
-    drift: 0,
-    reverseMps: 0,
-    crashedUntilS: ctx.clockS + STREET_CRASH_S,
   };
 }
 
@@ -207,9 +196,6 @@ export function stepFreeRider(
   reverseWanted = false,
 ): FreeRider {
   const dt = ctx.model.timestepS;
-  if (rider.crashedUntilS !== null) {
-    return ctx.clockS >= rider.crashedUntilS ? respawnRider(ctx, rider) : rider;
-  }
 
   let sim = rider.sim;
   let applied = input;
@@ -274,10 +260,21 @@ export function stepFreeRider(
     }
   }
   if (hit.front || hit.side !== 0) {
-    // Walking pace into a wall just stops you; any faster and you're down.
-    return Math.abs(v) > BUMP_MPS
-      ? crashRider(ctx, moved)
-      : { ...moved, sim: { ...sim, speedMps: 0 }, reverseMps: 0 };
+    // Into the wall: stopped where you are and knocked back a little, still on the bike.
+    const back = Math.sign(v) * WALL_BOUNCE_M;
+    const bx = rider.x - Math.cos(moved.heading) * back;
+    const bz = rider.z - Math.sin(moved.heading) * back;
+    const free = !contact(ctx.map, bx, bz, rider.y, moved.heading).front;
+    return {
+      ...moved,
+      x: free ? bx : rider.x,
+      z: free ? bz : rider.z,
+      sim: { ...sim, speedMps: 0 },
+      lean: 0,
+      drift: 0,
+      reverseMps: 0,
+      hitAtS: Math.abs(v) > BUMP_MPS ? ctx.clockS : rider.hitAtS,
+    };
   }
   // Up and down ramps with the road; off any road you're on the ground.
   const y = deckHeightAt(ctx.map, x, z, rider.y) ?? 0;

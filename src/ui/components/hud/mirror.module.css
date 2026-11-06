@@ -1,0 +1,16 @@
+/* Rear-view mirror frame: the picture inside is drawn by the 3D canvas underneath. */
+.mirror {
+  width: clamp(150px, 26vw, 340px);
+  aspect-ratio: 3.4;
+  border: 3px solid rgb(20 22 26 / 92%);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 18%),
+    0 6px 18px rgb(0 0 0 / 45%);
+  pointer-events: none;
+}
+
+[data-immersive] .mirror {
+  width: clamp(140px, 24vw, 260px);
+  border-width: 2px;
+}

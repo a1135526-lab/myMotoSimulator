@@ -66,7 +66,7 @@ ui/race/          RaceScene + scene/*（Three.js，命令式）· RaceHud · Rac
 
 ## 賽道繞圈
 
-- domain/circuit/：geometry（Catmull-Rom 中線與曲率）、lateral（壓車、摩擦圓、路面）、rider（前後物理 + 左右物理 + 計圈 + 摔車）、circuitAi（速度曲線 AI）、autoGearbox、circuitRace（亮燈、多車固定步長）、lapEstimate。
+- domain/circuit/：geometry（Catmull-Rom 中線與曲率）、lateral（壓車、摩擦圓、路面）、rider（前後物理 + 左右物理 + 計圈 + 撞護欄反彈）、contacts（護欄反彈、車與車碰撞、電腦車閃避）、circuitAdvance（固定步長推進、遠端玩家碰撞）、circuitAi（速度曲線 AI）、autoGearbox、circuitRace（亮燈、多車固定步長）、lapEstimate。
 - 前後方向沿用原本的引擎、離合器、傳動和車體模型；每一步依路面和壓車角，暫時調整抓地力和滾動阻力後再呼叫原本的 step()。
 - application/race/CircuitController 對應直線賽的 RaceController；鍵盤改用 circuit 配置（左右鍵轉向）。
 - ui/race/circuit/：CircuitRenderer（沿中線生成柏油、路肩、碎石區、護欄的網格，以及第一／第三人稱鏡頭）、CircuitHud、CircuitMap（卡片縮圖兼小地圖）。

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { CircuitRaceState } from '@/domain';
+import { kmhToMps, type CircuitRaceState, type RemoteBike } from '@/domain';
 import type { CircuitController } from '../../race/CircuitController';
 import type { CircuitView } from '../../viewModels/circuit';
 import { recordRoomMatch } from '../../stats/matchRecorder';
@@ -37,6 +37,7 @@ export function useCircuitRoom(
   const raceId = useRoomStore((s) => s.race?.raceId ?? null);
   useEffect(() => {
     controller.setRoomMode(enabled);
+    controller.setRemoteBikes(enabled ? roomBikes : () => []);
     controller.setOutOfTime((race) => {
       if (!enabled) return otherwise(race);
       const deadline = roomDeadlineS(useRoomStore.getState().finishes);
@@ -48,6 +49,20 @@ export function useCircuitRoom(
     const race = useRoomStore.getState().race;
     if (race) controller.startRoomRace(race.holdS);
   }, [controller, enabled, raceId]);
+}
+
+/** Where the other players' bikes are right now (as drawn), to bump into. */
+function roomBikes(): RemoteBike[] {
+  const room = useRoomStore.getState();
+  if (room.status !== 'racing' || !room.me) return [];
+  const myId = room.me.id;
+  const others = room.players.filter((p) => p.id !== myId);
+  return remoteRiders.sample(others, performance.now()).map(({ pose }) => ({
+    x: pose.x,
+    z: pose.z,
+    heading: pose.heading,
+    speedMps: kmhToMps(pose.speedKmh),
+  }));
 }
 
 /**
@@ -70,7 +85,7 @@ export function roomFrame(view: CircuitView): CircuitView {
       speedKmh: me.speedKmh,
       rpm: me.rpm,
       progressM: me.progressM,
-      crashed: me.crashed,
+      crashed: me.hit,
       bestLapS: me.bestLapS,
       finishTimeS: me.finishTimeS,
     });

@@ -62,7 +62,7 @@ export function MissionResultCard({ map }: { map: CityMap }) {
             <dd>{fmtClock(result.limitS)}</dd>
           </div>
           <div>
-            <dt>摔車</dt>
+            <dt>碰撞</dt>
             <dd>{result.crashes} 次</dd>
           </div>
           <div>

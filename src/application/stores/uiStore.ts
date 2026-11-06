@@ -4,19 +4,20 @@ import type { GhostLap } from '@/domain';
 const SOUND_KEY = 'scooter-dyno:sound';
 const GHOST_KEY = 'scooter-dyno:ghost-on';
 const MUSIC_KEY = 'scooter-dyno:music';
+const MIRROR_KEY = 'scooter-dyno:mirror';
 
-/** Lobby music: on unless turned off. */
-function loadMusicOn(): boolean {
+/** A setting that's on unless turned off (music, ghost, mirror). */
+function loadOn(key: string): boolean {
   try {
-    return globalThis.localStorage?.getItem(MUSIC_KEY) !== 'off';
+    return globalThis.localStorage?.getItem(key) !== 'off';
   } catch {
     return true;
   }
 }
 
-function saveMusicOn(on: boolean): void {
+function saveOn(key: string, on: boolean): void {
   try {
-    globalThis.localStorage?.setItem(MUSIC_KEY, on ? 'on' : 'off');
+    globalThis.localStorage?.setItem(key, on ? 'on' : 'off');
   } catch {
     // Not persisted; the toggle still works for this session.
   }
@@ -39,24 +40,8 @@ function saveSound(on: boolean): void {
   }
 }
 
-/** Ghost bike on circuits: on unless turned off. */
-function loadGhostOn(): boolean {
-  try {
-    return globalThis.localStorage?.getItem(GHOST_KEY) !== 'off';
-  } catch {
-    return true;
-  }
-}
-
-function saveGhostOn(on: boolean): void {
-  try {
-    globalThis.localStorage?.setItem(GHOST_KEY, on ? 'on' : 'off');
-  } catch {
-    // Not persisted; the toggle still works for this session.
-  }
-}
-
 export type DynoView = 'engine' | 'chassis';
+
 /** `home`: the lobby every visit starts in; `profile`: your race stats. */
 export type AppMode = 'home' | 'profile' | 'simulator' | 'race' | 'street';
 
@@ -89,6 +74,9 @@ interface UiState {
   /** Race your best lap's ghost on circuits. */
   readonly ghostOn: boolean;
   setGhostOn(on: boolean): void;
+  /** Rear-view mirror in the 3D modes. */
+  readonly mirrorOn: boolean;
+  setMirrorOn(on: boolean): void;
   /** Someone's lap from the global board to race on its circuit (this visit only). */
   readonly rivalGhost: { readonly circuitId: string; readonly ghost: GhostLap } | null;
   setRivalGhost(rival: { readonly circuitId: string; readonly ghost: GhostLap } | null): void;
@@ -112,14 +100,19 @@ export const useUiStore = create<UiState>()((set) => ({
   setFlickShiftOn: (flickShiftOn) => set({ flickShiftOn }),
   rivalGhost: null,
   setRivalGhost: (rivalGhost) => set({ rivalGhost }),
-  musicOn: loadMusicOn(),
+  musicOn: loadOn(MUSIC_KEY),
   setMusicOn: (musicOn) => {
-    saveMusicOn(musicOn);
+    saveOn(MUSIC_KEY, musicOn);
     set({ musicOn });
   },
-  ghostOn: loadGhostOn(),
+  ghostOn: loadOn(GHOST_KEY),
   setGhostOn: (ghostOn) => {
-    saveGhostOn(ghostOn);
+    saveOn(GHOST_KEY, ghostOn);
     set({ ghostOn });
+  },
+  mirrorOn: loadOn(MIRROR_KEY),
+  setMirrorOn: (mirrorOn) => {
+    saveOn(MIRROR_KEY, mirrorOn);
+    set({ mirrorOn });
   },
 }));

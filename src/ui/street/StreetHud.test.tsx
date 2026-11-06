@@ -32,7 +32,7 @@ const view = (
     engineRunning: true,
     revLimiter: false,
     reversing: false,
-    crashed: false,
+    hit: false,
     offRoad: false,
     manual: false,
     cylinders: 1,
@@ -93,11 +93,9 @@ describe('StreetHud', () => {
     expect(screen.queryByTestId('street-alert')).not.toBeInTheDocument();
   });
 
-  it('warns about a crash and riding on the pavement', () => {
-    const { rerender } = render(
-      <StreetHud view={view({ crashed: true })} map={map} camera="third" />,
-    );
-    expect(screen.getByTestId('street-alert')).toHaveTextContent('摔車');
+  it('warns about a hit and riding on the pavement', () => {
+    const { rerender } = render(<StreetHud view={view({ hit: true })} map={map} camera="third" />);
+    expect(screen.getByTestId('street-alert')).toHaveTextContent('碰撞');
     rerender(<StreetHud view={view({ offRoad: true })} map={map} camera="first" />);
     expect(screen.getByTestId('street-alert')).toHaveTextContent('人行道');
   });

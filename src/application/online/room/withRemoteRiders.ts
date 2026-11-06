@@ -48,7 +48,7 @@ export function withRemoteRiders(
       revLimiter: false,
       progressM: pose.progressM,
       position: 0,
-      crashed: pose.crashed,
+      hit: pose.crashed,
       finishTimeS: timeS,
       bestLapS: finish?.bestLapS ?? pose.bestLapS,
       remote: true,

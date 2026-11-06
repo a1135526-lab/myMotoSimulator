@@ -77,7 +77,7 @@ describe('free riding', () => {
     expect(r.heading).toBeLessThan(before); // a left turn lowers the heading
   });
 
-  it('crashes into a building and is put back on a road', () => {
+  it('rides into a building: stopped and knocked back, but left where it happened', () => {
     const base = createFreeRider(scooter, map);
     let r = {
       ...base,
@@ -87,13 +87,15 @@ describe('free riding', () => {
       surface: 'sidewalk' as CitySurface,
       sim: { ...base.sim, speedMps: 12 },
     };
-    for (let i = 0; i < 240 && r.crashedUntilS === null; i++) {
+    for (let i = 0; i < 240 && r.hitAtS === null; i++) {
       r = stepFreeRider(ctx(), r, { throttle: 0, brake: 0, clutchLever: 0 }, 0, false);
     }
-    expect(r.crashedUntilS).not.toBeNull();
-    const back = stepFreeRider(ctx({ clockS: 10 }), r, r.input, 0, false);
-    expect(back.crashedUntilS).toBeNull();
-    expect(citySurfaceAt(map, back.x, back.z)).toBe('road');
+    expect(r.hitAtS).not.toBeNull();
+    expect(r.sim.speedMps).toBe(0);
+    expect(citySurfaceAt(map, r.x, r.z)).not.toBe('building');
+    // Nothing moves it later: no respawn on the nearest road.
+    const later = stepFreeRider(ctx({ clockS: 10 }), r, r.input, 0, false);
+    expect(Math.hypot(later.x - r.x, later.z - r.z)).toBeLessThan(0.01);
   });
 
   it('paddles backwards at walking pace from a standstill', () => {
@@ -226,7 +228,7 @@ describe('traffic', () => {
     expect(hitCar(state, ahead.x, ahead.z)).toBeNull();
   });
 
-  it('riding into a moving car is a crash', () => {
+  it('a moving car shoves the rider clear and counts as a hit', () => {
     const s0 = createStreetRide(map, scooter, { ...settings, trafficCount: 1, seed: 11 });
     const car = s0.traffic.cars[0];
     if (!car) throw new Error('no car');
@@ -236,6 +238,7 @@ describe('traffic', () => {
       rider: { ...s0.rider, x: car.x, z: car.z },
     };
     const after = advanceStreet(map, scooter, s, idle, 0.1);
-    expect(after.rider.crashedUntilS).not.toBeNull();
+    expect(after.rider.hitAtS).not.toBeNull();
+    expect(hitCar(after.traffic, after.rider.x, after.rider.z, 0)).toBeNull();
   });
 });

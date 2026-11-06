@@ -22,7 +22,7 @@ const rider = (patch: Partial<CircuitRiderView>): CircuitRiderView => ({
   revLimiter: false,
   progressM: 100,
   position: 2,
-  crashed: false,
+  hit: false,
   finishTimeS: null,
   bestLapS: null,
   ...patch,

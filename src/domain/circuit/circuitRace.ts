@@ -1,10 +1,7 @@
 import { shiftGear, startEngine } from '../simulation/controls';
 import { isJumpStart, launchIntent } from '../race/reaction';
-import { MAX_STEPS_PER_ADVANCE } from '../simulation/fixedStep';
-import { shapeInput } from '../simulation/inputShaping';
 import type { SimModel } from '../simulation/model';
-import type { ControlCommand, SimInput } from '../simulation/types';
-import { clamp } from '../units';
+import type { SimInput } from '../simulation/types';
 import {
   aiControl,
   ASSIST_SKILL,
@@ -13,6 +10,7 @@ import {
   type CircuitSkill,
   type SpeedProfile,
 } from './circuitAi';
+import { avoidLine, collideRiders, type ContactBody } from './contacts';
 import { wantsDrift } from './drift';
 import type { CircuitGeometry } from './geometry';
 import type { CornerLimits } from './lateral';
@@ -38,9 +36,6 @@ export type CircuitPhase = 'grid' | 'lights' | 'racing' | 'finished';
 
 export const LIGHT_INTERVAL_S = 1;
 export const LIGHT_COUNT = 5;
-/** Steer input ramps like the throttle, so a tap is a small correction. */
-export const STEER_RATE_PER_S = 6;
-export const STEER_RETURN_PER_S = 8;
 const GRID_ROW_M = 9;
 const GRID_SIDE_M = 2.6;
 const FINISH_GRACE_S = 25;
@@ -152,6 +147,13 @@ export const startCircuitPlayerEngine = (models: readonly SimModel[], race: Circ
   return model ? updatePlayer(race, (r) => ({ ...r, sim: startEngine(model, r.sim) })) : race;
 };
 
+const body = (r: CircuitRider): ContactBody => ({
+  s: r.lat.s,
+  d: r.lat.d,
+  psi: r.lat.psi,
+  speedMps: r.sim.speedMps,
+});
+
 function context(race: CircuitRaceState, geo: CircuitGeometry, model: SimModel): RiderContext {
   return { model, geo, clockS: race.clockS, ...race.settings };
 }
@@ -187,6 +189,8 @@ export function stepCircuitRace(
   race: CircuitRaceState,
   playerInput: SimInput,
   steer: number,
+  /** Bikes known only from the network (a friend room), in track coordinates. */
+  others: readonly ContactBody[] = [],
 ): CircuitRaceState {
   const dt = models[0]?.timestepS ?? 1 / 240;
   const clocked = race.phase !== 'grid';
@@ -212,19 +216,24 @@ export function stepCircuitRace(
     const slot = race.ai[i - 1];
     if (!slot) return rider;
     const reacted = go && clockS >= race.lightsOutAtS + slot.skill.reactionS;
+    // Go round a slower bike on the line instead of riding into it.
+    const ahead = [...race.riders.filter((_, k) => k !== i).map(body), ...others];
+    const lineD = avoidLine(geo, body(rider), slot.lineD, race.settings.limits.halfWidth, ahead);
     const ai = aiControl(
       geo,
       slot.profile,
       rider.lat.s,
       rider.lat.d,
       rider.sim.speedMps,
-      slot.lineD,
+      lineD,
       reacted,
     );
     return stepRider({ ...ctx, assist: true, autoShift: true }, rider, ai.input, ai.steer);
   });
 
-  const next = { ...timed, riders, ...judgeStart(race, playerInput, clockS) };
+  // Bikes bump off each other once the race is on (on the grid they're held apart).
+  const touched = go ? collideRiders(geo, riders, others, clockS) : riders;
+  const next = { ...timed, riders: touched, ...judgeStart(race, playerInput, clockS) };
   return { ...next, phase: nextPhase(next) };
 }
 
@@ -248,42 +257,4 @@ function judgeStart(
       ? race.lightsOutAtS + JUMP_START_PENALTY_S
       : null,
   };
-}
-
-const approach = (value: number, target: number, dt: number) => {
-  const rate = Math.abs(target) > Math.abs(value) ? STEER_RATE_PER_S : STEER_RETURN_PER_S;
-  return value + clamp(target - value, -rate * dt, rate * dt);
-};
-
-export interface CircuitCommand extends ControlCommand {
-  readonly steerLeftPressed: boolean;
-  readonly steerRightPressed: boolean;
-  /** Analogue steering, −1…1 (+ = left), e.g. from tilting the phone. */
-  readonly steerAxis?: number;
-}
-
-/** Steering wanted, −1…1 (+ = left): the buttons win over the analogue axis. */
-export function steerTarget(command: CircuitCommand): number {
-  const buttons = (command.steerLeftPressed ? 1 : 0) - (command.steerRightPressed ? 1 : 0);
-  return buttons !== 0 ? buttons : clamp(command.steerAxis ?? 0, -1, 1);
-}
-
-export function advanceCircuitRace(
-  geo: CircuitGeometry,
-  models: readonly SimModel[],
-  race: CircuitRaceState,
-  command: CircuitCommand,
-  elapsedS: number,
-): CircuitRaceState {
-  const dt = models[0]?.timestepS ?? 1 / 240;
-  let acc = Math.min(race.accumulatorS + Math.max(0, elapsedS), dt * MAX_STEPS_PER_ADVANCE);
-  let current = race;
-  const wanted = steerTarget(command);
-  while (acc >= dt) {
-    const input = shapeInput(current.playerInput, command, dt);
-    const steer = approach(current.steer, wanted, dt);
-    current = { ...stepCircuitRace(geo, models, current, input, steer), steer, playerInput: input };
-    acc -= dt;
-  }
-  return { ...current, accumulatorS: acc };
 }

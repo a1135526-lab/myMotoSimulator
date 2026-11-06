@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { streetMissions, type CameraMode, type StreetView } from '@/application';
 import type { CityMap } from '@/domain';
 import { BikeDashboard } from '../components/dashboard/BikeDashboard';
+import { RearMirrorSlot } from '../components/hud/RearMirrorSlot';
 import { NavCard } from './NavCard';
 import { StreetMinimap } from './StreetMinimap';
 import styles from './street.module.css';
@@ -10,7 +11,7 @@ const RAD_TO_DEG = 180 / Math.PI;
 
 function alertFor(view: StreetView): { text: string; tone: 'info' | 'warn' | 'danger' } | null {
   const r = view.rider;
-  if (r.crashed) return { text: '摔車了！馬上把你放回最近的道路', tone: 'danger' };
+  if (r.hit) return { text: '碰撞！', tone: 'danger' };
   if (!r.engineRunning) return { text: '熄火 · 空檔或拉離合後按 Enter 發動', tone: 'warn' };
   if (r.reversing) return { text: '倒車中 · 用腳往後推，放開 X 停下', tone: 'info' };
   if (r.offRoad && r.speedKmh > 5) return { text: '騎上人行道了，小心行人', tone: 'warn' };
@@ -56,23 +57,21 @@ export function StreetHud({
         <p className={styles.clock}>{clock()}</p>
       </div>
 
-      {view.nav && (
-        <NavCard
-          nav={view.nav}
-          onCancel={onCancelNav}
-          mission={view.mission && { title: missionTitle ?? '任務', view: view.mission }}
-        />
-      )}
-      {alert && (
-        <p
-          className={styles.alert}
-          data-tone={alert.tone}
-          data-testid="street-alert"
-          style={view.nav ? { top: view.mission ? 160 : 130 } : undefined}
-        >
-          {alert.text}
-        </p>
-      )}
+      <div className={styles.topCenter}>
+        <RearMirrorSlot />
+        {view.nav && (
+          <NavCard
+            nav={view.nav}
+            onCancel={onCancelNav}
+            mission={view.mission && { title: missionTitle ?? '任務', view: view.mission }}
+          />
+        )}
+        {alert && (
+          <p className={styles.alert} data-tone={alert.tone} data-testid="street-alert">
+            {alert.text}
+          </p>
+        )}
+      </div>
 
       <div className={styles.topRight}>
         <StreetMinimap

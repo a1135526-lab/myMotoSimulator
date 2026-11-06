@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { CameraMode, CircuitView } from '@/application';
 import { createBikeModel, createCockpit, type BikeModel } from '../../scene/models';
+import { mirrorSlot, RearMirror } from '../../scene/rearMirror';
 import { SKY_PRESETS, type SceneTheme } from '../../scene/theme';
 import { buildCircuitTrack, type CircuitTrack } from './circuitTrack';
 import { GhostBike } from './ghostBike';
@@ -44,6 +45,7 @@ export class CircuitRenderer {
   private readonly cockpit = createCockpit();
   private readonly smoke = new TyreSmoke();
   private readonly ghost = new GhostBike();
+  private readonly mirror: RearMirror;
   private track: CircuitTrack | null = null;
   private riders: RiderObject[] = [];
   private readonly chase = new THREE.Vector3();
@@ -57,6 +59,7 @@ export class CircuitRenderer {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.mirror = new RearMirror(this.renderer);
     const sky = SKY_PRESETS[theme.sky];
     this.scene.background = new THREE.Color(sky.background);
     this.scene.fog = new THREE.Fog(sky.background, sky.fogNear * 2, sky.fogFar * 2);
@@ -92,9 +95,9 @@ export class CircuitRenderer {
       obj.yaw.position.set(r.x, 0, r.z);
       // A left turn lowers the heading, so the nose of a left slide sits at heading − slip.
       obj.yaw.rotation.y = yawFor(r.heading - r.slip);
-      obj.bike.group.rotation.z = r.crashed ? Math.PI / 2.2 : r.lean;
+      obj.bike.group.rotation.z = r.lean;
       obj.bike.update(r.progressM, r.speedKmh / KMH_PER_MPS);
-      if (r.drift > SMOKE_MIN_DRIFT && !r.crashed) {
+      if (r.drift > SMOKE_MIN_DRIFT) {
         const h = r.heading - r.slip;
         const rx = r.x - Math.cos(h) * REAR_WHEEL_M;
         const rz = r.z - Math.sin(h) * REAR_WHEEL_M;
@@ -110,12 +113,17 @@ export class CircuitRenderer {
     const player = view.riders[0];
     if (player) this.placeCamera(player, mode, dt);
     this.renderer.render(this.scene, this.camera);
+    if (player) {
+      const own = [this.cockpit, ...(this.riders[0] ? [this.riders[0].yaw] : [])];
+      this.mirror.render(this.scene, { ...player, y: 0 }, mirrorSlot(this.canvas), own);
+    }
   }
 
   dispose(): void {
     this.track?.dispose();
     this.smoke.dispose();
     this.ghost.dispose();
+    this.mirror.dispose();
     this.renderer.dispose();
   }
 

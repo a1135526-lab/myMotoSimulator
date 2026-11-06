@@ -137,6 +137,29 @@
   opacity: 0.85;
 }
 
+/* ---- Top centre: mirror, sat-nav, then the alert, one under the other ---- */
+.topCenter {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(420px, calc(100% - 32px));
+  transform: translateX(-50%);
+}
+
+.topCenter .navCard,
+.topCenter .alert {
+  position: static;
+  transform: none;
+}
+
+.topCenter .navCard {
+  width: 100%;
+}
+
 /* ---- Sat-nav card ---- */
 .navCard {
   position: absolute;
@@ -345,6 +368,11 @@
   right: calc(10px + env(safe-area-inset-right));
   transform: scale(0.75);
   transform-origin: top right;
+}
+
+[data-immersive] .topCenter {
+  top: calc(50px + env(safe-area-inset-top));
+  width: min(360px, 46vw);
 }
 
 [data-immersive] .alert {

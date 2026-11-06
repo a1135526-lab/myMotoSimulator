@@ -2,6 +2,7 @@ import {
   DRIFT_SLIP_RAD,
   findCorners,
   ghostPoseAt,
+  HIT_SHOWN_S,
   nextCorner,
   litLights,
   mpsToKmh,
@@ -66,7 +67,8 @@ export interface CircuitRiderView {
   readonly revLimiter: boolean;
   readonly progressM: number;
   readonly position: number;
-  readonly crashed: boolean;
+  /** Just hit the barrier or another bike (shown briefly; nobody falls off). */
+  readonly hit: boolean;
   /** Race time at the flag (since lights out), null while racing. */
   readonly finishTimeS: number | null;
   readonly bestLapS: number | null;
@@ -191,7 +193,7 @@ export function toCircuitView(
       revLimiter: r.sim.revLimiterActive,
       progressM: r.progressM,
       position: pos[i] ?? i + 1,
-      crashed: r.crashedUntilS !== null,
+      hit: r.hitAtS !== null && race.clockS - r.hitAtS < HIT_SHOWN_S,
       finishTimeS: r.finishedAtS === null ? null : r.finishedAtS - race.lightsOutAtS,
       bestLapS: best(r.lapTimesS),
     };

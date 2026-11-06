@@ -14,8 +14,8 @@ import {
   riderSkill,
   speedProfile,
 } from './circuitAi';
+import { advanceCircuitRace, type CircuitCommand } from './circuitAdvance';
 import {
-  advanceCircuitRace,
   createCircuitRace,
   JUMP_START_PENALTY_S,
   litLights,
@@ -23,7 +23,6 @@ import {
   resetPlayer,
   startLights,
   stepCircuitRace,
-  type CircuitCommand,
 } from './circuitRace';
 import { buildCircuit } from './geometry';
 import { estimateLapTime } from './lapEstimate';
@@ -228,7 +227,7 @@ describe('circuit race', () => {
     expect(race.riders[1]?.finishedAtS).not.toBeNull();
   });
 
-  it('flat out with no steering (assist off) runs wide, crashes, then recovers', () => {
+  it('flat out with no steering (assist off) runs wide, bounces off the barrier and rides on', () => {
     let race = startLights(
       createCircuitRace(geo, models, {
         settings: { ...settings, assist: false },
@@ -237,15 +236,18 @@ describe('circuit race', () => {
       }),
     );
     const wot: CircuitCommand = { ...idle, throttlePressed: true };
-    let crashed = false;
-    for (let t = 0; t < 60 && !crashed; t += 1 / 30) {
+    let hit = false;
+    for (let t = 0; t < 60 && !hit; t += 1 / 30) {
       race = advanceCircuitRace(geo, models, race, wot, 1 / 30);
-      crashed = race.riders[0]?.crashedUntilS !== null;
+      hit = race.riders[0]?.hitAtS !== null;
     }
-    expect(crashed).toBe(true);
-    race = runFor(race, 3, idle, models);
-    expect(race.riders[0]?.crashedUntilS).toBeNull();
-    expect(race.riders[0]?.surface).toBe('track');
+    expect(hit).toBe(true);
+    const at = race.riders[0];
+    // Still on the bike, at the barrier: not put back on the centreline.
+    expect(at?.surface).not.toBe('barrier');
+    expect(Math.abs(at?.lat.d ?? 0)).toBeGreaterThan(limits.halfWidth);
+    race = runFor(race, 1, wot, models);
+    expect(race.riders[0]?.sim.speedMps).toBeGreaterThan(0);
   });
 
   it('R puts the player back on the centreline', () => {

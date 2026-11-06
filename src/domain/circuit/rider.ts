@@ -4,6 +4,7 @@ import type { SimModel } from '../simulation/model';
 import { createInitialState, step } from '../simulation/simulator';
 import type { SimInput, SimState } from '../simulation/types';
 import { autoGearbox } from './autoGearbox';
+import { bounceOffBarrier, HARD_HIT_MPS } from './contacts';
 import { driftBrakeShare, driftCurvature, stepDrift } from './drift';
 import { wrapS, type CircuitGeometry } from './geometry';
 import {
@@ -24,8 +25,6 @@ import {
   type Surface,
 } from './lateral';
 
-/** Time on the ground after hitting the barrier before the bike is put back on track. */
-export const CRASH_RECOVERY_S = 2.5;
 /** Grip never drops fully to zero, so a leaned bike can still creep forward. */
 const MIN_GRIP_SHARE = 0.12;
 
@@ -42,7 +41,8 @@ export interface CircuitRider {
   readonly finishedAtS: number | null;
   /** Total distance along the track since the start, for race order. */
   readonly progressM: number;
-  readonly crashedUntilS: number | null;
+  /** Race-clock time of the last hard hit (barrier or another bike); nobody falls off. */
+  readonly hitAtS: number | null;
   /** Distance from the grid slot to the start line. */
   readonly startGapM: number;
   /** Brake slide, −1…1 (+ = into a left turn); see drift.ts. */
@@ -78,13 +78,13 @@ export function createRider(
     lapTimesS: [],
     finishedAtS: null,
     progressM: 0,
-    crashedUntilS: null,
+    hitAtS: null,
     startGapM: geo.length - wrapS(geo, s),
     drift: 0,
   };
 }
 
-/** Put a crashed (or reset) rider back on the centreline, stopped, in gear. */
+/** R key: put the rider back on the centreline, stopped, in gear. */
 export function recoverRider(ctx: RiderContext, rider: CircuitRider): CircuitRider {
   const base = createInitialState(ctx.model);
   const sim: SimState = {
@@ -101,7 +101,6 @@ export function recoverRider(ctx: RiderContext, rider: CircuitRider): CircuitRid
     sim,
     lat: { ...STRAIGHT_AHEAD, s: rider.lat.s },
     surface: 'track',
-    crashedUntilS: null,
     drift: 0,
   };
 }
@@ -146,9 +145,6 @@ export function stepRider(
   driftWanted = false,
 ): CircuitRider {
   const dt = ctx.model.timestepS;
-  if (rider.crashedUntilS !== null) {
-    return ctx.clockS >= rider.crashedUntilS ? recoverRider(ctx, rider) : rider;
-  }
 
   let sim = rider.sim;
   let applied = input;
@@ -174,15 +170,14 @@ export function stepRider(
   sim = step(modelFor(ctx, rider.surface, rider.lat.lean), sim, applied);
 
   const v = sim.speedMps;
-  // With the assist, the steer key starts the slide but doesn't ask to cut
-  // across the track, and the slide only adds the turning lean can't give.
-  const assistSteer = steer * (1 - Math.abs(drift));
+  // Without the assist the slide turns on top of the lean, so braking into a
+  // corner tightens the line. With it the slide only adds what lean can't give.
   const kDrift = ctx.assist
-    ? assistedDrift(ctx.geo, rider.lat, v, assistSteer, grip, drift)
+    ? assistedDrift(ctx.geo, rider.lat, v, steer, grip, drift)
     : driftCurvature(drift, v, steer);
   const lean = stepLean(
     rider.lat.lean,
-    targetLean(ctx.geo, rider.lat, v, assistSteer, grip, ctx.assist, kDrift),
+    targetLean(ctx.geo, rider.lat, v, steer, grip, ctx.assist, kDrift),
     dt,
   );
   const kPath =
@@ -190,7 +185,13 @@ export function stepRider(
     kDrift +
     (rider.surface === 'track' ? 0 : runoffCurvature(steer, v));
   const moved = integrate(ctx.geo, { ...rider.lat, lean }, v, kPath, dt);
-  const surface = surfaceAt(ctx.limits, moved.d);
+  // The barrier throws you back off it; you ride on from where you hit.
+  const hit = surfaceAt(ctx.limits, moved.d) === 'barrier';
+  const bounce = hit ? bounceOffBarrier(ctx.limits, { ...moved, lean }, v) : null;
+  const lat = bounce ? bounce.lat : { s: moved.s, d: moved.d, psi: moved.psi, lean };
+  if (bounce) sim = { ...sim, speedMps: bounce.speedMps };
+  const hard = bounce !== null && bounce.impactMps > HARD_HIT_MPS;
+  const surface = surfaceAt(ctx.limits, lat.d);
 
   // Line crossings come from total progress, so riding back and forth over
   // the line can never count a lap twice.
@@ -208,28 +209,18 @@ export function stepRider(
     if (finishedAtS === null && crossings > ctx.laps) finishedAtS = ctx.clockS;
   }
 
-  const next: CircuitRider = {
+  return {
     sim,
     input: applied,
-    lat: { s, d: moved.d, psi: moved.psi, lean },
+    lat: { ...lat, s },
     surface,
     crossings,
     lapStartedAtS,
     lapTimesS,
     finishedAtS,
     progressM,
-    crashedUntilS: null,
+    hitAtS: hard ? ctx.clockS : rider.hitAtS,
     startGapM: rider.startGapM,
-    drift,
+    drift: bounce ? 0 : drift,
   };
-  if (surface === 'barrier') {
-    return {
-      ...next,
-      sim: { ...sim, speedMps: 0 },
-      lat: { ...next.lat, lean: 0 },
-      drift: 0,
-      crashedUntilS: ctx.clockS + CRASH_RECOVERY_S,
-    };
-  }
-  return next;
 }

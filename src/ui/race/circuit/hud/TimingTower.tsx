@@ -27,7 +27,7 @@ export function TimingTower({ riders }: { riders: readonly CircuitRiderView[] })
         <li key={r.name} className={r.isPlayer ? styles.towerMe : styles.towerRow}>
           <span className={styles.towerPos}>{r.position}</span>
           <span className={styles.towerName}>{r.name}</span>
-          <span className={styles.towerGap}>{r.crashed ? 'CRASH' : gapLabel(r, leader)}</span>
+          <span className={styles.towerGap}>{gapLabel(r, leader)}</span>
         </li>
       ))}
     </ol>

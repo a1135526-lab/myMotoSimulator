@@ -26,6 +26,7 @@ export class LapRecorder {
   private lapsDone = 0;
   private samples: GhostSample[] = [];
   private clean = true;
+  private seenHitAtS: number | null = null;
   private lastSampleT = -Infinity;
 
   /** R was pressed: this lap doesn't count. */
@@ -37,7 +38,11 @@ export class LapRecorder {
   observe(geo: CircuitGeometry, race: CircuitRaceState): CompletedLap | null {
     const p = race.riders[0];
     if (!p) return null;
-    if (p.crashedUntilS !== null) this.clean = false;
+    // A hard hit (barrier or another bike) spoils the lap, like R does.
+    if (p.hitAtS !== this.seenHitAtS) {
+      this.seenHitAtS = p.hitAtS;
+      this.clean = false;
+    }
 
     let completed: CompletedLap | null = null;
     if (p.lapTimesS.length > this.lapsDone) {
@@ -59,7 +64,7 @@ export class LapRecorder {
     if (p.lapStartedAtS !== this.lapStartedAtS) {
       this.lapStartedAtS = p.lapStartedAtS;
       this.samples = [];
-      this.clean = p.crashedUntilS === null;
+      this.clean = true;
       this.lastSampleT = -Infinity;
     }
     if (this.lapStartedAtS !== null) {
