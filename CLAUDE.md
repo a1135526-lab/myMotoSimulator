@@ -41,6 +41,7 @@ ui → application → domain
 - **手機橫向全螢幕**：3D 頁面用 `useImmersive()`（`(pointer: coarse) and (orientation: landscape) and (max-height: 540px)`），成立時 `AppLayout immersive` 不畫標題列，外層加上 `data-immersive`；各 CSS module 用 `[data-immersive] .xxx` 改成全螢幕和覆蓋式按鈕（`TouchControls overlay`）。HUD 要避開左右下角的拇指區。
 - **傾斜轉向**：`TiltInputSource` 送出類比的 `steerAxis`（−1～1），domain 用 `steerTarget()` 合併，按鈕優先。手機上預設開啟（`useDefaultTilt`，關掉會存 `scooter-dyno:tilt`）；iOS 要從點擊呼叫 `requestTiltPermission()`，所以是第一次點畫面時才開，而且只在 https 有效。
 - **自訂按鈕／甩動換檔**：全螢幕按鈕由 `OverlayControls` 依 `controlLayoutStore` 擺放（位置是安全區域的 0–1 比例，存在 localStorage；沒存的用 `defaultAnchor` 的預設）。`FlickShiftSource` 從 `screenPitchDeg` 偵測快速前後甩動，送出 `shiftUp`／`shiftDown`。
+- **賽道**：`src/data/circuits/` 的測試要求每個彎半徑 ≥ 40 m、超過 120° 的彎 ≥ 50 m，不同路段不能太靠近。改了既有賽道的形狀，要把它加進 `recordsStore` 的 `RELAID`（並把 `LAYOUT` 加一），舊的本機圈速和幽靈車才會被清掉。
 - **紀錄**：`recordsStore` 把圈速榜、任務成績存在 localStorage（`scooter-dyno:records`），幽靈車每條賽道一筆、分開存（`scooter-dyno:ghost:<id>`）。讀取時一律驗證格式，壞資料丟掉。沒有後端，全球排行榜需要另外接資料庫。
 - **幽靈車**：`LapRecorder` 每 0.1 秒記錄玩家姿態，一圈完成交給 `CircuitController`；摔車或按 R 的圈標為不乾淨，不進榜也不當幽靈。`ghostPoseAt` 補間播放。
 - **街景任務**：定義在 `src/data/cities/missions.ts`（用地標的確切名稱），`streetMissions(map)` 對應到地圖並算好路線；規則在 `domain/street/missions.ts`。
@@ -54,7 +55,7 @@ ui → application → domain
 - **PWA**：`vite-plugin-pwa`，service worker 只存在於正式 build（`npm run dev` 沒有），e2e 用 `serviceWorkers: 'block'`。改了 `public/icon.svg` 要跑 `node scripts/icons/render-icons.mjs`。
 - **車款資料**：每個規格區塊都有 `provenance`；沒查證的數值 UI 會標「估計值」。不要把估計值寫成已查證。
 - **街景地圖**：`src/data/cities/nanzih/nanzih.json` 由 `scripts/osm/` 從 OpenStreetMap 產生，不要手改；資料 © OpenStreetMap 貢獻者（ODbL），README 的標示要保留。範圍是整個楠梓區（行政區界＋150 m），只畫 OSM 上的真實建築（不要再加自動生成的房子）。
-- **高架道路**：`RoadEdge.heights`（每個點的高度，null = 平面），騎士和車都有 `y`。`citySurfaceAt(map, x, z, y)`／`deckHeightAt` 只認高度差 `LEVEL_TOLERANCE_M` 內的路，所以橋上和橋下互不干擾；在高處離開橋面算撞到護欄。3D 在 `ui/street/scene/deckMeshes.ts`；不能騎的國道／鐵路高架是 `map.overpasses`。
+- **高架道路**：`RoadEdge.heights`（每個點的高度，null = 平面），騎士和車都有 `y`。`citySurfaceAt(map, x, z, y)`／`deckHeightAt` 只認高度差 `LEVEL_TOLERANCE_M` 內的路，所以橋上和橋下互不干擾；在高處離開橋面算撞到護欄。3D 在 `ui/street/scene/deckMeshes.ts`；不能騎的國道／鐵路高架是 `map.overpasses`。橋面的碰撞寬度＝畫出來的寬度（`DECK_SHOULDER_M`），高於 `PARAPET_FROM_M` 才有護欄；側面擦到牆是「擦牆滑行」，正面撞才摔車。路樹、路燈、號誌用 `overheadAt()` 避開高架下方。
 
 ## 測試
 

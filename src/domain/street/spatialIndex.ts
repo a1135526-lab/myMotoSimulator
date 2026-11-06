@@ -12,6 +12,8 @@ export interface Cell {
   readonly buildings: number[];
   readonly areas: number[];
   readonly water: number[];
+  /** Overpass segments (viaducts you ride under), packed like `segs`. */
+  readonly over: number[];
 }
 
 export interface SpatialIndex {
@@ -41,7 +43,7 @@ export function cellsIn(ix: SpatialIndex, b: Bounds, create: boolean, visit: (c:
       const k = r * ix.cols + c;
       let cell = ix.cells[k];
       if (!cell && create) {
-        cell = { segs: [], buildings: [], areas: [], water: [] };
+        cell = { segs: [], buildings: [], areas: [], water: [], over: [] };
         ix.cells[k] = cell;
       }
       if (cell) visit(cell);

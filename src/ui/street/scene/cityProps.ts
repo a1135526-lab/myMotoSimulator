@@ -1,6 +1,16 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { citySurfaceAt, insidePolygon, pointAlong, roadAt, type TimeOfDay } from '@/application';
+import {
+  citySurfaceAt,
+  DECK_SHOULDER_M,
+  heightAlong,
+  insidePolygon,
+  overheadAt,
+  PARAPET_FROM_M,
+  pointAlong,
+  roadAt,
+  type TimeOfDay,
+} from '@/application';
 import type { CityMap, RoadClass, RoadEdge } from '@/domain';
 import { signTexture } from './cityTextures';
 import { hash, instanced, instancedChunks, matrix } from './roadLayout';
@@ -11,6 +21,10 @@ import { SIDEWALK_Y } from './roadMeshes';
 const LAMP_EVERY_M = 35;
 const TREE_EVERY_M = 14;
 const LIT: ReadonlySet<RoadClass> = new Set(['primary', 'secondary', 'tertiary', 'link']);
+/** Keep tall things (trees, lamps) this far clear of decks and viaducts overhead, m. */
+const OVERHEAD_CLEAR_M = 2.5;
+/** Lamp posts on an elevated road's parapet, m apart. */
+const DECK_LAMP_EVERY_M = 40;
 /** At most this many trees per park, and one per this many m². */
 const PARK_TREES_MAX = 160;
 const PARK_M2_PER_TREE = 260;
@@ -104,9 +118,10 @@ export function alongEdges(
         const o = side * (e.widthM / 2 + fromKerb(e));
         const x = p.x + nx * o;
         const z = p.z + nz * o;
-        // Not on another road (dual carriageways, side streets).
+        // Not on another road (dual carriageways, side streets), nor under a deck.
         const other = roadAt(map, x, z);
         if (other && other.edge.id !== e.id) continue;
+        if (overheadAt(map, x, z, OVERHEAD_CLEAR_M) > 0) continue;
         place(x, z, Math.atan2(nz * side, -nx * side), e);
       }
     }
@@ -125,6 +140,20 @@ export function addStreetLights(kit: Kit, map: CityMap): void {
     0,
     (x, z, yaw) => lamps.push(matrix(x, SIDEWALK_Y, z, yaw)),
   );
+  // On elevated roads, the lamps stand on the parapets.
+  for (const e of map.edges) {
+    if (!e.heights || !LIT.has(e.cls)) continue;
+    for (let s = DECK_LAMP_EVERY_M / 2; s < e.length; s += DECK_LAMP_EVERY_M) {
+      const y = heightAlong(e, s);
+      if (y < PARAPET_FROM_M * 4) continue;
+      const p = pointAlong(e, s);
+      const nx = -Math.sin(p.heading);
+      const nz = Math.cos(p.heading);
+      const side = Math.round(s / DECK_LAMP_EVERY_M) % 2 === 0 ? 1 : -1;
+      const o = side * (e.widthM / 2 + DECK_SHOULDER_M + 0.15);
+      lamps.push(matrix(p.x + nx * o, y + 1, p.z + nz * o, Math.atan2(nz * side, -nx * side)));
+    }
+  }
   const poleMat = mat({ color: '#5c6166', roughness: 0.5, metalness: 0.6 });
   const pole = keep(new THREE.CylinderGeometry(0.07, 0.11, 8, 8).translate(0, 4, 0));
   const arm = keep(new THREE.BoxGeometry(2.4, 0.1, 0.1).translate(1.2, 7.9, 0));
@@ -167,6 +196,7 @@ function parkTrees(map: CityMap): THREE.Matrix4[] {
       const x = a.bounds.minX + hash(ai, k) * w;
       const z = a.bounds.minZ + hash(k, ai + 0.5) * d;
       if (!insidePolygon(a.ring, x, z) || citySurfaceAt(map, x, z) !== 'grass') continue;
+      if (overheadAt(map, x, z, OVERHEAD_CLEAR_M) > 0) continue;
       out.push(matrix(x, 0.02, z, hash(x, z) * 6, 1, 0.8 + hash(z) * 0.6, 1));
       n++;
     }

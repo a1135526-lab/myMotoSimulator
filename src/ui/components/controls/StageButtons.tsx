@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   requestTiltPermission,
+  saveFlickWanted,
   saveTiltWanted,
   useControlLayoutStore,
   useUiStore,
@@ -156,7 +157,11 @@ export function FlickShiftToggle({
   compact?: boolean;
 }) {
   const on = useUiStore((s) => s.flickShiftOn);
-  const setOn = useUiStore((s) => s.setFlickShiftOn);
+  const setFlick = useUiStore((s) => s.setFlickShiftOn);
+  const setOn = (next: boolean) => {
+    saveFlickWanted(next);
+    setFlick(next);
+  };
   return (
     <MotionToggle
       on={on}

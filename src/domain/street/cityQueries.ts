@@ -103,6 +103,40 @@ function inWaterway(w: Waterway, seg: number, x: number, z: number): boolean {
  * deck you're above the streets below, and under one you ride past it.
  */
 export const LEVEL_TOLERANCE_M = 1.8;
+/** An elevated road's deck reaches this far past its carriageway (to the parapet), m. */
+export const DECK_SHOULDER_M = 0.5;
+/** From this height up, an elevated road has parapets: leaving the deck means hitting one, m. */
+export const PARAPET_FROM_M = 0.4;
+
+/** How far from the centreline a road's surface reaches: decks to their parapet. */
+const reach = (e: RoadEdge) => e.widthM / 2 + (e.heights ? DECK_SHOULDER_M : e.sidewalkM);
+
+/**
+ * The highest deck or viaduct over a point (within `padM` of its edge), m;
+ * 0 when the sky is clear. For keeping trees and lamps out from under them.
+ */
+export function overheadAt(map: CityMap, x: number, z: number, padM: number): number {
+  const cell = cellAt(map.index, x, z);
+  if (!cell) return 0;
+  let top = 0;
+  for (const key of cell.segs) {
+    const edge = map.edges[Math.floor(key / SEG_STRIDE)] as RoadEdge;
+    if (!edge.heights) continue;
+    const hit = hitOn(edge, key % SEG_STRIDE, x, z);
+    if (hit.d <= edge.widthM / 2 + DECK_SHOULDER_M + padM)
+      top = Math.max(top, heightAlong(edge, hit.s));
+  }
+  for (const key of cell.over) {
+    const o = map.overpasses[Math.floor(key / SEG_STRIDE)];
+    const i = key % SEG_STRIDE;
+    const p = o?.points[i];
+    const q = o?.points[i + 1];
+    if (!o || !p || !q) continue;
+    if (closestOnSegment(x, z, p.x, p.z, q.x, q.z).d <= o.widthM / 2 + padM)
+      top = Math.max(top, o.heightM);
+  }
+  return top;
+}
 
 /** Height of the road surface under a point at about height `y`; null when there's none. */
 export function deckHeightAt(map: CityMap, x: number, z: number, y: number): number | null {
@@ -110,7 +144,7 @@ export function deckHeightAt(map: CityMap, x: number, z: number, y: number): num
   for (const key of segsAt(map, x, z)) {
     const edge = map.edges[Math.floor(key / SEG_STRIDE)] as RoadEdge;
     const hit = hitOn(edge, key % SEG_STRIDE, x, z);
-    if (hit.d > edge.widthM / 2 + edge.sidewalkM) continue;
+    if (hit.d > reach(edge)) continue;
     const h = edge.heights ? heightAlong(edge, hit.s) : 0;
     if (
       Math.abs(h - y) <= LEVEL_TOLERANCE_M &&
@@ -129,7 +163,7 @@ export function deckHeightAt(map: CityMap, x: number, z: number, y: number): num
 export function citySurfaceAt(map: CityMap, x: number, z: number, y = 0): CitySurface {
   if (!inBounds(map.bounds, x, z)) return 'water';
   const cell = cellAt(map.index, x, z);
-  const raised = y > LEVEL_TOLERANCE_M;
+  const raised = y > PARAPET_FROM_M;
   if (!cell) return raised ? 'building' : 'grass';
   let sidewalk = false;
   for (const key of cell.segs) {
@@ -137,8 +171,8 @@ export function citySurfaceAt(map: CityMap, x: number, z: number, y = 0): CitySu
     const hit = hitOn(edge, key % SEG_STRIDE, x, z);
     if (edge.heights && Math.abs(heightAlong(edge, hit.s) - y) > LEVEL_TOLERANCE_M) continue;
     if (!edge.heights && raised) continue;
-    if (hit.d <= edge.widthM / 2) return 'road';
-    if (hit.d <= edge.widthM / 2 + edge.sidewalkM) sidewalk = true;
+    if (hit.d <= (edge.heights ? reach(edge) : edge.widthM / 2)) return 'road';
+    if (hit.d <= reach(edge)) sidewalk = true;
   }
   if (sidewalk) return 'sidewalk';
   if (raised) return 'building';

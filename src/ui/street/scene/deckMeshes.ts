@@ -1,4 +1,5 @@
-import type { CityMap, Overpass, RoadEdge } from '@/domain';
+import { DECK_SHOULDER_M, heightAlong, PARAPET_FROM_M, pointAlong } from '@/application';
+import type { CityMap, Overpass, RoadEdge, RoadNode } from '@/domain';
 import type { ChunkedBuilders } from './chunks';
 import type { P2, QuadBuilder } from './geometryBuilder';
 import { offset } from './polyline';
@@ -17,8 +18,10 @@ const PARAPET_T = 0.3;
 const BEAM_M = 1.3;
 const PIER_EVERY_M = 30;
 const PIER_HALF_M = 0.8;
-/** Below this the ramp is near enough the ground to need no walls or piers. */
-const RAISED_M = 0.4;
+/** Below this the ramp is near enough the ground to need no walls (as for collisions). */
+const RAISED_M = PARAPET_FROM_M;
+const DASH_M = 4;
+const GAP_M = 6;
 const PIER_FROM_M = 2.5;
 
 type Builder = QuadBuilder;
@@ -139,8 +142,9 @@ export function buildDeck(parts: ChunkedBuilders<RoadPart>, e: RoadEdge, tile: n
   if (!hs) return;
   const ys = hs.map((h) => h + DECK_Y);
   const mid = e.points[Math.floor(e.points.length / 2)] ?? { x: 0, z: 0 };
-  const half = e.widthM / 2 + 0.5;
+  const half = e.widthM / 2 + DECK_SHOULDER_M;
   slopedStrip(parts.at('asphalt', mid.x, mid.z), e.points, ys, -half, half, tile);
+  deckMarkings(parts, e, mid);
   const white = parts.at('white', mid.x, mid.z);
   const lift = ys.map((y) => y + 0.01);
   slopedStrip(white, e.points, lift, half - 0.75, half - 0.6, 1);
@@ -168,6 +172,56 @@ export function buildDeck(parts: ChunkedBuilders<RoadPart>, e: RoadEdge, tile: n
     );
   }
   piers(concrete, e.points, e.cum, ys);
+}
+
+/** The deck between s0 and s1, every few metres, with its height. */
+function stretch(e: RoadEdge, s0: number, s1: number) {
+  const pts: P2[] = [];
+  const ys: number[] = [];
+  const n = Math.max(1, Math.ceil((s1 - s0) / 2));
+  for (let k = 0; k <= n; k++) {
+    const s = s0 + ((s1 - s0) * k) / n;
+    const p = pointAlong(e, s);
+    pts.push({ x: p.x, z: p.z });
+    ys.push(heightAlong(e, s) + DECK_Y + 0.012);
+  }
+  return { pts, ys };
+}
+
+/** Lane lines on the deck: double yellow down the middle of a two-way road, dashes between lanes. */
+function deckMarkings(parts: ChunkedBuilders<RoadPart>, e: RoadEdge, mid: P2) {
+  const white = parts.at('white', mid.x, mid.z);
+  const yellow = parts.at('yellow', mid.x, mid.z);
+  const half = e.widthM / 2;
+  const lanes = e.lanesPerDirection;
+  const whole = stretch(e, 0, e.length);
+  if (!e.oneway) {
+    slopedStrip(yellow, whole.pts, whole.ys, -0.28, -0.12, 1);
+    slopedStrip(yellow, whole.pts, whole.ys, 0.12, 0.28, 1);
+  }
+  const offsets: number[] = [];
+  for (let k = 1; k < lanes; k++) {
+    if (e.oneway) offsets.push(-half + (k * e.widthM) / lanes);
+    else offsets.push((k * half) / lanes, -(k * half) / lanes);
+  }
+  if (offsets.length === 0) return;
+  for (let s = GAP_M / 2; s + DASH_M < e.length; s += DASH_M + GAP_M) {
+    const dash = stretch(e, s, s + DASH_M);
+    for (const o of offsets) slopedStrip(white, dash.pts, dash.ys, o - 0.075, o + 0.075, 1);
+  }
+}
+
+/** Where raised roads meet: one patch of deck at the junction's height. */
+export function deckJunction(parts: ChunkedBuilders<RoadPart>, map: CityMap, n: RoadNode) {
+  const h = nodeHeight(map, n.id);
+  if (h < RAISED_M) return;
+  const r =
+    Math.max(...n.edges.map((id) => (map.edges[id] as RoadEdge).widthM / 2)) + DECK_SHOULDER_M;
+  const ring = Array.from({ length: 18 }, (_, i) => {
+    const a = (i / 18) * Math.PI * 2;
+    return { x: n.x + Math.cos(a) * r, z: n.z + Math.sin(a) * r };
+  });
+  parts.at('asphalt', n.x, n.z).polygon(ring, h + DECK_Y - 0.005, 8);
 }
 
 /** A viaduct overhead you can't get onto: deck, walls, underside and piers. */

@@ -77,7 +77,10 @@ interface UiState {
    */
   readonly tiltOn: boolean;
   setTiltOn(on: boolean): void;
-  /** Shift by flicking the phone forward (up) or back (down); same permission rules as tilt. */
+  /**
+   * Shift by flicking the phone forward (up) or back (down); on by default on
+   * phones, with the same permission rules as tilt (useDefaultTilt).
+   */
   readonly flickShiftOn: boolean;
   setFlickShiftOn(on: boolean): void;
   /** Music in the lobby, profile and friend rooms. */

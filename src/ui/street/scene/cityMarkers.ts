@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { pointAlong } from '@/application';
+import { overheadAt, pointAlong } from '@/application';
 import type { CityMap, PoiKind, RoadEdge } from '@/domain';
 import type { Kit } from './cityProps';
 import { hash, instanced, matrix } from './roadLayout';
@@ -39,6 +39,8 @@ function signalsOf(map: CityMap): Signal[] {
       // On the right of the arriving traffic, lamps facing it.
       const x = p.x - Math.sin(h) * off;
       const z = p.z + Math.cos(h) * off;
+      // A pole under a deck would come up through it.
+      if (overheadAt(map, x, z, 1) > 0) continue;
       out.push({
         m: matrix(x, SIDEWALK_Y, z, -h),
         group: Math.abs(Math.cos(wrap(h - ref))) > 0.7 ? 0 : 1,

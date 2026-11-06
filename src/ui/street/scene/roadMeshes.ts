@@ -1,7 +1,7 @@
 import { roadAt } from '@/application';
 import type { CityMap, RoadEdge, RoadNode } from '@/domain';
 import type { ChunkedBuilders } from './chunks';
-import { buildDeck, buildOverpass, nodeHeight } from './deckMeshes';
+import { buildDeck, buildOverpass, deckJunction, nodeHeight } from './deckMeshes';
 import { band, dashes, kerb, slice, type Line } from './polyline';
 
 /**
@@ -153,7 +153,8 @@ export function buildRoads(parts: ChunkedBuilders<RoadPart>, map: CityMap) {
     if (nb?.signal && isJunction(nb)) crossing(parts, e, line, false, nb);
   }
   for (const n of map.nodes) {
-    if (isJunction(n) && nodeHeight(map, n.id) < 0.3) junctionPatch(parts, map, n);
+    if (nodeHeight(map, n.id) >= 0.3) deckJunction(parts, map, n);
+    else if (isJunction(n)) junctionPatch(parts, map, n);
   }
   for (const o of map.overpasses) buildOverpass(parts, o, ASPHALT_TILE_M);
 }

@@ -4,7 +4,13 @@ import { TEST_CITY_DATA, TEST_CITY_OPTIONS } from '../../test/fixtures/testCity'
 import { buildModel } from '../simulation/model';
 import { buildCity } from './cityBuild';
 import { citySurfaceAt, deckHeightAt, nearestRoadPose } from './cityQueries';
-import { createFreeRider, stepFreeRider, type FreeRider, type FreeRideContext } from './freeRide';
+import {
+  createFreeRider,
+  respawnRider,
+  stepFreeRider,
+  type FreeRider,
+  type FreeRideContext,
+} from './freeRide';
 import { heightAlong } from './roadNetwork';
 
 const map = buildCity(TEST_CITY_DATA, TEST_CITY_OPTIONS);
@@ -72,6 +78,21 @@ describe('elevated roads', () => {
     expect(r.crashedUntilS).toBeNull();
     expect(r.z).toBeGreaterThan(110);
     expect(r.y).toBe(0);
+  });
+
+  it('brushing the parapet scrapes along it instead of throwing you off', () => {
+    // On the deck, aimed a little to the right: into the parapet before the far ramp.
+    let r = placed(125, 60, 0.08, 6.5, 12);
+    r = ride(r, 30, (x) => x.x >= 235);
+    expect(r.crashedUntilS).toBeNull();
+    expect(r.x).toBeGreaterThan(235);
+    expect(r.y).toBeCloseTo(6.5, 1);
+  });
+
+  it('after a fall on the deck you are put back on the deck, not the street below', () => {
+    const r = respawnRider(ctx, placed(120, 62, 0, 6.5, 0));
+    expect(r.y).toBeCloseTo(6.5, 1);
+    expect(Math.abs(r.z - 60)).toBeLessThan(6);
   });
 
   it('respawning on it puts you at its height', () => {

@@ -258,6 +258,8 @@ def build_roads(nodes, ways):
 # layer up, and ramps run at RAMP_GRADE down to the ground junctions.
 DECK_M = 6.5
 RAMP_GRADE = 0.07
+# Ramps start this far out of a ground junction, so its box stays flat.
+JUNCTION_CLEAR_M = 12
 OVER = {"motorway", "trunk", "primary", "secondary", "tertiary", "unclassified", "residential",
         "living_street", "service", "motorway_link", "trunk_link", "primary_link",
         "secondary_link", "tertiary_link"}
@@ -396,7 +398,8 @@ def height_profiles(out_nodes, out_edges, pts_of, deck_of):
                 db = 0.0
             else:
                 db = min(to_deck.get(a, 1e9) + s, to_deck.get(b, 1e9) + length[ei] - s)
-            h = min(h_deck, RAMP_GRADE * dg, max(0.0, h_deck - RAMP_GRADE * db))
+            h = min(h_deck, RAMP_GRADE * max(0.0, dg - JUNCTION_CLEAR_M),
+                    max(0.0, h_deck - RAMP_GRADE * db))
             hs.append(round(h, 1))
         if max(hs) > 0.3:
             profiles[ei] = (pts, hs)

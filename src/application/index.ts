@@ -48,7 +48,7 @@ export {
 } from './stores/controlLayoutStore';
 export type { TouchControl } from './input/TouchInputSource';
 export { requestTiltPermission, type TiltPermission } from './input/TiltInputSource';
-export { saveTiltWanted, useDefaultTilt } from './input/defaultTilt';
+export { saveFlickWanted, saveTiltWanted, useDefaultTilt } from './input/defaultTilt';
 export type { Preset } from './services/presetService';
 export { isStock, type SelectableCategory } from './tuning/selection';
 export type {
@@ -123,7 +123,17 @@ export {
 } from './stores/streetStore';
 export { cityMap, loadCityMap } from './street/city';
 /** Map lookups the 3D city needs to lay out its meshes. */
-export { citySurfaceAt, insidePolygon, pointAlong, roadAt, signedArea } from '@/domain';
+export {
+  citySurfaceAt,
+  DECK_SHOULDER_M,
+  heightAlong,
+  insidePolygon,
+  overheadAt,
+  PARAPET_FROM_M,
+  pointAlong,
+  roadAt,
+  signedArea,
+} from '@/domain';
 export {
   formatDistance,
   maneuverText,

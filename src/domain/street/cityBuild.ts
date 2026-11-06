@@ -128,6 +128,12 @@ export function buildCity(data: CityData, options: CityOptions): CityMap {
     widthM: o[1] ?? 10,
     points: pointsOf(o, 2),
   }));
+  overpasses.forEach((o, oi) => {
+    for (let i = 0; i + 1 < o.points.length; i++) {
+      const box = segBounds(o.points[i] as Vec2, o.points[i + 1] as Vec2, o.widthM / 2 + 4);
+      cellsIn(index, box, true, (c) => c.over.push(oi * SEG_STRIDE + i));
+    }
+  });
   const boundary = data.boundary ? pointsOf(data.boundary, 0) : [];
 
   const partial = {

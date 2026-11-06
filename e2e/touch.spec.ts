@@ -163,11 +163,13 @@ test.describe('phone on its side: custom buttons and flick shifting', () => {
     expect(await moved()).toBeLessThan(12);
   });
 
-  test('flicking the phone forward shifts up', async ({ page, context }) => {
+  test('flick shifting is on by default; flicking the phone forward shifts up', async ({
+    page,
+    context,
+  }) => {
     await context.grantPermissions(['accelerometer', 'gyroscope', 'magnetometer']);
     await enterDragRace(page, true);
     await expect(page.getByTestId('race-gear')).toHaveText('N');
-    await page.getByTestId('flick-shift-toggle').tap();
     await expect(page.getByTestId('flick-shift-toggle')).toHaveAttribute('aria-pressed', 'true');
     // Held upright, then the top edge tipped away by 25°, all at once: in CI the
     // 3D page is too busy for timers to pace real sensor timing.

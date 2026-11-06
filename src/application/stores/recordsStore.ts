@@ -53,6 +53,24 @@ interface RecordsState {
 const KEY = 'scooter-dyno:records';
 const ghostKey = (circuitId: string) => `scooter-dyno:ghost:${circuitId}`;
 
+/**
+ * Circuits redrawn with gentler corners (layout 2): laps and ghosts set on
+ * the old layout don't belong on the new one, so they're dropped once.
+ */
+const LAYOUT = 2;
+const RELAID = [
+  'practice-park',
+  'hill-town',
+  'harbor-night',
+  'sugar-mill',
+  'cloud-peak',
+  'gorge-run',
+  'lake-ridge',
+  'kart-oval',
+  'neon-streets',
+  'rift-valley',
+];
+
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isStr = (v: unknown): v is string => typeof v === 'string';
 
@@ -126,9 +144,15 @@ function load(): Boards {
       laps?: unknown;
       missions?: unknown;
       drag?: unknown;
+      layout?: unknown;
     } | null;
+    let laps = cleanBoards(raw?.laps, cleanLaps);
+    if (raw && raw.layout !== LAYOUT) {
+      laps = Object.fromEntries(Object.entries(laps).filter(([id]) => !RELAID.includes(id)));
+      for (const id of RELAID) globalThis.localStorage?.removeItem(ghostKey(id));
+    }
     return {
-      laps: cleanBoards(raw?.laps, cleanLaps),
+      laps,
       missions: cleanBoards(raw?.missions, cleanMissionRuns),
       drag: cleanBoards(raw?.drag, cleanDragRuns),
     };
@@ -141,7 +165,12 @@ function save(state: Boards): void {
   try {
     globalThis.localStorage?.setItem(
       KEY,
-      JSON.stringify({ laps: state.laps, missions: state.missions, drag: state.drag }),
+      JSON.stringify({
+        laps: state.laps,
+        missions: state.missions,
+        drag: state.drag,
+        layout: LAYOUT,
+      }),
     );
   } catch {
     // Not persisted; the records still show for this visit.

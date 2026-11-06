@@ -12,9 +12,13 @@ describe('circuits', () => {
       const geo = buildCircuit(c.controlPoints, c.widthM / 2);
       expect(geo.length).toBeGreaterThan(900);
       expect(geo.length).toBeLessThan(4500);
-      // The tightest corner still fits a bike.
-      expect(1 / maxCurvature(geo)).toBeGreaterThan(12);
-      expect(findCorners(geo).length).toBeGreaterThanOrEqual(4);
+      // No corner too tight to get round: 40 m radius at least, 50 m for the big ones.
+      expect(1 / maxCurvature(geo)).toBeGreaterThan(39);
+      const corners = findCorners(geo);
+      expect(corners.length).toBeGreaterThanOrEqual(4);
+      for (const k of corners.filter((x) => x.turnDeg > 120)) {
+        expect(k.minRadiusM).toBeGreaterThan(49);
+      }
       // Barrier to barrier: stretches far apart along the lap stay apart on the ground.
       const clear = c.widthM + 2 * c.runoffM;
       for (let s = 0; s < geo.length; s += 10) {

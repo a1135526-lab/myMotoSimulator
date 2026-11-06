@@ -35,6 +35,22 @@ describe('records store', () => {
     expect(store.getState().missions.m1?.[0]?.timeS).toBe(42);
   });
 
+  it('drops laps and ghosts set on circuits since redrawn, once, and keeps the rest', async () => {
+    localStorage.setItem(
+      'scooter-dyno:records',
+      JSON.stringify({ laps: { 'practice-park': [lap(70)], 'south-bay': [lap(90)] } }),
+    );
+    localStorage.setItem('scooter-dyno:ghost:practice-park', '{}');
+    let store = (await fresh()).useRecordsStore;
+    expect(store.getState().laps['practice-park']).toBeUndefined();
+    expect(store.getState().laps['south-bay']).toHaveLength(1);
+    expect(localStorage.getItem('scooter-dyno:ghost:practice-park')).toBeNull();
+    // A lap on the new layout stays.
+    store.getState().addLap('practice-park', lap(75));
+    store = (await fresh()).useRecordsStore;
+    expect(store.getState().laps['practice-park']?.map((r) => r.lapS)).toEqual([75]);
+  });
+
   it('stores a ghost compactly and reads it back', async () => {
     const { saveGhost, loadGhost } = await fresh();
     const ghost: GhostLap = {
