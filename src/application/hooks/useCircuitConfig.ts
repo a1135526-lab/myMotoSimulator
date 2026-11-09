@@ -38,6 +38,7 @@ export function useCircuitConfig(): CircuitConfig {
   const brakeAssist = useRaceStore((s) => s.brakeAssist);
   const autoShift = useRaceStore((s) => s.autoShift);
   const autoClutch = useRaceStore((s) => s.autoClutch);
+  const gridLayout = useRaceStore((s) => s.gridLayout);
   const opponent = useRaceStore((s) => s.opponent);
   const rival = useUiStore((s) => s.rivalGhost);
 
@@ -90,6 +91,7 @@ export function useCircuitConfig(): CircuitConfig {
       brakeAssist: noAssists ? false : brakeAssist,
       autoShift,
       autoClutch,
+      grid: inRoom ? (roomSettings.grid ?? 'staggered') : ranked ? 'staggered' : gridLayout,
       // Racing someone from the global board, else your own best.
       ghost: rival?.circuitId === circuit.id ? rival.ghost : loadGhost(circuit.id),
     };
@@ -106,6 +108,7 @@ export function useCircuitConfig(): CircuitConfig {
     brakeAssist,
     autoShift,
     autoClutch,
+    gridLayout,
     opponent,
     rival,
   ]);

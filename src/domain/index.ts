@@ -32,6 +32,7 @@ export * from './circuit/rider';
 export * from './circuit/circuitAi';
 export * from './circuit/drift';
 export * from './circuit/circuitRace';
+export * from './circuit/circuitStart';
 export * from './circuit/circuitAdvance';
 export * from './circuit/contacts';
 export * from './circuit/lapEstimate';

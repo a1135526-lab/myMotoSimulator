@@ -1,5 +1,4 @@
 import { shiftGear, startEngine } from '../simulation/controls';
-import { isJumpStart, launchIntent } from '../race/reaction';
 import type { SimModel } from '../simulation/model';
 import type { SimInput } from '../simulation/types';
 import {
@@ -12,6 +11,17 @@ import {
   type CircuitSkill,
   type SpeedProfile,
 } from './circuitAi';
+import {
+  contactsOn,
+  gridSlots,
+  gridSpot,
+  judgeStart,
+  judging,
+  LIGHT_COUNT,
+  LIGHT_INTERVAL_S,
+  START_GRACE_S,
+  type GridLayout,
+} from './circuitStart';
 import { avoidLine, collideRiders, type ContactBody } from './contacts';
 import { findCorners, nextCorner, type Corner } from './corners';
 import { wantsDrift } from './drift';
@@ -38,13 +48,7 @@ import {
  */
 export type CircuitPhase = 'grid' | 'lights' | 'racing' | 'finished';
 
-export const LIGHT_INTERVAL_S = 1;
-export const LIGHT_COUNT = 5;
-const GRID_ROW_M = 9;
-const GRID_SIDE_M = 2.6;
 const FINISH_GRACE_S = 25;
-/** Held on the spot for this long after the lights go out, for a jump start. */
-export const JUMP_START_PENALTY_S = 3;
 
 export interface CircuitSettings {
   readonly laps: number;
@@ -60,6 +64,8 @@ export interface CircuitSettings {
 export interface AiSlot {
   readonly skill: CircuitSkill;
   readonly lineD: number;
+  /** Where it lined up across the track: it holds that line through the getaway. */
+  readonly gridD: number;
   readonly profile: SpeedProfile;
 }
 
@@ -93,6 +99,10 @@ export interface CircuitSetup {
   readonly aiSkills: readonly CircuitSkill[];
   /** Random hold after the fifth light, s. */
   readonly holdS: number;
+  readonly grid?: GridLayout;
+  /** A friend room: your place on the grid and how many line up (the others ride elsewhere). */
+  readonly playerSlot?: number;
+  readonly field?: number;
 }
 
 export function createCircuitRace(
@@ -100,14 +110,21 @@ export function createCircuitRace(
   models: readonly SimModel[],
   setup: CircuitSetup,
 ): CircuitRaceState {
+  const field = Math.max(models.length, setup.field ?? 0);
+  const slots = gridSlots(models.length, setup.playerSlot ?? 0);
   const riders = models.map((model, i) => {
-    const row = Math.floor(i / 2);
-    const side = i % 2 === 0 ? GRID_SIDE_M : -GRID_SIDE_M;
-    return createRider(model, geo, -GRID_ROW_M * (row + 1), side);
+    const spot = gridSpot(
+      slots[i] ?? i,
+      field,
+      setup.grid ?? 'staggered',
+      setup.settings.limits.halfWidth,
+    );
+    return createRider(model, geo, spot.s, spot.d);
   });
   const ai = setup.aiSkills.map((skill, i) => ({
     skill,
     lineD: ((i % 3) - 1) * 1.5,
+    gridD: riders[i + 1]?.lat.d ?? 0,
     profile: speedProfile(geo, setup.settings.limits.gripG, skill),
   }));
   return {
@@ -243,7 +260,10 @@ export function stepCircuitRace(
     const reacted = go && clockS >= race.lightsOutAtS + slot.skill.reactionS;
     // Go round a slower bike on the line instead of riding into it.
     const ahead = [...race.riders.filter((_, k) => k !== i).map(body), ...others];
-    const lineD = avoidLine(geo, body(rider), slot.lineD, race.settings.limits.halfWidth, ahead);
+    const getaway = clockS < race.lightsOutAtS + START_GRACE_S;
+    const lineD = getaway
+      ? slot.gridD
+      : avoidLine(geo, body(rider), slot.lineD, race.settings.limits.halfWidth, ahead);
     const ai = aiControl(
       geo,
       slot.profile,
@@ -256,8 +276,8 @@ export function stepCircuitRace(
     return stepRider({ ...ctx, assist: true, autoShift: true }, rider, ai.input, ai.steer);
   });
 
-  // Bikes bump off each other once the race is on (on the grid they're held apart).
-  const touched = go ? collideRiders(geo, riders, others, clockS) : riders;
+  // Bikes bump off each other once the race is on and the pack has got away.
+  const touched = contactsOn(race, clockS) ? collideRiders(geo, riders, others, clockS) : riders;
   const before = race.riders[0];
   const after = touched[0];
   const tally =
@@ -272,26 +292,4 @@ export function stepCircuitRace(
 function paceHere(geo: CircuitGeometry, race: CircuitRaceState, s: number): number | null {
   const at = nextCorner(geo, race.corners, s);
   return at && at.distanceM === 0 ? profileAt(geo, race.paceProfile, s) : null;
-}
-
-/** The start is judged from the first red light; until then the bike is held for the rider. */
-const judging = (race: CircuitRaceState) =>
-  race.phase !== 'grid' && race.clockS >= LIGHT_INTERVAL_S;
-
-/** Note the player's launch once the lights are on; too early earns a stop on the grid. */
-function judgeStart(
-  race: CircuitRaceState,
-  playerInput: SimInput,
-  clockS: number,
-): Pick<CircuitRaceState, 'playerLaunchAtS' | 'penaltyUntilS'> {
-  const player = race.riders[0];
-  const unchanged = { playerLaunchAtS: race.playerLaunchAtS, penaltyUntilS: race.penaltyUntilS };
-  if (!judging(race) || race.playerLaunchAtS !== null || !player) return unchanged;
-  if (!launchIntent(playerInput, player.sim)) return unchanged;
-  return {
-    playerLaunchAtS: clockS,
-    penaltyUntilS: isJumpStart(clockS, race.lightsOutAtS)
-      ? race.lightsOutAtS + JUMP_START_PENALTY_S
-      : null,
-  };
 }

@@ -28,6 +28,8 @@ export interface RoomSettings {
   readonly laps: number;
   /** A ranked match: everyone rides this group's stock bike, no assists. */
   readonly ranked?: 'scooter' | 'manual';
+  /** Parallel start (all abreast); staggered when not set. */
+  readonly grid?: 'parallel';
 }
 
 /** Where a rider is, ~10 times a second while racing. */
@@ -124,7 +126,8 @@ function parseSettings(raw: unknown): RoomSettings | null {
   const laps = num(o?.laps, 1, 20);
   if (!circuitId || laps === null) return null;
   const ranked = o?.ranked === 'scooter' || o?.ranked === 'manual' ? o.ranked : undefined;
-  return { circuitId, laps: Math.round(laps), ...(ranked && { ranked }) };
+  const grid = o?.grid === 'parallel' ? o.grid : undefined;
+  return { circuitId, laps: Math.round(laps), ...(ranked && { ranked }), ...(grid && { grid }) };
 }
 
 function parsePose(raw: unknown): PosePayload | null {

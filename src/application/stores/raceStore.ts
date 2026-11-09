@@ -1,5 +1,11 @@
 import { create } from 'zustand';
-import { clamp, MAX_RACE_DISTANCE_M, MIN_RACE_DISTANCE_M, type TreeMode } from '@/domain';
+import {
+  clamp,
+  MAX_RACE_DISTANCE_M,
+  MIN_RACE_DISTANCE_M,
+  type GridLayout,
+  type TreeMode,
+} from '@/domain';
 import {
   DEFAULT_BIKE_ID,
   DEFAULT_CIRCUIT_ID,
@@ -54,6 +60,8 @@ interface RaceStoreState {
   readonly autoShift: boolean;
   /** Manual bikes: automatic half-clutch, or the rider works the lever. */
   readonly autoClutch: boolean;
+  /** Circuit start: staggered rows or all abreast. */
+  readonly gridLayout: GridLayout;
   readonly trackId: string;
   /** Distance for the custom track; fixed tracks use their own. */
   readonly customDistanceM: number;
@@ -74,6 +82,7 @@ interface RaceStoreState {
   setBrakeAssist(on: boolean): void;
   setAutoShift(on: boolean): void;
   setAutoClutch(on: boolean): void;
+  setGridLayout(layout: GridLayout): void;
   setTrack(id: string): void;
   setCustomDistance(m: number): void;
   setTreeMode(mode: TreeMode): void;
@@ -92,6 +101,7 @@ export const useRaceStore = create<RaceStoreState>()((set) => ({
   brakeAssist: false,
   autoShift: false,
   autoClutch: false,
+  gridLayout: 'staggered',
   trackId: DEFAULT_TRACK_ID,
   customDistanceM: 402,
   treeMode: 'sportsman',
@@ -110,6 +120,7 @@ export const useRaceStore = create<RaceStoreState>()((set) => ({
   setBrakeAssist: (brakeAssist) => set({ brakeAssist }),
   setAutoShift: (autoShift) => set({ autoShift }),
   setAutoClutch: (autoClutch) => set({ autoClutch }),
+  setGridLayout: (gridLayout) => set({ gridLayout }),
   setCustomDistance: (m) =>
     set({ customDistanceM: Math.round(clamp(m, MIN_RACE_DISTANCE_M, MAX_RACE_DISTANCE_M)) }),
   setTreeMode: (treeMode) => set({ treeMode }),

@@ -46,8 +46,13 @@ export function useCircuitRoom(
   }, [controller, enabled, otherwise]);
   useEffect(() => {
     if (!enabled || raceId === null) return;
-    const race = useRoomStore.getState().race;
-    if (race) controller.startRoomRace(race.holdS);
+    const { race, players, me } = useRoomStore.getState();
+    // Everyone sees the same players in the same order, so the slots agree.
+    const slot = Math.max(
+      0,
+      players.findIndex((p) => p.id === me?.id),
+    );
+    if (race) controller.startRoomRace(race.holdS, slot, Math.max(1, players.length));
   }, [controller, enabled, raceId]);
 }
 

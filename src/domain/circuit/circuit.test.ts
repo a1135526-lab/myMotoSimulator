@@ -17,13 +17,12 @@ import {
 import { advanceCircuitRace, type CircuitCommand } from './circuitAdvance';
 import {
   createCircuitRace,
-  JUMP_START_PENALTY_S,
   litLights,
-  LIGHT_COUNT,
   resetPlayer,
   startLights,
   stepCircuitRace,
 } from './circuitRace';
+import { JUMP_START_PENALTY_S, LIGHT_COUNT } from './circuitStart';
 import { buildCircuit } from './geometry';
 import { estimateLapTime } from './lapEstimate';
 import { longitudinalGripShare, maxLean, pathCurvature, surfaceAt, targetLean } from './lateral';

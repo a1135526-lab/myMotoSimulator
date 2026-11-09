@@ -1,10 +1,17 @@
 import { useState } from 'react';
-import { MAX_ROOM_PLAYERS, useCircuits, useRoomStore } from '@/application';
+import { MAX_ROOM_PLAYERS, useCircuits, useRoomStore, type RoomSettings } from '@/application';
 import { BikeSelector } from '../../components/config/BikeSelector';
 import { AddFriendButton, RoomFriends } from './RoomFriends';
 import styles from './room.module.css';
 
 const LAP_CHOICES = [1, 2, 3, 5] as const;
+
+const GRID_LABELS = { staggered: '交錯起步', parallel: '平行起步' } as const;
+
+const withGrid = (s: RoomSettings, grid: keyof typeof GRID_LABELS): RoomSettings => {
+  const { circuitId, laps, ranked } = s;
+  return { circuitId, laps, ...(ranked && { ranked }), ...(grid === 'parallel' && { grid }) };
+};
 
 /** Waiting room: the code to share, who's in, the host's circuit and laps, your bike. */
 export function RoomLobby() {
@@ -86,10 +93,24 @@ export function RoomLobby() {
               </button>
             ))}
           </div>
+          <div className={styles.chips}>
+            {(['staggered', 'parallel'] as const).map((g) => (
+              <button
+                key={g}
+                type="button"
+                aria-pressed={(settings.grid ?? 'staggered') === g}
+                onClick={() => setSettings(withGrid(settings, g))}
+                data-testid={`room-grid-${g}`}
+              >
+                {GRID_LABELS[g]}
+              </button>
+            ))}
+          </div>
         </>
       ) : (
         <p className={styles.settings} data-testid="room-settings">
-          {circuit?.name ?? settings.circuitId} · {settings.laps} 圈
+          {circuit?.name ?? settings.circuitId} · {settings.laps} 圈 ·{' '}
+          {GRID_LABELS[settings.grid ?? 'staggered']}
         </p>
       )}
 
@@ -97,7 +118,7 @@ export function RoomLobby() {
 
       <h3>你的機車</h3>
       <BikeSelector />
-      <p className={styles.note}>改裝設定沿用車庫；比賽中車和車之間不會碰撞。</p>
+      <p className={styles.note}>改裝設定沿用車庫；起步後 4 秒內車和車之間不會碰撞。</p>
 
       {waiting && <p className={styles.notice}>比賽進行中，下一場開始時你就會加入。</p>}
 

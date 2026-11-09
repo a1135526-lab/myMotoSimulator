@@ -28,6 +28,8 @@ export function StepCircuit() {
   const brakeAssist = useRaceStore((s) => s.brakeAssist);
   const setBrakeAssist = useRaceStore((s) => s.setBrakeAssist);
   const autoShift = useRaceStore((s) => s.autoShift);
+  const gridLayout = useRaceStore((s) => s.gridLayout);
+  const setGridLayout = useRaceStore((s) => s.setGridLayout);
   const { setCircuit, setLaps, setOpponentCount, setAssist, setAutoShift } =
     useRaceStore.getState();
 
@@ -109,6 +111,27 @@ export function StepCircuit() {
                 onClick={() => setOpponentCount(n)}
               >
                 {n}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className={styles.option}>
+          起步方式
+          <div className={styles.filters}>
+            {(
+              [
+                ['staggered', '交錯起步'],
+                ['parallel', '平行起步'],
+              ] as const
+            ).map(([g, label]) => (
+              <button
+                key={g}
+                type="button"
+                className={gridLayout === g ? styles.chipActive : styles.chip}
+                onClick={() => setGridLayout(g)}
+                data-testid={`grid-${g}`}
+              >
+                {label}
               </button>
             ))}
           </div>

@@ -15,6 +15,7 @@ import {
   type CircuitSettings,
   type CircuitSkill,
   type GhostLap,
+  type GridLayout,
   type RemoteBike,
   type RiderSkill,
   type SimConfig,
@@ -40,6 +41,8 @@ export interface CircuitConfig {
   readonly ghost: GhostLap | null;
   /** Exact AI pace (ranked races), instead of the `skill` presets. */
   readonly aiSkill?: CircuitSkill;
+  /** How the grid lines up (staggered unless set). */
+  readonly grid?: GridLayout;
 }
 
 export interface CircuitSnapshot {
@@ -73,6 +76,8 @@ export class CircuitController {
   private outOfTime: (race: CircuitRaceState) => boolean = () => false;
   private remoteBikes: () => readonly RemoteBike[] = () => [];
   private ghost: GhostLap | null = null;
+  /** Your grid slot and the field size in a friend room (each player rides their own race). */
+  private roomGrid: { readonly slot: number; readonly field: number } | null = null;
 
   constructor(
     config: CircuitConfig,
@@ -112,7 +117,8 @@ export class CircuitController {
   }
 
   /** A friend-room start: fresh grid, lights on, the same hold as everyone else. */
-  startRoomRace(holdS: number): void {
+  startRoomRace(holdS: number, slot = 0, field = 1): void {
+    this.roomGrid = { slot, field };
     this.restage(holdS);
     this.update(startLights(this.race));
   }
@@ -144,6 +150,9 @@ export class CircuitController {
         riderSkill(this.config.aiSkill ?? CIRCUIT_SKILLS[skill], i),
       ),
       holdS: holdS ?? lo + this.random() * (hi - lo),
+      grid: this.config.grid ?? 'staggered',
+      ...(this.roomMode &&
+        this.roomGrid && { playerSlot: this.roomGrid.slot, field: this.roomGrid.field }),
     });
     // A rematch keeps the ghost, including a best set in the last race.
     this.recorder = new LapRecorder();
