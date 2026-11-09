@@ -67,6 +67,16 @@ describe('rider control', () => {
     expect(r.surface).toBe('track');
   });
 
+  it('the grass bogs a fast bike down: cutting across it is never quicker', () => {
+    // Flat out, straight along the grass beside the tarmac vs on it.
+    const grass = ride(riding(limits.halfWidth + 6, 0, 30), 1.5, { throttle: 1, brake: 0 }, 0).r;
+    const tarmac = ride(riding(0, 0, 30), 1.5, { throttle: 1, brake: 0 }, 0).r;
+    expect(grass.surface).toBe('runoff');
+    expect(grass.sim.speedMps).toBeLessThan(21);
+    expect(tarmac.sim.speedMps).toBeGreaterThan(29);
+    expect(grass.progressM).toBeLessThan(tarmac.progressM - 6);
+  });
+
   it('braking into a turn slides and turns tighter than leaning alone (assist off)', () => {
     const start = riding(0, 0, 30);
     const leaning = ride(start, 0.6, { throttle: 0, brake: 0 }, 1).r;

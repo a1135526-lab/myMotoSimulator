@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { useUiStore } from '../../stores/uiStore';
 import { RemoteRiders } from './remoteRiders';
-import { SupabaseRoomTransport, type RoomTransport } from './roomTransport';
+import { liveTransport, passOn, SupabaseRoomTransport, type RoomTransport } from './roomTransport';
 import {
   MAX_ROOM_PLAYERS,
   NAME_MAX,
@@ -112,6 +112,7 @@ export const useRoomStore = create<RoomState>()((set, get) => {
       }
     },
     message(msg: RoomMessage) {
+      passOn(msg);
       const s = get();
       switch (msg.type) {
         case 'settings':
@@ -160,7 +161,7 @@ export const useRoomStore = create<RoomState>()((set, get) => {
   /** Into the room; resolves with everyone there once presence has arrived. */
   const enter = async (code: string, profile: RoomProfile) => {
     transport?.leave();
-    transport = makeTransport();
+    transport = liveTransport(makeTransport());
     if (!transport) {
       set({ ...IDLE, error: '這個版本沒有連線功能，無法使用好友房間' });
       return null;
@@ -229,7 +230,7 @@ export const useRoomStore = create<RoomState>()((set, get) => {
 
     leave: () => {
       transport?.leave();
-      transport = null;
+      transport = liveTransport(null);
       presenceSeen = null;
       remoteRiders.clear();
       set({ ...IDLE });

@@ -31,6 +31,7 @@ const rider = (patch: Partial<CircuitRiderView>): CircuitRiderView => ({
 const view = (patch: Partial<CircuitView> = {}, driftPct = 0): CircuitView => ({
   phase: 'racing',
   ghost: null,
+  grades: null,
   lightsLit: 0,
   raceTimeS: 20,
   laps: 3,

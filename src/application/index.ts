@@ -49,7 +49,13 @@ export {
 export type { TouchControl } from './input/TouchInputSource';
 export { requestTiltPermission, type TiltPermission } from './input/TiltInputSource';
 export { saveFlickWanted, saveTiltWanted, useDefaultTilt } from './input/defaultTilt';
-export { useMirrorKey } from './input/mirrorKey';
+export { useHornKey, useMirrorKey } from './input/heldKeys';
+export {
+  HORN_CLIP_MAX_CHARS,
+  HORN_PRESETS,
+  useHornStore,
+  type HornPreset,
+} from './stores/hornStore';
 export type { Preset } from './services/presetService';
 export { isStock, type SelectableCategory } from './tuning/selection';
 export type {
@@ -212,6 +218,7 @@ export {
   type FriendState,
   type RoomInvite,
 } from './online/friends/friendsStore';
+export { useRemoteHornStore, type RemoteHorn } from './online/room/roomHorns';
 export { amHost, useRoomStore, type RoomProfile, type RoomStatus } from './online/room/roomStore';
 export {
   CODE_LENGTH,

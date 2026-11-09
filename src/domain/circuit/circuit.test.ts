@@ -227,7 +227,7 @@ describe('circuit race', () => {
     expect(race.riders[1]?.finishedAtS).not.toBeNull();
   });
 
-  it('flat out with no steering (assist off) runs wide, bounces off the barrier and rides on', () => {
+  it('flat out with no steering (assist off) runs wide over the grass, stops at the barrier and rides on', () => {
     let race = startLights(
       createCircuitRace(geo, models, {
         settings: { ...settings, assist: false },
@@ -236,12 +236,14 @@ describe('circuit race', () => {
       }),
     );
     const wot: CircuitCommand = { ...idle, throttlePressed: true };
-    let hit = false;
-    for (let t = 0; t < 60 && !hit; t += 1 / 30) {
+    // The grass slows it a lot first, so it may reach the wall too slowly to count as a hit.
+    const wall = limits.halfWidth + limits.runoffM - 0.3;
+    let reached = false;
+    for (let t = 0; t < 60 && !reached; t += 1 / 30) {
       race = advanceCircuitRace(geo, models, race, wot, 1 / 30);
-      hit = race.riders[0]?.hitAtS !== null;
+      reached = Math.abs(race.riders[0]?.lat.d ?? 0) >= wall;
     }
-    expect(hit).toBe(true);
+    expect(reached).toBe(true);
     const at = race.riders[0];
     // Still on the bike, at the barrier: not put back on the centreline.
     expect(at?.surface).not.toBe('barrier');

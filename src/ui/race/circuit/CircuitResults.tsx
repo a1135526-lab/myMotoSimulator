@@ -4,6 +4,7 @@ import { AddFriend } from '../../components/friends/AddFriend';
 import { FinishSplash } from './FinishSplash';
 import { fmtLap } from './format';
 import { LapBoard } from './LapBoard';
+import { RideGradeCard } from './RideGradeCard';
 import styles from './results.module.css';
 
 interface CircuitResultsProps {
@@ -82,6 +83,7 @@ function Results({ view, circuitId, onRematch, onGarage, actions, extra }: Circu
             </div>
           </dl>
         )}
+        {view.grades && <RideGradeCard grades={view.grades} reactionS={view.player.reactionS} />}
         <table className={styles.resultTable}>
           <thead>
             <tr>

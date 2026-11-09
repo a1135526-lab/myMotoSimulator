@@ -1,4 +1,5 @@
 import {
+  circuitGrades,
   DRIFT_SLIP_RAD,
   findCorners,
   ghostPoseAt,
@@ -15,6 +16,7 @@ import {
   type CircuitPhase,
   type CircuitRaceState,
   type CircuitRider,
+  type RideGrades,
   type SimModel,
 } from '@/domain';
 import { dashboardModel, type DashboardModel } from './dashboard';
@@ -129,6 +131,8 @@ export interface CircuitView {
   readonly dash: DashboardModel;
   /** Where your best lap was at this point of the current one; null when off or none. */
   readonly ghost: CircuitGhostView | null;
+  /** Your grades, once you've taken the flag (or the race is over). */
+  readonly grades: RideGrades | null;
   /** Friend room: seconds left to take the flag after the winner did; null before. */
   readonly finishCountdownS?: number | null;
   /** Friend room: you finished or retired, and so has everyone else. */
@@ -215,6 +219,10 @@ export function toCircuitView(
             manual: ghost.manual,
             owner: ghost.owner ?? null,
           }
+        : null,
+    grades:
+      p.finishedAtS !== null || race.phase === 'finished'
+        ? circuitGrades(race, models[0] as SimModel)
         : null,
     phase: race.phase,
     lightsLit: litLights(race),

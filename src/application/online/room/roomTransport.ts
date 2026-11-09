@@ -20,6 +20,30 @@ export interface RoomTransport {
 
 const EVENT = 'msg';
 
+/*
+ * Extras beyond the race itself (the horn) tap the room here, so the room
+ * store stays about the race: every incoming message is passed on, and
+ * `sendToRoom` goes out on whichever connection is live.
+ */
+type MessageTap = (msg: RoomMessage) => void;
+const taps = new Set<MessageTap>();
+let live: RoomTransport | null = null;
+
+export function tapRoomMessages(tap: MessageTap): () => void {
+  taps.add(tap);
+  return () => taps.delete(tap);
+}
+
+export const passOn = (msg: RoomMessage) => taps.forEach((tap) => tap(msg));
+
+/** The room store's current connection (null when out of a room); returns it. */
+export function liveTransport(t: RoomTransport | null): RoomTransport | null {
+  live = t;
+  return t;
+}
+
+export const sendToRoom = (msg: RoomMessage) => live?.send(msg);
+
 /** Rooms over Supabase Realtime: broadcast for messages, presence for who's in. */
 export class SupabaseRoomTransport implements RoomTransport {
   private channel: RealtimeChannel | null = null;

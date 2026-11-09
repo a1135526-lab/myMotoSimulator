@@ -1,0 +1,135 @@
+.card {
+  --grade-s: #ffd34d;
+  --grade-a: #5be08a;
+  --grade-b: #4cc3ff;
+  --grade-c: #d7dbe2;
+  --grade-d: #ff9a3c;
+  --grade-e: #ff5a5a;
+
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 4px;
+}
+
+[data-grade='S'] {
+  --grade: var(--grade-s);
+}
+[data-grade='A'] {
+  --grade: var(--grade-a);
+}
+[data-grade='B'] {
+  --grade: var(--grade-b);
+}
+[data-grade='C'] {
+  --grade: var(--grade-c);
+}
+[data-grade='D'] {
+  --grade: var(--grade-d);
+}
+[data-grade='E'] {
+  --grade: var(--grade-e);
+}
+
+.overall {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.letter {
+  font-size: 3rem;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  color: var(--grade);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--grade) 45%, transparent);
+  animation: stamp 0.4s ease-out;
+}
+
+@keyframes stamp {
+  from {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.overallText {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
+.overallText strong {
+  font-size: 1.4rem;
+  letter-spacing: 0;
+  color: var(--text);
+}
+
+.items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.items li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.itemLetter {
+  flex: none;
+  width: 1.6em;
+  font-size: 1.3rem;
+  font-weight: 900;
+  font-style: italic;
+  text-align: center;
+  color: var(--grade);
+}
+
+.itemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.itemHead {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.itemHead small {
+  color: var(--text-muted);
+}
+
+.bar {
+  height: 4px;
+  background: rgb(255 255 255 / 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--grade);
+}
+
+.itemDetail {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}

@@ -73,6 +73,7 @@ function fromCircuit(
     timeS: dnf ? null : me.finishTimeS,
     bestLapS: me.bestLapS,
     riders: ridersOf(view, bike.label),
+    ...(view.grades && { grade: { letter: view.grades.grade, score: view.grades.score } }),
   };
 }
 

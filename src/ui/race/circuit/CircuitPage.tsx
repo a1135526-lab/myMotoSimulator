@@ -12,6 +12,7 @@ import {
   useUiStore,
 } from '@/application';
 import { useEngineAudio } from '../../audio/useEngineAudio';
+import { useHorn } from '../../audio/useHorn';
 import { HomeButton } from '../../components/common/HomeButton';
 import { SoundToggle } from '../../components/common/SoundToggle';
 import { KeyHints } from '../../components/controls/KeyHints';
@@ -23,6 +24,7 @@ import {
   TiltToggle,
 } from '../../components/controls/StageButtons';
 import { TouchControls } from '../../components/controls/TouchControls';
+import { HornButton } from '../../components/horn/HornButton';
 import { MirrorButton } from '../../components/hud/RearMirrorSlot';
 import { AppLayout } from '../../layouts/AppLayout';
 import { useImmersive } from '../../layouts/useMediaQuery';
@@ -43,6 +45,7 @@ const CIRCUIT_KEYS: [string, string][] = [
   ['Shift', '離合'],
   ['V', '視角'],
   ['B（按住）', '後照鏡'],
+  ['H（按住）', '喇叭'],
   ['R', '回賽道'],
   ['Space', '起跑'],
 ];
@@ -76,6 +79,7 @@ export function CircuitPage({
   const done = view?.phase === 'finished' || view?.riders[0]?.finishTimeS != null;
   const immersive = useImmersive();
   useMirrorKey();
+  useHorn();
   const showGo = !room && !ranked && !done && (!immersive || !live);
   useEngineAudio(readCircuitSound);
 
@@ -130,6 +134,7 @@ export function CircuitPage({
             >
               {immersive ? '👻' : `👻 幽靈車 ${ghostOn ? '開' : '關'}`}
             </button>
+            <HornButton className={styles.garageButton} compact={immersive} />
             <MirrorButton className={styles.garageButton} compact={immersive} />
             <TiltToggle className={styles.garageButton} compact={immersive} />
             {manual && !autoShift && (

@@ -48,6 +48,8 @@ export interface MatchRecord {
   readonly timeS: number | null;
   readonly bestLapS: number | null;
   readonly riders: readonly MatchRider[];
+  /** Overall riding grade (circuit races), S–E, and its score. */
+  readonly grade?: { readonly letter: string; readonly score: number };
 }
 
 // ---- Checking stored / synced records ----
@@ -99,7 +101,18 @@ export function parseMatch(raw: unknown): MatchRecord | null {
     timeS: numOrNull(m.timeS),
     bestLapS: numOrNull(m.bestLapS),
     riders,
+    ...(parseGrade(m.grade) && { grade: parseGrade(m.grade) }),
   };
+}
+
+const GRADE_LETTERS = new Set(['S', 'A', 'B', 'C', 'D', 'E']);
+
+function parseGrade(raw: unknown): MatchRecord['grade'] | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const g = raw as Record<string, unknown>;
+  return typeof g.letter === 'string' && GRADE_LETTERS.has(g.letter) && isNum(g.score)
+    ? { letter: g.letter, score: g.score }
+    : undefined;
 }
 
 export const newMatchId = (): string =>

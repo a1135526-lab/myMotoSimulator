@@ -15,6 +15,7 @@ import {
   longitudinalGripShare,
   pathCurvature,
   RUNOFF_ROLLING_COEFF,
+  runoffBog,
   runoffCurvature,
   STRAIGHT_AHEAD,
   stepLean,
@@ -168,6 +169,7 @@ export function stepRider(
   );
   applied = { ...applied, brake: applied.brake * brakeShare * Math.min(1, grip) };
   sim = step(modelFor(ctx, rider.surface, rider.lat.lean), sim, applied);
+  if (rider.surface === 'runoff') sim = { ...sim, speedMps: runoffBog(sim.speedMps, dt) };
 
   const v = sim.speedMps;
   // Without the assist the slide turns on top of the lean, so braking into a

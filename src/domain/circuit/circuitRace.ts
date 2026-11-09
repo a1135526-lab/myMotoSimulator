@@ -6,14 +6,18 @@ import {
   aiControl,
   ASSIST_SKILL,
   brakeAssist,
+  CIRCUIT_SKILLS,
+  profileAt,
   speedProfile,
   type CircuitSkill,
   type SpeedProfile,
 } from './circuitAi';
 import { avoidLine, collideRiders, type ContactBody } from './contacts';
+import { findCorners, nextCorner, type Corner } from './corners';
 import { wantsDrift } from './drift';
 import type { CircuitGeometry } from './geometry';
 import type { CornerLimits } from './lateral';
+import { EMPTY_TALLY, stepTally, tallyReset, tallyShift, type RideTally } from './rideTally';
 import {
   createRider,
   recoverRider,
@@ -77,6 +81,11 @@ export interface CircuitRaceState {
   /** Player jumped the start: held until this race-clock time. */
   readonly penaltyUntilS: number | null;
   readonly accumulatorS: number;
+  /** What the player did this race, for the grades at the flag. */
+  readonly tally: RideTally;
+  /** A pro's speed round the lap and the corners: the yardstick for corner pace. */
+  readonly paceProfile: SpeedProfile;
+  readonly corners: readonly Corner[];
 }
 
 export interface CircuitSetup {
@@ -116,6 +125,9 @@ export function createCircuitRace(
     playerLaunchAtS: null,
     penaltyUntilS: null,
     accumulatorS: 0,
+    tally: EMPTY_TALLY,
+    paceProfile: speedProfile(geo, setup.settings.limits.gripG, CIRCUIT_SKILLS.pro),
+    corners: findCorners(geo),
   };
 }
 
@@ -133,13 +145,24 @@ const updatePlayer = (race: CircuitRaceState, fn: (r: CircuitRider) => CircuitRi
   return player ? { ...race, riders: [fn(player), ...rest] } : race;
 };
 
+/** The player's riding counts toward the grades: racing, before their own flag. */
+const tallying = (race: CircuitRaceState) =>
+  race.phase === 'racing' && race.riders[0]?.finishedAtS === null;
+
 export const shiftCircuitPlayer = (
   models: readonly SimModel[],
   race: CircuitRaceState,
   dir: 1 | -1,
 ): CircuitRaceState => {
   const model = models[0];
-  return model ? updatePlayer(race, (r) => ({ ...r, sim: shiftGear(model, r.sim, dir) })) : race;
+  const player = race.riders[0];
+  if (!model || !player) return race;
+  const sim = shiftGear(model, player.sim, dir);
+  const shifted = sim.gear !== player.sim.gear && tallying(race);
+  return {
+    ...updatePlayer(race, (r) => ({ ...r, sim })),
+    tally: shifted ? tallyShift(race.tally, model, player.sim, dir) : race.tally,
+  };
 };
 
 export const startCircuitPlayerEngine = (models: readonly SimModel[], race: CircuitRaceState) => {
@@ -165,7 +188,9 @@ export const resetPlayer = (
   race: CircuitRaceState,
 ) => {
   const model = models[0];
-  return model ? updatePlayer(race, (r) => recoverRider(context(race, geo, model), r)) : race;
+  if (!model) return race;
+  const reset = updatePlayer(race, (r) => recoverRider(context(race, geo, model), r));
+  return tallying(race) ? { ...reset, tally: tallyReset(race.tally) } : reset;
 };
 
 /** Out of time (a friend room's finish window closed): the race ends without your flag. */
@@ -233,8 +258,20 @@ export function stepCircuitRace(
 
   // Bikes bump off each other once the race is on (on the grid they're held apart).
   const touched = go ? collideRiders(geo, riders, others, clockS) : riders;
-  const next = { ...timed, riders: touched, ...judgeStart(race, playerInput, clockS) };
+  const before = race.riders[0];
+  const after = touched[0];
+  const tally =
+    tallying(race) && before && after
+      ? stepTally(race.tally, before, after, paceHere(geo, race, after.lat.s), dt)
+      : race.tally;
+  const next = { ...timed, riders: touched, tally, ...judgeStart(race, playerInput, clockS) };
   return { ...next, phase: nextPhase(next) };
+}
+
+/** A pro's speed at s when it's in a corner, else null. */
+function paceHere(geo: CircuitGeometry, race: CircuitRaceState, s: number): number | null {
+  const at = nextCorner(geo, race.corners, s);
+  return at && at.distanceM === 0 ? profileAt(geo, race.paceProfile, s) : null;
 }
 
 /** The start is judged from the first red light; until then the bike is held for the rider. */

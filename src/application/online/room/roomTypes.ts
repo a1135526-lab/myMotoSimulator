@@ -1,3 +1,5 @@
+import { HORN_PRESETS, type HornPreset } from '../../stores/hornStore';
+
 /**
  * Friend rooms: up to four players racing one circuit together. Each runs
  * their own physics; the room only passes along who's in, the host's
@@ -69,7 +71,20 @@ export type RoomMessage =
   /** Someone at the results wants another race. */
   | { readonly type: 'again'; readonly id: string; readonly raceId: number }
   /** Host → all: race over, back to the lobby. */
-  | { readonly type: 'lobby' };
+  | { readonly type: 'lobby' }
+  /** Someone's horn went on or off. */
+  | {
+      readonly type: 'horn';
+      readonly id: string;
+      readonly raceId: number;
+      readonly on: boolean;
+      readonly preset: HornPreset;
+    }
+  /** Someone's recorded horn, sent before they first use it in a race. */
+  | { readonly type: 'hornClip'; readonly id: string; readonly clip: string };
+
+/** A recorded horn bigger than this isn't sent (others hear the standard horn). */
+export const ROOM_CLIP_MAX_CHARS = 200_000;
 
 // ---- Checking what other players send: never trust it as-is ----
 
@@ -174,6 +189,19 @@ export function parseMessage(raw: unknown): RoomMessage | null {
     }
     case 'lobby':
       return { type: 'lobby' };
+    case 'horn': {
+      const id = str(o.id, 64);
+      const raceId = num(o.raceId, 0, Number.MAX_SAFE_INTEGER);
+      const preset = HORN_PRESETS.find((p) => p === o.preset);
+      return id && raceId !== null && preset
+        ? { type: 'horn', id, raceId, on: o.on === true, preset }
+        : null;
+    }
+    case 'hornClip': {
+      const id = str(o.id, 64);
+      const clip = str(o.clip, ROOM_CLIP_MAX_CHARS);
+      return id && clip?.startsWith('data:audio/') ? { type: 'hornClip', id, clip } : null;
+    }
     default:
       return null;
   }

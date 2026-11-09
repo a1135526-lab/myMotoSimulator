@@ -6,6 +6,7 @@ import {
   useStreetStore,
 } from '@/application';
 import { useEngineAudio } from '../audio/useEngineAudio';
+import { useHorn } from '../audio/useHorn';
 import { HomeButton } from '../components/common/HomeButton';
 import { SoundToggle } from '../components/common/SoundToggle';
 import { KeyHints } from '../components/controls/KeyHints';
@@ -17,6 +18,7 @@ import {
   TiltToggle,
 } from '../components/controls/StageButtons';
 import { TouchControls } from '../components/controls/TouchControls';
+import { HornButton } from '../components/horn/HornButton';
 import { MirrorButton } from '../components/hud/RearMirrorSlot';
 import type { CityMap } from '@/domain';
 import { AppLayout } from '../layouts/AppLayout';
@@ -39,6 +41,7 @@ const STREET_KEYS: [string, string][] = [
   ['Enter', '發動'],
   ['V', '視角'],
   ['B（按住）', '後照鏡'],
+  ['H（按住）', '喇叭'],
   ['M', '大地圖・導航'],
   ['R', '回到道路'],
 ];
@@ -60,6 +63,7 @@ export function StreetPage({ map }: { map: CityMap }) {
   const manual = bike.kind === 'manual';
   const immersive = useImmersive();
   useMirrorKey();
+  useHorn();
   useEngineAudio(readStreetSound);
 
   return (
@@ -110,6 +114,7 @@ export function StreetPage({ map }: { map: CityMap }) {
         >
           {immersive ? '🏁' : '🏁 任務'}
         </button>
+        <HornButton className={race.garageButton} compact={immersive} />
         <MirrorButton className={race.garageButton} compact={immersive} />
         <TiltToggle className={race.garageButton} compact={immersive} />
         {manual && !autoShift && (

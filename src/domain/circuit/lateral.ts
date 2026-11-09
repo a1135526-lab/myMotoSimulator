@@ -31,12 +31,19 @@ const LOOKAHEAD_S = 0.5;
 
 /** Grass / gravel: much less grip and lots of drag. */
 export const RUNOFF_GRIP_G = 0.55;
-export const RUNOFF_ROLLING_COEFF = 0.09;
+export const RUNOFF_ROLLING_COEFF = 0.2;
+/**
+ * The tyres dig in on grass: above this speed the bike bogs down hard, so
+ * cutting across the inside of a corner is always slower than the tarmac.
+ */
+export const RUNOFF_TOP_SPEED_MPS = 12;
+export const RUNOFF_BOG_MPS2 = 7;
 /**
  * Off the tarmac the rider can still haul the bike round — feet out, bars
- * turned, back wheel skating — so steer adds this much turning on top of lean.
+ * turned, back wheel skating — so steer adds this much turning on top of lean
+ * (enough to get back on, not enough to make the grass a shortcut).
  */
-export const RUNOFF_STEER_G = 0.6;
+export const RUNOFF_STEER_G = 0.35;
 /** Turning off-track is figured at no less than this speed (walking pace still steers). */
 const RUNOFF_STEER_MIN_SPEED_MPS = 6;
 
@@ -134,6 +141,12 @@ export function pathCurvature(lean: number, speedMps: number, steer: number): nu
 export function runoffCurvature(steer: number, speedMps: number): number {
   const v = Math.max(speedMps, RUNOFF_STEER_MIN_SPEED_MPS);
   return (clamp(steer, -1, 1) * RUNOFF_STEER_G * STANDARD_GRAVITY) / (v * v);
+}
+
+/** Speed after one step bogging down on grass (only above RUNOFF_TOP_SPEED_MPS). */
+export function runoffBog(speedMps: number, dtS: number): number {
+  if (speedMps <= RUNOFF_TOP_SPEED_MPS) return speedMps;
+  return Math.max(RUNOFF_TOP_SPEED_MPS, speedMps - RUNOFF_BOG_MPS2 * dtS);
 }
 
 /** Advance position along / across the track for one step. */

@@ -37,6 +37,8 @@ export * from './circuit/contacts';
 export * from './circuit/lapEstimate';
 export * from './circuit/ghost';
 export * from './circuit/corners';
+export * from './circuit/rideTally';
+export * from './circuit/rideGrades';
 export * from './ranked/ranking';
 export * from './street/city';
 export {

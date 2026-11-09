@@ -49,6 +49,14 @@ export function MatchDetailDialog({ match, onClose }: { match: MatchRecord; onCl
               <dd>{fmtLap(match.bestLapS)}</dd>
             </>
           )}
+          {match.grade && (
+            <>
+              <dt>評分</dt>
+              <dd data-testid="match-grade">
+                {match.grade.letter}（{match.grade.score} 分）
+              </dd>
+            </>
+          )}
         </dl>
 
         <h3>完整成績（{match.field} 人）</h3>
