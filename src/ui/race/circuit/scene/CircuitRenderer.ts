@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { CameraMode, CircuitView } from '@/application';
 import { createBikeModel, createCockpit, type BikeModel } from '../../scene/models';
+import { createNameTag } from '../../scene/nameTag';
 import { mirrorSlot, RearMirror } from '../../scene/rearMirror';
 import { SKY_PRESETS, type SceneTheme } from '../../scene/theme';
 import { buildCircuitTrack, type CircuitTrack } from './circuitTrack';
@@ -48,6 +49,8 @@ export class CircuitRenderer {
   private readonly mirror: RearMirror;
   private track: CircuitTrack | null = null;
   private riders: RiderObject[] = [];
+  /** Who's drawn (names, bikes, colours): the models are rebuilt when it changes. */
+  private ridersKey = '';
   private readonly chase = new THREE.Vector3();
   private chaseReady = false;
   private lastMs: number | null = null;
@@ -175,12 +178,22 @@ export class CircuitRenderer {
   }
 
   private ensureRiders(view: CircuitView): void {
-    if (this.riders.length === view.riders.length) return;
+    const key = view.riders
+      .map((r) => `${r.name}|${r.manual}|${r.livery ? Object.values(r.livery).join() : ''}`)
+      .join(';');
+    if (key === this.ridersKey) return;
+    this.ridersKey = key;
     for (const r of this.riders) this.scene.remove(r.yaw);
     this.riders = view.riders.map((r, i) => {
-      const bike = createBikeModel(RIDER_COLORS[i % RIDER_COLORS.length] ?? '#ffffff', !r.manual);
+      const colors = r.livery ?? RIDER_COLORS[i % RIDER_COLORS.length] ?? '#ffffff';
+      const bike = createBikeModel(colors, !r.manual);
       const yaw = new THREE.Group();
       yaw.add(bike.group);
+      // Everyone else gets a name over their bike, in their colour.
+      const tag = r.isPlayer
+        ? null
+        : createNameTag(r.name, typeof colors === 'string' ? colors : colors.body);
+      if (tag) yaw.add(tag);
       this.scene.add(yaw);
       return { yaw, bike };
     });

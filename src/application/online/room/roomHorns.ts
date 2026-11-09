@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useHornStore, type HornPreset } from '../../stores/hornStore';
-import { useRoomStore } from './roomStore';
+import { useCircuitStore } from '../../stores/circuitStore';
+import { remoteRiders, useRoomStore } from './roomStore';
 import { sendToRoom, tapRoomMessages } from './roomTransport';
 import { ROOM_CLIP_MAX_CHARS, type RoomMessage } from './roomTypes';
 
@@ -54,6 +55,27 @@ export function sendHorn(on: boolean): void {
   // A recording too big to send sounds as the standard horn to everyone else.
   const heard: HornPreset = preset === 'custom' && !sendable ? 'standard' : preset;
   sendToRoom({ type: 'horn', id: me.id, raceId: race.raceId, on, preset: heard });
+}
+
+/** Full volume this close, m; it fades with distance and is gone past HORN_RANGE_M. */
+const HORN_NEAR_M = 8;
+const HORN_FADE_M = 20;
+export const HORN_RANGE_M = 120;
+
+/** Loudness (0–1) of a horn this far away, like a real one: only riders nearby hear it. */
+export function hornGain(distanceM: number | null): number {
+  if (distanceM === null || distanceM >= HORN_RANGE_M) return 0;
+  const past = Math.max(0, distanceM - HORN_NEAR_M) / HORN_FADE_M;
+  return 1 / (1 + past * past);
+}
+
+/** How far another player's bike is from yours right now, m (null when not known). */
+export function hornDistanceM(id: string): number | null {
+  const player = useRoomStore.getState().players.find((p) => p.id === id);
+  const me = useCircuitStore.getState().view?.riders[0];
+  if (!player || !me) return null;
+  const [them] = remoteRiders.sample([player], performance.now());
+  return them ? Math.hypot(them.pose.x - me.x, them.pose.z - me.z) : null;
 }
 
 tapRoomMessages(receiveHorn);

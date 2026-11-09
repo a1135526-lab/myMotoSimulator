@@ -10,7 +10,8 @@ import { useRankedStore } from '../online/ranked/rankedStore';
 import { useRoomStore } from '../online/room/roomStore';
 import { saveGhost, useRecordsStore } from '../stores/recordsStore';
 import { useUiStore } from '../stores/uiStore';
-import { toCircuitView } from '../viewModels/circuit';
+import { toCircuitView, withLivery } from '../viewModels/circuit';
+import { useLiveryStore } from '../stores/liveryStore';
 import { finishWindowClosed, withFinishWindow } from '../race/finishWindow';
 import { CircuitContext } from './circuitContext';
 import { useFlickShift } from './useFlickShift';
@@ -91,12 +92,9 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
       new CircuitController(
         config,
         ({ race, geo, models, names, ghost }) => {
-          const raw = toCircuitView(
-            race,
-            geo,
-            models,
-            names,
-            useUiStore.getState().ghostOn ? ghost : null,
+          const raw = withLivery(
+            toCircuitView(race, geo, models, names, useUiStore.getState().ghostOn ? ghost : null),
+            useLiveryStore.getState().livery,
           );
           const view = isRankedAi() ? withFinishWindow(raw) : roomFrame(raw);
           const { circuit, laps, player } = applied.current;

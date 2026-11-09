@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export { createBikeModel, type BikeModel } from './bikeModel';
+export { createBikeModel, type BikeColors, type BikeModel } from './bikeModel';
 
 /** First-person handlebars and dash, attached to the camera. */
 export function createCockpit(): THREE.Group {

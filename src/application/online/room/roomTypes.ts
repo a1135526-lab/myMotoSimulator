@@ -1,4 +1,5 @@
 import { HORN_PRESETS, type HornPreset } from '../../stores/hornStore';
+import { parseLivery, type Livery } from '../../stores/liveryStore';
 
 /**
  * Friend rooms: up to four players racing one circuit together. Each runs
@@ -21,6 +22,8 @@ export interface RoomPlayer {
   readonly joinedAt: number;
   /** Their account nickname when signed in (to add them as a friend). */
   readonly accountName?: string;
+  /** Their bike's colours. */
+  readonly livery?: Livery;
 }
 
 export interface RoomSettings {
@@ -109,6 +112,7 @@ export function parsePlayer(raw: unknown): RoomPlayer | null {
   const joinedAt = num(o.joinedAt, 0, Number.MAX_SAFE_INTEGER);
   if (!id || !name || !bike || cylinders === null || joinedAt === null) return null;
   const accountName = str(o.accountName, NAME_MAX) ?? undefined;
+  const livery = parseLivery(o.livery);
   return {
     id,
     name,
@@ -117,6 +121,7 @@ export function parsePlayer(raw: unknown): RoomPlayer | null {
     cylinders,
     joinedAt,
     ...(accountName && { accountName }),
+    ...(livery && { livery }),
   };
 }
 

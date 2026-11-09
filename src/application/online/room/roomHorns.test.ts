@@ -61,3 +61,14 @@ describe('horns in a friend room', () => {
     ).toBeNull();
   });
 });
+
+describe('how far a horn carries', () => {
+  it('full volume close by, fading with distance, silent far away', async () => {
+    const { hornGain, HORN_RANGE_M } = await import('./roomHorns');
+    expect(hornGain(3)).toBe(1);
+    expect(hornGain(28)).toBeCloseTo(0.5);
+    expect(hornGain(60)).toBeLessThan(hornGain(30));
+    expect(hornGain(HORN_RANGE_M)).toBe(0);
+    expect(hornGain(null)).toBe(0);
+  });
+});

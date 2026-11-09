@@ -54,6 +54,7 @@ export function withRemoteRiders(
       remote: true,
       bike: player.bike,
       ...(player.accountName && { accountName: player.accountName }),
+      ...(player.livery && { livery: player.livery }),
       dnf: timeS === null && window.closed,
     };
   });

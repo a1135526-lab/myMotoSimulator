@@ -5,6 +5,7 @@ import { ArtBackdrop } from '../../components/common/ArtBackdrop';
 import { MusicToggle } from '../../components/common/MusicToggle';
 import { FriendsButton } from '../../components/friends/FriendsButton';
 import { HornSettingsButton } from '../../components/horn/HornSettingsDialog';
+import { LiveryButton } from '../../components/livery/LiveryDialog';
 import { OnlineHeader } from '../../components/online/OnlineHeader';
 import { ProfileChip } from './ProfileChip';
 import styles from './home.module.css';
@@ -97,6 +98,7 @@ export function HomePage() {
           <FriendsButton />
         </div>
         <div className={styles.topRight}>
+          <LiveryButton />
           <HornSettingsButton />
           <MusicToggle />
           <OnlineHeader />

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
-import type { CameraMode, StreetView, TimeOfDay } from '@/application';
+import { useLiveryStore, type CameraMode, type StreetView, type TimeOfDay } from '@/application';
 import type { CityMap } from '@/domain';
 import { TyreSmoke } from '../../race/circuit/scene/tyreSmoke';
 import { createBikeModel, createCockpit, type BikeModel } from '../../race/scene/models';
@@ -10,7 +10,6 @@ import { buildCityScene, ROAD_Y, type CityScene } from './cityScene';
 import { LIGHTING, type Lighting } from './lighting';
 import { RouteMarker } from './routeMarker';
 
-const PLAYER_COLOR = '#ff7a1a';
 const EYE_HEIGHT_M = 1.25;
 const CHASE_BACK_M = 5.8;
 const CHASE_UP_M = 2.2;
@@ -194,10 +193,11 @@ export class StreetRenderer {
   }
 
   private ensureBike(manual: boolean): void {
-    const key = manual ? 'manual' : 'scooter';
+    const livery = useLiveryStore.getState().livery;
+    const key = `${manual ? 'manual' : 'scooter'}|${Object.values(livery).join()}`;
     if (this.bike && this.bikeKey === key) return;
     if (this.bike) this.bikeYaw.remove(this.bike.group);
-    this.bike = createBikeModel(PLAYER_COLOR, !manual);
+    this.bike = createBikeModel(livery, !manual);
     this.bikeKey = key;
     this.bikeYaw.add(this.bike.group);
   }

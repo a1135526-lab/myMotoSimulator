@@ -211,9 +211,18 @@ function rider(
   }
 }
 
-export function createBikeModel(color: string, scooter: boolean): BikeModel {
+/** Paint for the bodywork, helmet and leathers; a plain colour paints body and helmet alike. */
+export type BikeColors =
+  string | { readonly body: string; readonly helmet: string; readonly jacket: string };
+
+const DEFAULT_JACKET = '#23262d';
+
+export function createBikeModel(colors: BikeColors, scooter: boolean): BikeModel {
   const group = new THREE.Group();
-  const paint = std(color, 0.32, 0.35);
+  const scheme =
+    typeof colors === 'string' ? { body: colors, helmet: colors, jacket: DEFAULT_JACKET } : colors;
+  const paint = std(scheme.body, 0.32, 0.35);
+  const helmet = scheme.helmet === scheme.body ? paint : std(scheme.helmet, 0.3, 0.3);
   const m: Record<string, THREE.Material> = {
     black: std('#17191d', 0.6, 0.1),
     rim: std('#9aa0a7', 0.3, 0.85),
@@ -224,7 +233,7 @@ export function createBikeModel(color: string, scooter: boolean): BikeModel {
   };
   const rubber = std('#111214', 0.92);
   const disc = std('#c6cbd0', 0.25, 0.95);
-  const jacket = std('#23262d', 0.75);
+  const jacket = std(scheme.jacket, 0.75);
 
   const radius = scooter ? 0.27 : 0.31;
   const axles = scooter ? [-0.66, 0.62] : [-0.74, 0.68];
@@ -235,7 +244,7 @@ export function createBikeModel(color: string, scooter: boolean): BikeModel {
     return w;
   });
   addParts(group, scooter ? scooterBody(paint, m) : sportBody(paint, m));
-  rider(group, scooter, paint, jacket, m.visor as THREE.Material);
+  rider(group, scooter, helmet, jacket, m.visor as THREE.Material);
 
   group.traverse((o) => {
     if (o instanceof THREE.Mesh) {

@@ -19,6 +19,7 @@ import {
   type RideGrades,
   type SimModel,
 } from '@/domain';
+import type { Livery } from '../stores/liveryStore';
 import { dashboardModel, type DashboardModel } from './dashboard';
 import { gearLabelOf } from './telemetry';
 
@@ -82,6 +83,8 @@ export interface CircuitRiderView {
   readonly bike?: string;
   /** Another player's account name, when they're signed in (to add as a friend). */
   readonly accountName?: string;
+  /** Bike and rider colours (you, and other players); AI riders get the default palette. */
+  readonly livery?: Livery;
 }
 
 export interface CircuitPlayerView {
@@ -257,4 +260,10 @@ export function toCircuitView(
       corner: cornerCall(geo, p.lat.s),
     },
   };
+}
+
+/** Your own colours on your bike (index 0). */
+export function withLivery(view: CircuitView, livery: Livery): CircuitView {
+  const [me, ...rest] = view.riders;
+  return me ? { ...view, riders: [{ ...me, livery }, ...rest] } : view;
 }

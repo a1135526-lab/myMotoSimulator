@@ -218,7 +218,13 @@ export {
   type FriendState,
   type RoomInvite,
 } from './online/friends/friendsStore';
-export { useRemoteHornStore, type RemoteHorn } from './online/room/roomHorns';
+export { DEFAULT_LIVERY, LIVERY_PRESETS, useLiveryStore, type Livery } from './stores/liveryStore';
+export {
+  hornDistanceM,
+  hornGain,
+  useRemoteHornStore,
+  type RemoteHorn,
+} from './online/room/roomHorns';
 export { amHost, useRoomStore, type RoomProfile, type RoomStatus } from './online/room/roomStore';
 export {
   CODE_LENGTH,

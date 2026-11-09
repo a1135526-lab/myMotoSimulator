@@ -1,0 +1,63 @@
+.preview {
+  width: 100%;
+  max-width: 260px;
+  justify-self: center;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.preset[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 50%;
+}
+
+.pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.picker input {
+  width: 44px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}

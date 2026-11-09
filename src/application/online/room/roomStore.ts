@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useLiveryStore } from '../../stores/liveryStore';
 import { useUiStore } from '../../stores/uiStore';
 import { RemoteRiders } from './remoteRiders';
 import { liveTransport, passOn, SupabaseRoomTransport, type RoomTransport } from './roomTransport';
@@ -171,6 +172,7 @@ export const useRoomStore = create<RoomState>()((set, get) => {
       name: cleanName(profile.name),
       id: globalThis.crypto?.randomUUID?.() ?? `p${now()}${Math.floor(random() * 1e9)}`,
       joinedAt: now(),
+      livery: useLiveryStore.getState().livery,
     };
     set({ ...IDLE, status: 'connecting', code, me, error: null });
     const seen = new Promise<RoomPlayer[]>((resolve) => {

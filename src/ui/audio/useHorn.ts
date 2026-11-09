@@ -1,20 +1,35 @@
 import { useEffect } from 'react';
-import { useHornKey, useHornStore, useRemoteHornStore } from '@/application';
+import {
+  hornDistanceM,
+  hornGain,
+  useHornKey,
+  useHornStore,
+  useRemoteHornStore,
+} from '@/application';
 import { hornContext, soundHorn, type StopHorn } from './hornSounds';
 
-/** Other players' horns are a bit quieter than your own. */
-const REMOTE_HORN_GAIN = 0.6;
+/** Volume follows the other bike this fast, s. */
+const GAIN_GLIDE_S = 0.05;
+
+interface Playing {
+  readonly stop: StopHorn;
+  readonly out: GainNode;
+}
 
 /**
  * The horn on a riding page: H or the 📯 button, plus other players' horns
- * in a friend room. Sounds even with the engine sound off — honking is
- * always on purpose.
+ * in a friend room — loud close by, fading with distance, silent far away.
+ * Sounds even with the engine sound off: honking is always on purpose.
  */
 export function useHorn(): void {
   useHornKey();
   useEffect(() => {
     let stop: StopHorn | null = null;
-    const remote = new Map<string, StopHorn>();
+    const remote = new Map<string, Playing>();
+    const end = (id: string) => {
+      remote.get(id)?.stop();
+      remote.delete(id);
+    };
     const mine = useHornStore.subscribe((s, prev) => {
       if (s.held === prev.held) return;
       stop?.();
@@ -25,31 +40,38 @@ export function useHorn(): void {
     });
     const theirs = useRemoteHornStore.subscribe((s) => {
       for (const [id, horn] of Object.entries(s.horns)) {
-        const playing = remote.get(id);
-        if (horn.on && !playing) {
+        if (horn.on && !remote.has(id)) {
           const ctx = hornContext();
           if (!ctx) continue;
           const out = ctx.createGain();
-          out.gain.value = REMOTE_HORN_GAIN;
+          out.gain.value = hornGain(hornDistanceM(id));
           out.connect(ctx.destination);
-          remote.set(id, soundHorn(ctx, out, horn.preset, horn.clip));
-        } else if (!horn.on && playing) {
-          playing();
-          remote.delete(id);
+          remote.set(id, { stop: soundHorn(ctx, out, horn.preset, horn.clip), out });
+        } else if (!horn.on) {
+          end(id);
         }
       }
-      for (const [id, playing] of remote) {
-        if (!s.horns[id]) {
-          playing();
-          remote.delete(id);
-        }
-      }
+      for (const id of [...remote.keys()]) if (!s.horns[id]) end(id);
     });
+    // Bikes move while they honk: keep each horn's volume on its distance.
+    let frame = 0;
+    const follow = () => {
+      for (const [id, { out }] of remote) {
+        out.gain.setTargetAtTime(
+          hornGain(hornDistanceM(id)),
+          out.context.currentTime,
+          GAIN_GLIDE_S,
+        );
+      }
+      frame = requestAnimationFrame(follow);
+    };
+    frame = requestAnimationFrame(follow);
     return () => {
+      cancelAnimationFrame(frame);
       mine();
       theirs();
       stop?.();
-      remote.forEach((playing) => playing());
+      for (const id of [...remote.keys()]) end(id);
     };
   }, []);
 }
