@@ -6,6 +6,7 @@ import { mirrorSlot, RearMirror } from '../../scene/rearMirror';
 import { SKY_PRESETS, type SceneTheme } from '../../scene/theme';
 import { buildCircuitTrack, type CircuitTrack } from './circuitTrack';
 import { GhostBike } from './ghostBike';
+import type { TrackHeight } from './terrain';
 import { TyreSmoke } from './tyreSmoke';
 
 const RIDER_COLORS = ['#ff7a1a', '#1e88e5', '#e53935', '#43a047'];
@@ -13,6 +14,9 @@ const EYE_HEIGHT_M = 1.25;
 const CHASE_BACK_M = 6.5;
 const CHASE_UP_M = 2.4;
 const CHASE_LOOK_AHEAD_M = 5;
+const CHASE_LOOK_UP_M = 0.9;
+/** Onboard camera looks a touch down the road. */
+const ONBOARD_PITCH = -0.04;
 const CHASE_FOLLOW_PER_S = 7;
 /** Onboard camera rolls with the bike, a touch less than the full lean. */
 const ONBOARD_ROLL_SHARE = 0.85;
@@ -34,6 +38,7 @@ interface RiderObject {
 
 /** Yaw that turns a model facing −Z to travel along heading h (forward = cos h, sin h). */
 const yawFor = (heading: number) => Math.atan2(-Math.cos(heading), -Math.sin(heading));
+const FLAT: TrackHeight = { y: 0, grade: 0, offM: 0 };
 
 /**
  * Imperative Three.js scene for circuit racing. React mounts it once and calls
@@ -95,20 +100,22 @@ export class CircuitRenderer {
     view.riders.forEach((r, i) => {
       const obj = this.riders[i];
       if (!obj) return;
-      obj.yaw.position.set(r.x, 0, r.z);
+      const ground = this.ground(r.x, r.z);
+      obj.yaw.position.set(r.x, ground.y, r.z);
       // A left turn lowers the heading, so the nose of a left slide sits at heading − slip.
-      obj.yaw.rotation.y = yawFor(r.heading - r.slip);
+      // Nose up a climb, down a drop.
+      obj.yaw.rotation.set(Math.atan(ground.grade), yawFor(r.heading - r.slip), 0);
       obj.bike.group.rotation.z = r.lean;
       obj.bike.update(r.progressM, r.speedKmh / KMH_PER_MPS);
       if (r.drift > SMOKE_MIN_DRIFT) {
         const h = r.heading - r.slip;
         const rx = r.x - Math.cos(h) * REAR_WHEEL_M;
         const rz = r.z - Math.sin(h) * REAR_WHEEL_M;
-        this.smoke.emit(rx, rz, r.drift, dt);
+        this.smoke.emit(rx, ground.y, rz, r.drift, dt);
       }
     });
     this.smoke.update(dt);
-    this.ghost.update(view.ghost);
+    this.ghost.update(view.ghost, (x, z) => this.ground(x, z).y);
 
     const lit = view.lightsLit;
     this.track?.startLights.forEach((m, i) => (m.emissiveIntensity = i < lit ? 3 : 0));
@@ -118,7 +125,12 @@ export class CircuitRenderer {
     this.renderer.render(this.scene, this.camera);
     if (player) {
       const own = [this.cockpit, ...(this.riders[0] ? [this.riders[0].yaw] : [])];
-      this.mirror.render(this.scene, { ...player, y: 0 }, mirrorSlot(this.canvas), own);
+      this.mirror.render(
+        this.scene,
+        { ...player, y: this.ground(player.x, player.z).y },
+        mirrorSlot(this.canvas),
+        own,
+      );
     }
   }
 
@@ -139,14 +151,19 @@ export class CircuitRenderer {
     this.camera.fov = Math.min(MAX_FOV, BASE_FOV + p.speedKmh * FOV_PER_KMH);
     this.camera.updateProjectionMatrix();
 
+    const ground = this.ground(p.x, p.z);
     if (mode === 'first') {
       // Head moves out over the inside of the turn as the bike leans.
       const lx = Math.sin(p.heading);
       const lz = -Math.cos(p.heading);
       const side = Math.sin(p.lean) * EYE_HEIGHT_M;
-      this.camera.position.set(p.x + lx * side, Math.cos(p.lean) * EYE_HEIGHT_M, p.z + lz * side);
+      this.camera.position.set(
+        p.x + lx * side,
+        ground.y + Math.cos(p.lean) * EYE_HEIGHT_M,
+        p.z + lz * side,
+      );
       this.camera.rotation.set(
-        -0.04,
+        ONBOARD_PITCH + Math.atan(ground.grade),
         yawFor(p.heading - p.slip * ONBOARD_SLIP_SHARE),
         p.lean * ONBOARD_ROLL_SHARE,
       );
@@ -154,7 +171,9 @@ export class CircuitRenderer {
       return;
     }
 
-    const target = new THREE.Vector3(p.x - fx * CHASE_BACK_M, CHASE_UP_M, p.z - fz * CHASE_BACK_M);
+    const bx = p.x - fx * CHASE_BACK_M;
+    const bz = p.z - fz * CHASE_BACK_M;
+    const target = new THREE.Vector3(bx, CHASE_UP_M + this.ground(bx, bz).y, bz);
     if (!this.chaseReady) {
       this.chase.copy(target);
       this.chaseReady = true;
@@ -163,7 +182,14 @@ export class CircuitRenderer {
     }
     this.camera.position.copy(this.chase);
     this.camera.rotation.set(0, 0, 0);
-    this.camera.lookAt(p.x + fx * CHASE_LOOK_AHEAD_M, 0.9, p.z + fz * CHASE_LOOK_AHEAD_M);
+    const ax = p.x + fx * CHASE_LOOK_AHEAD_M;
+    const az = p.z + fz * CHASE_LOOK_AHEAD_M;
+    this.camera.lookAt(ax, CHASE_LOOK_UP_M + this.ground(ax, az).y, az);
+  }
+
+  /** Road height and slope under a point (flat until the track is built). */
+  private ground(x: number, z: number): TrackHeight {
+    return this.track?.heights.at(x, z) ?? FLAT;
   }
 
   private ensureTrack(view: CircuitView): void {
@@ -188,6 +214,8 @@ export class CircuitRenderer {
       const colors = r.livery ?? RIDER_COLORS[i % RIDER_COLORS.length] ?? '#ffffff';
       const bike = createBikeModel(colors, !r.manual);
       const yaw = new THREE.Group();
+      // Heading first, then the slope about the bike's own axle line.
+      yaw.rotation.order = 'YXZ';
       yaw.add(bike.group);
       // Everyone else gets a name over their bike, in their colour.
       const tag = r.isPlayer

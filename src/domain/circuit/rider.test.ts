@@ -102,3 +102,47 @@ describe('rider control', () => {
     expect(held.sim.speedMps).toBeGreaterThan(12);
   });
 });
+
+describe('hills', () => {
+  const loop = geo.samples.filter((_, i) => i % 10 === 0).map(({ x, z }) => ({ x, z }));
+  const hilly = (keys: readonly (readonly [number, number])[]) => ({
+    model: manual,
+    geo: buildCircuit(loop, 6, undefined, keys),
+    limits,
+    clockS: 0,
+    laps: 1,
+    assist: false,
+    autoShift: true,
+  });
+  /** Speed after rolling 2 s off the throttle from 20 m/s near the start. */
+  const coast = (keys: readonly (readonly [number, number])[]) => {
+    const ctx = hilly(keys);
+    const r0 = createRider(manual, ctx.geo, 20, 0);
+    let r: CircuitRider = {
+      ...r0,
+      sim: { ...r0.sim, speedMps: 20, gear: 3, engineRpm: 7000, clutchState: 'locked' },
+    };
+    for (let i = 0; i < 2 * 240; i++) {
+      r = stepRider(ctx, r, { throttle: 0, brake: 0, clutchLever: 0 }, 0);
+    }
+    return r.sim.speedMps;
+  };
+
+  it('a climb slows the bike and a drop speeds it up', () => {
+    const flat = coast([]);
+    const up = coast([
+      [0, 0],
+      [0.25, 25],
+      [0.5, 25],
+      [0.75, 0],
+    ]);
+    const down = coast([
+      [0, 25],
+      [0.25, 0],
+      [0.5, 0],
+      [0.75, 25],
+    ]);
+    expect(up).toBeLessThan(flat - 1);
+    expect(down).toBeGreaterThan(flat + 1);
+  });
+});

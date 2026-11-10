@@ -25,27 +25,33 @@ const readings: DashboardReadings = {
 };
 
 describe('BikeDashboard', () => {
-  it.each(['lcd-bar', 'round-lcd', 'analog-lcd', 'twin-analog', 'tft'] as const)(
-    '%s shows speed and gear',
-    (layout) => {
-      render(
-        <BikeDashboard
-          model={model({ layout })}
-          readings={readings}
-          speedTestId="speed"
-          gearTestId="gear"
-        />,
-      );
-      const dash = screen.getByTestId('dashboard');
-      expect(dash).toHaveAttribute('data-layout', layout);
-      expect(dash).toHaveAttribute('data-rpm', '7400');
-      expect(screen.getByTestId('speed')).toHaveTextContent('87');
-      expect(screen.getByTestId('gear')).toHaveTextContent('3');
-      expect(screen.getByRole('img', { name: /時速 87 公里/ })).toBeInTheDocument();
-    },
-  );
+  it.each([
+    'lcd-bar',
+    'round-lcd',
+    'analog-lcd',
+    'twin-analog',
+    'tft',
+    'tick-ring',
+    'race-strip',
+    'retro-chrono',
+  ] as const)('%s shows speed and gear', (layout) => {
+    render(
+      <BikeDashboard
+        model={model({ layout })}
+        readings={readings}
+        speedTestId="speed"
+        gearTestId="gear"
+      />,
+    );
+    const dash = screen.getByTestId('dashboard');
+    expect(dash).toHaveAttribute('data-layout', layout);
+    expect(dash).toHaveAttribute('data-rpm', '7400');
+    expect(screen.getByTestId('speed')).toHaveTextContent('87');
+    expect(screen.getByTestId('gear')).toHaveTextContent('3');
+    expect(screen.getByRole('img', { name: /時速 87 公里.*3 檔/ })).toBeInTheDocument();
+  });
 
-  it('scooters have no gear readout', () => {
+  it('scooters show D (drive) where the gear goes', () => {
     render(
       <BikeDashboard
         model={model({ manual: false })}
@@ -54,5 +60,21 @@ describe('BikeDashboard', () => {
       />,
     );
     expect(screen.queryByTestId('gear')).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /D 檔/ })).toBeInTheDocument();
+  });
+
+  it('the race dash puts the gear in big type and lights the shift strip', () => {
+    const { container } = render(
+      <BikeDashboard
+        model={model({ layout: 'race-strip' })}
+        readings={{ ...readings, gearLabel: '5', rpm: 10800 }}
+      />,
+    );
+    expect(container.querySelector('svg')).toHaveTextContent('5');
+    // Past the shift point every LED flashes blue.
+    const leds = [...container.querySelectorAll('circle')].filter(
+      (c) => c.getAttribute('fill') === '#3d8bff',
+    );
+    expect(leds).toHaveLength(16);
   });
 });

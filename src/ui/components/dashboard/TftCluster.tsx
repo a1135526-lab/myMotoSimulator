@@ -1,5 +1,5 @@
 import styles from './dashboard.module.css';
-import { alpha, labelStepRpm, type LayoutProps } from './lcd';
+import { alpha, gearText, labelStepRpm, NEUTRAL_GREEN, type LayoutProps } from './lcd';
 import { arcPath, polar } from './geometry';
 import { Lamps } from './parts';
 
@@ -93,28 +93,26 @@ export function TftCluster({ m, r, lamps }: LayoutProps) {
         km/h
       </text>
 
-      {m.manual && (
-        <g>
-          <rect
-            x={276}
-            y={134}
-            width={50}
-            height={40}
-            rx={8}
-            fill={alpha(m.accent, 0.12)}
-            stroke={r.gearLabel === 'N' ? '#2bff6a' : m.accent}
-            strokeWidth={2}
-          />
-          <text
-            x={301}
-            y={155}
-            className={styles.tftGear}
-            fill={r.gearLabel === 'N' ? '#2bff6a' : '#fff'}
-          >
-            {r.gearLabel}
-          </text>
-        </g>
-      )}
+      <g>
+        <rect
+          x={276}
+          y={134}
+          width={50}
+          height={40}
+          rx={8}
+          fill={alpha(m.accent, 0.12)}
+          stroke={r.gearLabel === 'N' ? NEUTRAL_GREEN : m.accent}
+          strokeWidth={2}
+        />
+        <text
+          x={301}
+          y={155}
+          className={styles.tftGear}
+          fill={r.gearLabel === 'N' ? NEUTRAL_GREEN : '#fff'}
+        >
+          {gearText(r)}
+        </text>
+      </g>
 
       <text x={30} y={132} className={styles.label} fill="#8d99a6">
         TRIP

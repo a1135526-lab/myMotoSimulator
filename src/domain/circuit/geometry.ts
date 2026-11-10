@@ -12,7 +12,10 @@
  * The x/z ground plane is the 3D scene's: seen from above, +x is right and +z
  * is down the screen, so the rider's left is (sin h, −cos h) and a left turn
  * makes h decrease. Curvature κ = −dh/ds (> 0 turning left).
+ * Height y is up from the ground plane (see elevation.ts); grade = dy/ds.
  */
+import { elevationAt, type ElevationKey } from './elevation';
+
 export interface Vec2 {
   readonly x: number;
   readonly z: number;
@@ -24,6 +27,10 @@ export interface TrackSample {
   readonly z: number;
   readonly heading: number;
   readonly curvature: number;
+  /** Road height, m (0 on a flat circuit). */
+  readonly y: number;
+  /** Slope along the direction of travel, rise / run (+ = uphill). */
+  readonly grade: number;
 }
 
 export interface CircuitGeometry {
@@ -64,6 +71,7 @@ export function buildCircuit(
   controlPoints: readonly Vec2[],
   halfWidth: number,
   step = 2,
+  elevation: readonly ElevationKey[] = [],
 ): CircuitGeometry {
   if (controlPoints.length < 4) throw new Error('A circuit needs at least 4 control points');
   const dense = densePolyline(controlPoints);
@@ -100,6 +108,7 @@ export function buildCircuit(
     return Math.atan2(b.z - a.z, b.x - a.x);
   });
   const win = Math.max(1, Math.round(CURVATURE_WINDOW_M / ds));
+  const heights = pts.map((_, i) => elevationAt(elevation, i / count));
   const samples = pts.map((p, i) => {
     const h0 = headings[(((i - win) % count) + count) % count] ?? 0;
     const h1 = headings[(i + win) % count] ?? 0;
@@ -109,6 +118,8 @@ export function buildCircuit(
       z: p.z,
       heading: headings[i] ?? 0,
       curvature: -wrapAngle(h1 - h0) / (2 * win * ds),
+      y: heights[i] ?? 0,
+      grade: ((heights[(i + 1) % count] ?? 0) - (heights[(i - 1 + count) % count] ?? 0)) / (2 * ds),
     };
   });
   return { length: total, step: ds, samples, halfWidth };
@@ -131,6 +142,8 @@ export function sampleAt(geo: CircuitGeometry, s: number): TrackSample {
     z: a.z + (b.z - a.z) * t,
     heading: a.heading + wrapAngle(b.heading - a.heading) * t,
     curvature: a.curvature + (b.curvature - a.curvature) * t,
+    y: a.y + (b.y - a.y) * t,
+    grade: a.grade + (b.grade - a.grade) * t,
   };
 }
 

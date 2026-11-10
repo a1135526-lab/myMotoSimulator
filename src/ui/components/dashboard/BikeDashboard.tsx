@@ -3,7 +3,9 @@ import type { DashboardModel, DashboardReadings } from '@/application';
 import { AnalogLcdCluster } from './AnalogLcdCluster';
 import styles from './dashboard.module.css';
 import { LcdBarCluster } from './LcdBarCluster';
-import { lampState, type LayoutProps } from './lcd';
+import { gearText, lampState, type LayoutProps } from './lcd';
+import { RaceStripCluster } from './RaceStripCluster';
+import { RetroChronoCluster } from './RetroChronoCluster';
 import { RoundLcdCluster } from './RoundLcdCluster';
 import { TftCluster } from './TftCluster';
 import { TickRingCluster } from './TickRingCluster';
@@ -16,6 +18,8 @@ const LAYOUTS: Readonly<Record<DashboardModel['layout'], ComponentType<LayoutPro
   'twin-analog': TwinAnalogCluster,
   tft: TftCluster,
   'tick-ring': TickRingCluster,
+  'race-strip': RaceStripCluster,
+  'retro-chrono': RetroChronoCluster,
 };
 
 interface BikeDashboardProps {
@@ -41,9 +45,7 @@ export function BikeDashboard({
     <div
       className={`${styles.dash} ${className ?? ''}`}
       role="img"
-      aria-label={`儀表：時速 ${speed} 公里，轉速 ${Math.round(readings.rpm)}${
-        readings.gearLabel === null ? '' : `，${readings.gearLabel} 檔`
-      }`}
+      aria-label={`儀表：時速 ${speed} 公里，轉速 ${Math.round(readings.rpm)}，${gearText(readings)} 檔`}
       data-testid="dashboard"
       data-layout={model.layout}
       data-speed={readings.speedKmh.toFixed(2)}

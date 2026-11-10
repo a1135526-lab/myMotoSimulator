@@ -25,6 +25,8 @@ const SEGMENTS: Readonly<Record<string, string>> = {
   '-': 'g',
   // Gear displays draw neutral as an "n" with a roof.
   N: 'abcef',
+  // Scooters (no gears) show D for drive, as a lowercase "d".
+  D: 'bcdeg',
   ' ': '',
 };
 

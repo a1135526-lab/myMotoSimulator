@@ -137,9 +137,19 @@ export type BikeSegment = ScooterSegment | ManualSegment;
  *   twin-analog analog speedo and tacho either side of a centre screen
  *   tft         full-colour screen with a sweeping tach arc
  *   tick-ring   round black LCD whose tach is a ring of tick segments (SYM JET SL)
+ *   race-strip  race dash: shift-light LEDs across the top, huge gear number
+ *   retro-chrono cream-faced chrome twin clocks with a gear window between
+ * Every layout shows the gear (D on a scooter).
  */
 export type ClusterLayout =
-  'lcd-bar' | 'round-lcd' | 'analog-lcd' | 'twin-analog' | 'tft' | 'tick-ring';
+  | 'lcd-bar'
+  | 'round-lcd'
+  | 'analog-lcd'
+  | 'twin-analog'
+  | 'tft'
+  | 'tick-ring'
+  | 'race-strip'
+  | 'retro-chrono';
 
 export interface ClusterSpec {
   readonly layout: ClusterLayout;

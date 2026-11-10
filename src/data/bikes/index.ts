@@ -39,6 +39,15 @@ import { YAMAHA_CYGNUS_X_125 } from './scooters/yamaha-cygnus-x-125';
 import { YAMAHA_FORCE_2_155 } from './scooters/yamaha-force-2-155';
 import { YAMAHA_TMAX_560 } from './scooters/yamaha-tmax-560';
 import { YAMAHA_XMAX_300 } from './scooters/yamaha-xmax-300';
+import { YAMAHA_YZF_R1 } from './manual/yamaha-yzf-r1';
+import { HONDA_CBR1000RR_R } from './manual/honda-cbr1000rr-r';
+import { APRILIA_RSV4_FACTORY } from './manual/aprilia-rsv4-factory';
+import { KAWASAKI_NINJA_ZX_4RR } from './manual/kawasaki-ninja-zx-4rr';
+import { HONDA_GROM } from './manual/honda-grom';
+import { KAWASAKI_Z900RS } from './manual/kawasaki-z900rs';
+import { TRIUMPH_THRUXTON_RS } from './manual/triumph-thruxton-rs';
+import { HONDA_ADV_160 } from './scooters/honda-adv-160';
+import { KYMCO_LIKE_150 } from './scooters/kymco-like-150';
 
 /**
  * Bike registry. To add a bike: create one data file and append it here —
@@ -65,6 +74,8 @@ const RAW_BIKES: readonly BikeSpec[] = [
   HONDA_FORZA_350,
   KYMCO_AK_550,
   SYM_MAXSYM_TL_508,
+  HONDA_ADV_160,
+  KYMCO_LIKE_150,
   // 打檔車
   YAMAHA_R15_V4,
   YAMAHA_MT_15,
@@ -87,6 +98,13 @@ const RAW_BIKES: readonly BikeSpec[] = [
   DUCATI_PANIGALE_V2,
   TRIUMPH_STREET_TRIPLE_765_RS,
   SUZUKI_GSX_S1000,
+  YAMAHA_YZF_R1,
+  HONDA_CBR1000RR_R,
+  APRILIA_RSV4_FACTORY,
+  KAWASAKI_NINJA_ZX_4RR,
+  HONDA_GROM,
+  KAWASAKI_Z900RS,
+  TRIUMPH_THRUXTON_RS,
 ];
 
 export const BIKES: readonly BikeSpec[] = RAW_BIKES.map(parseBikeSpec);

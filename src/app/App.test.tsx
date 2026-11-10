@@ -104,7 +104,12 @@ describe('App (manual bikes)', () => {
     const groups = within(select)
       .getAllByRole('group')
       .map((g) => g.getAttribute('label'));
-    expect(groups).toEqual(['126–249 cc・白牌', '250–550 cc・黃牌', '551 cc 以上・紅牌']);
+    expect(groups).toEqual([
+      '125 cc 以下',
+      '126–249 cc・白牌',
+      '250–550 cc・黃牌',
+      '551 cc 以上・紅牌',
+    ]);
     expect(within(select).getByRole('option', { name: /XSR155・155 cc 復古檔車/ })).toBeTruthy();
   });
 

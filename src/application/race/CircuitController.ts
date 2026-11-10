@@ -133,7 +133,12 @@ export class CircuitController {
   restage(holdS?: number): void {
     const { circuit, player, opponents, skill, laps, assist, brakeAssist, autoShift, autoClutch } =
       this.config;
-    this.geo = buildCircuit(circuit.controlPoints, circuit.widthM / 2);
+    this.geo = buildCircuit(
+      circuit.controlPoints,
+      circuit.widthM / 2,
+      undefined,
+      circuit.elevation,
+    );
     this.models = [player, ...opponents].map(buildModel);
     const settings: CircuitSettings = {
       laps,

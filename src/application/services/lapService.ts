@@ -15,7 +15,7 @@ const LAP_CACHE_LIMIT = 128;
 export function circuitGeometry(circuit: CircuitSpec): CircuitGeometry {
   let geo = geoCache.get(circuit.id);
   if (!geo) {
-    geo = buildCircuit(circuit.controlPoints, circuit.widthM / 2);
+    geo = buildCircuit(circuit.controlPoints, circuit.widthM / 2, undefined, circuit.elevation);
     geoCache.set(circuit.id, geo);
   }
   return geo;

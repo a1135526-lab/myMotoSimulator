@@ -6,7 +6,7 @@ import type { SimInput, SimState } from '../simulation/types';
 import { autoGearbox } from './autoGearbox';
 import { bounceOffBarrier, HARD_HIT_MPS } from './contacts';
 import { driftBrakeShare, driftCurvature, stepDrift } from './drift';
-import { wrapS, type CircuitGeometry } from './geometry';
+import { sampleAt, wrapS, type CircuitGeometry } from './geometry';
 import {
   assistCurvature,
   gripOn,
@@ -106,8 +106,10 @@ export function recoverRider(ctx: RiderContext, rider: CircuitRider): CircuitRid
   };
 }
 
-/** Body with grip and rolling drag adjusted for lean and surface this step. */
-function modelFor(ctx: RiderContext, surface: Surface, lean: number): SimModel {
+const PERCENT = 100;
+
+/** Body with grip, rolling drag and hill adjusted for lean, surface and place this step. */
+function modelFor(ctx: RiderContext, surface: Surface, lean: number, s: number): SimModel {
   const grip = gripOn(ctx.limits, surface);
   const share = Math.max(MIN_GRIP_SHARE, longitudinalGripShare(lean, grip));
   const body = ctx.model.body;
@@ -116,6 +118,7 @@ function modelFor(ctx: RiderContext, surface: Surface, lean: number): SimModel {
     body: {
       ...body,
       tractionG: grip * share,
+      gradePercent: sampleAt(ctx.geo, s).grade * PERCENT,
       rollingResistanceCoeff:
         surface === 'track' ? body.rollingResistanceCoeff : RUNOFF_ROLLING_COEFF,
     },
@@ -168,7 +171,7 @@ export function stepRider(
     driftBrakeShare(drift, longitudinalGripShare(rider.lat.lean, grip)),
   );
   applied = { ...applied, brake: applied.brake * brakeShare * Math.min(1, grip) };
-  sim = step(modelFor(ctx, rider.surface, rider.lat.lean), sim, applied);
+  sim = step(modelFor(ctx, rider.surface, rider.lat.lean, rider.lat.s), sim, applied);
   if (rider.surface === 'runoff') sim = { ...sim, speedMps: runoffBog(sim.speedMps, dt) };
 
   const v = sim.speedMps;

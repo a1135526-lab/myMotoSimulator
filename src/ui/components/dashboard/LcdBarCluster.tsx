@@ -1,5 +1,5 @@
 import styles from './dashboard.module.css';
-import { labelStepRpm, lcdColors, type LayoutProps } from './lcd';
+import { gearText, labelStepRpm, lcdColors, NEUTRAL_GREEN, type LayoutProps } from './lcd';
 import { sevenSegWidth } from './geometry';
 import { Lamps, LcdClock, LcdTrip, SevenSeg } from './parts';
 
@@ -96,23 +96,21 @@ export function LcdBarCluster({ m, r, lamps }: LayoutProps) {
       </text>
 
       {/* Gear position */}
-      {m.manual && (
-        <g>
-          <rect x={282} y={98} width={42} height={52} rx={4} fill="none" stroke={c.dim} />
-          <text x={303} y={107} className={styles.label} fill={c.dim} textAnchor="middle">
-            GEAR
-          </text>
-          <SevenSeg
-            text={r.gearLabel ?? ' '}
-            digits={1}
-            x={295}
-            y={112}
-            size={32}
-            on={r.gearLabel === 'N' ? '#2bff6a' : c.on}
-            off={c.off}
-          />
-        </g>
-      )}
+      <g>
+        <rect x={282} y={98} width={42} height={52} rx={4} fill="none" stroke={c.dim} />
+        <text x={303} y={107} className={styles.label} fill={c.dim} textAnchor="middle">
+          GEAR
+        </text>
+        <SevenSeg
+          text={gearText(r)}
+          digits={1}
+          x={295}
+          y={112}
+          size={32}
+          on={r.gearLabel === 'N' ? NEUTRAL_GREEN : c.on}
+          off={c.off}
+        />
+      </g>
 
       {/* Clock, trip, fuel */}
       <LcdClock x={40} y={100} size={13} on={c.on} off={c.off} />

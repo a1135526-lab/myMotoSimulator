@@ -51,7 +51,7 @@ export class TyreSmoke {
   }
 
   /** Queue puffs at a rear contact patch for a slide of 0–1. */
-  emit(x: number, z: number, intensity: number, dt: number): void {
+  emit(x: number, y: number, z: number, intensity: number, dt: number): void {
     this.owed += intensity * RATE_PER_S * dt;
     while (this.owed >= 1) {
       this.owed -= 1;
@@ -62,7 +62,7 @@ export class TyreSmoke {
       puff.sprite.visible = true;
       puff.sprite.position.set(
         x + (Math.random() - 0.5) * 0.5,
-        0.3,
+        y + 0.3,
         z + (Math.random() - 0.5) * 0.5,
       );
     }

@@ -26,6 +26,7 @@ export * from './race/race';
 export * from './race/result';
 export * from './dyno/dragRun';
 export * from './circuit/geometry';
+export * from './circuit/elevation';
 export * from './circuit/lateral';
 export * from './circuit/autoGearbox';
 export * from './circuit/rider';

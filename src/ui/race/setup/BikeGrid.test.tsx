@@ -30,7 +30,7 @@ describe('BikeGrid', () => {
     expect(screen.getByTestId('b-yamaha-nmax-155')).toBeInTheDocument();
     expect(screen.queryByTestId('b-yamaha-tmax-560')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('style-naked'));
+    fireEvent.click(screen.getByTestId('style-retro'));
     fireEvent.click(screen.getByTestId('band-upTo125'));
     expect(screen.getByText('沒有符合條件的車款，換個篩選試試。')).toBeInTheDocument();
   });

@@ -16,9 +16,16 @@ interface AnalogDialProps {
   readonly needle: string;
   readonly startDeg?: number;
   readonly sweepDeg?: number;
+  /** Black face (modern) or cream face with black print (classic). */
+  readonly face?: 'black' | 'cream';
 }
 
-/** Black-faced needle gauge with a chrome ring, as on an analog dash. */
+const FACES = {
+  black: { inner: '#1a1e23', outer: '#050607', ink: '#f3f5f7', caption: '#9aa3ad' },
+  cream: { inner: '#fbf5e4', outer: '#d8ccaa', ink: '#1c1a16', caption: '#5d5546' },
+} as const;
+
+/** Needle gauge with a chrome ring, as on an analog dash. */
 export function AnalogDial({
   id,
   cx,
@@ -33,7 +40,9 @@ export function AnalogDial({
   needle,
   startDeg = 135,
   sweepDeg = 270,
+  face = 'black',
 }: AnalogDialProps) {
+  const f = FACES[face];
   const deg = (v: number) => startDeg + (Math.min(max, Math.max(0, v)) / max) * sweepDeg;
   const majors = Math.floor(max / majorStep);
   const minorStep = majorStep / 2;
@@ -48,8 +57,8 @@ export function AnalogDial({
           <stop offset="1" stopColor="#2b3035" />
         </linearGradient>
         <radialGradient id={`${id}-face`} cx="0.5" cy="0.4" r="0.65">
-          <stop offset="0" stopColor="#1a1e23" />
-          <stop offset="1" stopColor="#050607" />
+          <stop offset="0" stopColor={f.inner} />
+          <stop offset="1" stopColor={f.outer} />
         </radialGradient>
       </defs>
       <circle cx={cx} cy={cy} r={r + 5} fill={`url(#${id}-ring)`} />
@@ -74,7 +83,7 @@ export function AnalogDial({
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke={redFrom !== null && v >= redFrom ? '#ff6a5e' : '#f3f5f7'}
+            stroke={redFrom !== null && v >= redFrom ? '#ff6a5e' : f.ink}
             strokeWidth={major ? 2 : 1}
           />
         );
@@ -88,12 +97,13 @@ export function AnalogDial({
             x={p.x}
             y={p.y}
             className={redFrom !== null && v >= redFrom ? styles.dialNumRed : styles.dialNum}
+            style={redFrom !== null && v >= redFrom ? undefined : { fill: f.ink }}
           >
             {v / divisor}
           </text>
         );
       })}
-      <text x={cx} y={cy + r * 0.42} className={styles.label} fill="#9aa3ad" textAnchor="middle">
+      <text x={cx} y={cy + r * 0.42} className={styles.label} fill={f.caption} textAnchor="middle">
         {caption}
       </text>
       <g transform={`rotate(${deg(value).toFixed(2)} ${cx} ${cy})`}>

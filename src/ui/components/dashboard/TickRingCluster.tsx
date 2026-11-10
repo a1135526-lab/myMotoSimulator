@@ -1,6 +1,6 @@
 import styles from './dashboard.module.css';
 import { polar, sevenSegWidth } from './geometry';
-import type { LayoutProps } from './lcd';
+import { gearText, NEUTRAL_GREEN, type LayoutProps } from './lcd';
 import { Lamps, LcdClock, SevenSeg } from './parts';
 
 const CX = 150;
@@ -22,8 +22,8 @@ const FUEL_BARS = 7;
 /**
  * SYM JET SL: a round black LCD in a shield-shaped housing. The tachometer is
  * a ring of tick segments (0–12, red from 9) that light up with the revs; the
- * centre has a yellow clock, big white speed, yellow odometer (TOTAL) and a
- * fuel bar along the bottom.
+ * centre has a yellow clock, big white speed with the gear beside it, yellow
+ * odometer (TOTAL) and a fuel bar along the bottom.
  */
 export function TickRingCluster({ m, r, lamps }: LayoutProps) {
   const top = Math.ceil(m.tachMaxRpm / 1000);
@@ -127,6 +127,15 @@ export function TickRingCluster({ m, r, lamps }: LayoutProps) {
       <text x={203} y={196} className={styles.ringUnitLeft}>
         km/h
       </text>
+      <SevenSeg
+        text={gearText(r)}
+        digits={1}
+        x={207}
+        y={150}
+        size={24}
+        on={r.gearLabel === 'N' ? NEUTRAL_GREEN : YELLOW}
+        off="#ffffff08"
+      />
       <line x1={78} y1={208} x2={222} y2={208} stroke="#cfd4d8" strokeWidth={1.2} />
 
       {/* Odometer */}

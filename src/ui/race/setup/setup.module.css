@@ -223,6 +223,19 @@
   font-size: 0.8rem;
 }
 
+.hillBadge {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgb(255 176 32 / 0.9);
+  color: #1b1200;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-shadow: none;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 .trackStats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

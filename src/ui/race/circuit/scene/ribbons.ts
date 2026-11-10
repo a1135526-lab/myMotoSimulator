@@ -7,6 +7,10 @@ export interface RibbonSample {
   readonly heading: number;
   readonly curvature: number;
   readonly s: number;
+  /** Road height, m (absent = on the ground plane). */
+  readonly y?: number;
+  /** Slope along the track, rise / run. */
+  readonly grade?: number;
 }
 
 /** World point at lateral offset d (left of travel) from a sample. */
@@ -19,6 +23,7 @@ interface RibbonOptions {
   /** Lateral offsets of the two edges, left-positive. */
   readonly from: number;
   readonly to: number;
+  /** Height above the road. */
   readonly y: number;
   /** Only emit quads where this returns a colour (or true for the default). */
   readonly colorAt?: (p: RibbonSample, index: number) => THREE.Color | null;
@@ -49,16 +54,18 @@ export function ribbon(
     const color = opts.colorAt ? opts.colorAt(a, i) : null;
     if (opts.colorAt && !color) continue;
 
+    const ya = opts.y + (a.y ?? 0);
+    const yb = opts.y + (b.y ?? 0);
     let quad: [number, number, number][];
     if (opts.wallHeight !== undefined) {
       const pa = offsetPoint(a, opts.from);
       const pb = offsetPoint(b, opts.from);
       const h = opts.wallHeight;
       quad = [
-        [pa.x, opts.y, pa.z],
-        [pb.x, opts.y, pb.z],
-        [pb.x, opts.y + h, pb.z],
-        [pa.x, opts.y + h, pa.z],
+        [pa.x, ya, pa.z],
+        [pb.x, yb, pb.z],
+        [pb.x, yb + h, pb.z],
+        [pa.x, ya + h, pa.z],
       ];
     } else {
       const al = offsetPoint(a, opts.to);
@@ -66,14 +73,14 @@ export function ribbon(
       const bl = offsetPoint(b, opts.to);
       const br = offsetPoint(b, opts.from);
       quad = [
-        [ar.x, opts.y, ar.z],
-        [br.x, opts.y, br.z],
-        [bl.x, opts.y, bl.z],
-        [al.x, opts.y, al.z],
+        [ar.x, ya, ar.z],
+        [br.x, yb, br.z],
+        [bl.x, yb, bl.z],
+        [al.x, ya, al.z],
       ];
     }
     const v0 = a.s / vScale;
-    const v1 = v0 + Math.hypot(b.x - a.x, b.z - a.z) / vScale;
+    const v1 = v0 + Math.hypot(b.x - a.x, b.z - a.z, yb - ya) / vScale;
     const quadUv = [
       [0, v0],
       [0, v1],

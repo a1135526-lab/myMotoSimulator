@@ -1,14 +1,13 @@
 import { AnalogDial } from './AnalogDial';
 import styles from './dashboard.module.css';
-import { lcdColors, type LayoutProps } from './lcd';
-import { Lamps, LcdClock, LcdTrip } from './parts';
+import { gearText, lcdColors, NEUTRAL_GREEN, type LayoutProps } from './lcd';
+import { Lamps, LcdClock, LcdTrip, SevenSeg } from './parts';
 
 const FUEL_BARS = 6;
-const TEMP_BARS = 4;
 
 /**
  * Maxi-scooter dash: analog speedometer and tachometer either side of a centre
- * screen with clock, trip, fuel and temperature (Yamaha XMAX / TMAX).
+ * screen with clock, trip, gear and fuel (Yamaha XMAX / TMAX).
  */
 export function TwinAnalogCluster({ m, r, lamps }: LayoutProps) {
   const c = lcdColors({ ...m, lcd: 'negative' });
@@ -63,17 +62,23 @@ export function TwinAnalogCluster({ m, r, lamps }: LayoutProps) {
       <text x={226} y={102} className={styles.label} fill={c.dim} textAnchor="end">
         km
       </text>
-      {Array.from({ length: FUEL_BARS }, (_, i) => (
-        <rect key={i} x={174 + i * 8} y={120} width={6} height={9} fill={c.on} />
-      ))}
-      <text x={226} y={128} className={styles.label} fill={c.dim} textAnchor="end">
-        F
+      <text x={174} y={126} className={styles.label} fill={c.dim}>
+        GEAR
       </text>
-      {Array.from({ length: TEMP_BARS }, (_, i) => (
-        <rect key={i} x={174 + i * 8} y={136} width={6} height={9} fill={i < 2 ? c.on : c.off} />
+      <SevenSeg
+        text={gearText(r)}
+        digits={1}
+        x={206}
+        y={110}
+        size={22}
+        on={r.gearLabel === 'N' ? NEUTRAL_GREEN : c.on}
+        off={c.off}
+      />
+      {Array.from({ length: FUEL_BARS }, (_, i) => (
+        <rect key={i} x={174 + i * 8} y={138} width={6} height={8} fill={c.on} />
       ))}
-      <text x={226} y={144} className={styles.label} fill={c.dim} textAnchor="end">
-        H
+      <text x={226} y={146} className={styles.label} fill={c.dim} textAnchor="end">
+        F
       </text>
       <text x={200} y={170} className={styles.label} fill="#7b828b" textAnchor="middle">
         {m.brand}

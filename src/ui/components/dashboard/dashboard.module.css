@@ -160,3 +160,21 @@
     animation: none;
   }
 }
+
+.raceBig {
+  font: 700 54px var(--font-display, sans-serif);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.raceMid {
+  font: 700 26px var(--font-display, sans-serif);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.raceGear {
+  font: 800 84px var(--font-display, sans-serif);
+  text-anchor: middle;
+  dominant-baseline: central;
+}

@@ -55,5 +55,14 @@ export function lampState(m: DashboardModel, r: DashboardReadings): LampState {
   };
 }
 
+/** Neutral lights green on every dash. */
+export const NEUTRAL_GREEN = '#2bff6a';
+
+/**
+ * What the gear readout shows: the gear on a manual bike, D (drive) on a
+ * twist-and-go scooter, so every dash has one.
+ */
+export const gearText = (r: DashboardReadings): string => r.gearLabel ?? 'D';
+
 /** Tach scale labels every 1000 rpm, or every 2000 on long scales. */
 export const labelStepRpm = (tachMax: number) => (tachMax > 14000 ? 2000 : 1000);

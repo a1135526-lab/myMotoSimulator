@@ -164,6 +164,7 @@ export class StreetRenderer {
       const h = r.heading - r.slip;
       this.smoke.emit(
         r.x - Math.cos(h) * REAR_WHEEL_M,
+        ROAD_Y + r.y,
         r.z - Math.sin(h) * REAR_WHEEL_M,
         r.drift,
         dt,

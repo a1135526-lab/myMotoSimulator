@@ -1,6 +1,6 @@
 import { AnalogDial } from './AnalogDial';
 import styles from './dashboard.module.css';
-import { lcdColors, type LayoutProps } from './lcd';
+import { gearText, lcdColors, type LayoutProps } from './lcd';
 import { sevenSegWidth } from './geometry';
 import { Lamps, LcdClock, LcdTrip, SevenSeg } from './parts';
 
@@ -65,15 +65,7 @@ export function AnalogLcdCluster({ m, r, lamps }: LayoutProps) {
       <text x={210} y={64} className={styles.label} fill={c.dim}>
         GEAR
       </text>
-      <SevenSeg
-        text={r.gearLabel ?? ' '}
-        digits={1}
-        x={212}
-        y={70}
-        size={30}
-        on={c.on}
-        off={c.off}
-      />
+      <SevenSeg text={gearText(r)} digits={1} x={212} y={70} size={30} on={c.on} off={c.off} />
       <LcdClock x={212} y={118} size={13} on={c.on} off={c.off} />
       <text x={262} y={128} className={styles.label} fill={c.dim}>
         TRIP

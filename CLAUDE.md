@@ -48,7 +48,7 @@ ui → application → domain
 - **車輛外觀**：`liveryStore`（車身／安全帽／車手服，`scooter-dyno:livery`，`parseLivery` 只收 `#rrggbb`）。進房間時放進 `RoomPlayer.livery`（presence），`withRemoteRiders` 帶到 `CircuitRiderView.livery`，自己的由 `withLivery` 加上；電腦車用 `RIDER_COLORS`。`createBikeModel` 接受單色或 livery；其他車手頭上有 `nameTag.ts` 的名牌。
 - **騎乘評分**：`domain/circuit/rideTally.ts` 在 `stepCircuitRace` 裡逐步累計玩家的數據（只算燈滅到自己過線），`rideGrades.ts` 換算成各項 0–100 分和 S～E；`CircuitView.grades` 在過線後才有值，`RideGradeCard` 顯示，綜合評分存在 `MatchRecord.grade`。過彎速度是每個彎（`findCorners`）的最低速跟職業 AI 的速度曲線比。
 - **草地**：`lateral.ts` 的 `runoffBog()`，時速超過 `RUNOFF_TOP_SPEED_MPS` 會快速減速，截彎一定比較慢；`LapRecorder` 一圈離開柏油超過 `TRACK_LIMIT_S` 就標為不乾淨。
-- **賽道**：`src/data/circuits/` 的測試要求每個彎半徑 ≥ 40 m、超過 120° 的彎 ≥ 50 m，不同路段不能太靠近。改了既有賽道的形狀，要把它加進 `recordsStore` 的 `RELAID`（並把 `LAYOUT` 加一），舊的本機圈速和幽靈車才會被清掉。
+- **賽道**：`src/data/circuits/` 的測試要求每個彎半徑 ≥ 40 m、超過 120° 的彎 ≥ 50 m，不同路段不能太靠近。有上下坡的賽道（`hillCircuits.ts`）多一個 `elevation`（`[一圈比例, 高度]` 關鍵點，`domain/circuit/elevation.ts`），坡度上限 14%；物理用取樣點的 `grade`，3D 用 `scene/terrain.ts` 的 `TrackHeights`（車、鏡頭、幽靈車的高度與俯仰）和起伏地形。改了既有賽道的形狀，要把它加進 `recordsStore` 的 `RELAID`（並把 `LAYOUT` 加一），舊的本機圈速和幽靈車才會被清掉。
 - **紀錄**：`recordsStore` 把圈速榜、任務成績存在 localStorage（`scooter-dyno:records`），幽靈車每條賽道一筆、分開存（`scooter-dyno:ghost:<id>`）。讀取時一律驗證格式，壞資料丟掉。沒有後端，全球排行榜需要另外接資料庫。
 - **幽靈車**：`LapRecorder` 每 0.1 秒記錄玩家姿態，一圈完成交給 `CircuitController`；有明顯碰撞（`hitAtS` 變了）或按 R 的圈標為不乾淨，不進榜也不當幽靈。`ghostPoseAt` 補間播放。
 - **街景任務**：定義在 `src/data/cities/missions.ts`（用地標的確切名稱），`streetMissions(map)` 對應到地圖並算好路線；規則在 `domain/street/missions.ts`。
@@ -61,6 +61,7 @@ ui → application → domain
 - **導覽／美術／音樂**：模式只在大廳選，其他頁面只有 `HomeButton`（← 大廳）。背景圖在 `public/art/`，由 `scripts/art/capture-art.mjs` 從遊戲截圖（需要先 build + preview）；大廳音樂是 `ui/audio/lobbyMusic.ts` 即時合成，用 `<LobbyMusicPlayer />` 放進要播放的頁面。
 - **PWA**：`vite-plugin-pwa`，service worker 只存在於正式 build（`npm run dev` 沒有），e2e 用 `serviceWorkers: 'block'`。改了 `public/icon.svg` 要跑 `node scripts/icons/render-icons.mjs`。
 - **車款資料**：每個規格區塊都有 `provenance`；沒查證的數值 UI 會標「估計值」。不要把估計值寫成已查證。
+- **儀表**：每台車的 `cluster.layout` 選一種原廠樣式（`ui/components/dashboard/`，新樣式要加到 `ClusterLayout`、schema 和 `BikeDashboard` 的 `LAYOUTS`）。**每種樣式都必須顯示檔位**，用 `gearText()`（速克達顯示 D）。
 - **街景地圖**：`src/data/cities/nanzih/nanzih.json` 由 `scripts/osm/` 從 OpenStreetMap 產生，不要手改；資料 © OpenStreetMap 貢獻者（ODbL），README 的標示要保留。範圍是整個楠梓區（行政區界＋150 m），只畫 OSM 上的真實建築（不要再加自動生成的房子）。
 - **高架道路**：`RoadEdge.heights`（每個點的高度，null = 平面），騎士和車都有 `y`。`citySurfaceAt(map, x, z, y)`／`deckHeightAt` 只認高度差 `LEVEL_TOLERANCE_M` 內的路，所以橋上和橋下互不干擾；在高處離開橋面算撞到護欄。3D 在 `ui/street/scene/deckMeshes.ts`；不能騎的國道／鐵路高架是 `map.overpasses`。橋面的碰撞寬度＝畫出來的寬度（`DECK_SHOULDER_M`），高於 `PARAPET_FROM_M` 才有護欄；側面擦到牆是「擦牆滑行」，正面撞是停下＋小反彈。路樹、路燈、號誌用 `overheadAt()` 避開高架下方。
 

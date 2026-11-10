@@ -9,7 +9,8 @@ import { wrapS, type CircuitGeometry } from './geometry';
  * AI riders on a circuit.
  *
  * Speed: each sample's corner speed is √(μ_use·g / |κ|); a backwards pass then
- * adds braking zones (v² = v_next² + 2·a·ds). Skill sets how much of the grip
+ * adds braking zones (v² = v_next² + 2·a·ds; a hill adds or takes g·grade).
+ * Skill sets how much of the grip
  * the rider dares to use in corners and under braking.
  * Line: the AI rides the steering assist and nudges toward its own lateral line.
  */
@@ -52,6 +53,8 @@ const ASSIST_BAND_MPS = 1;
 const ASSIST_BRAKE_PER_MPS = 0.35;
 
 const MAX_PROFILE_MPS = 120;
+/** Braking never planned weaker than this, even down the steepest hill. */
+const MIN_DECEL_MPS2 = 1.5;
 /** Look this far ahead (s) when reading the speed profile. */
 const LOOKAHEAD_S = 0.6;
 const SPEED_BAND_MPS = 1.5;
@@ -77,7 +80,10 @@ export function speedProfile(
   for (let k = 2 * n - 1; k >= 0; k--) {
     const i = k % n;
     const next = v[(i + 1) % n] ?? MAX_PROFILE_MPS;
-    v[i] = Math.min(v[i] ?? MAX_PROFILE_MPS, Math.sqrt(next * next + 2 * decel * geo.step));
+    // Downhill the bike stops later, uphill sooner.
+    const slope = (geo.samples[i]?.grade ?? 0) * STANDARD_GRAVITY;
+    const a = Math.max(MIN_DECEL_MPS2, decel + slope);
+    v[i] = Math.min(v[i] ?? MAX_PROFILE_MPS, Math.sqrt(next * next + 2 * a * geo.step));
   }
   return v;
 }

@@ -106,6 +106,10 @@ export const RANKED_CIRCUITS = [
   'kart-oval',
   'neon-streets',
   'rift-valley',
+  'dragon-ridge',
+  'roller-hills',
+  'cliff-coast',
+  'midnight-pass',
 ] as const;
 /** Opponents in a race against the AI (a full grid of four). */
 export const RANKED_AI_OPPONENTS = 3;

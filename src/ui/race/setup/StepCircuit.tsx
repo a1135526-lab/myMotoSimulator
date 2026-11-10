@@ -39,6 +39,8 @@ export function StepCircuit() {
         {circuits.map((c) => {
           const geo = circuitGeometry(c);
           const selected = c.id === active.id;
+          const heights = geo.samples.map((p) => p.y);
+          const dropM = Math.round(Math.max(...heights) - Math.min(...heights));
           return (
             <button
               key={c.id}
@@ -48,7 +50,14 @@ export function StepCircuit() {
               onClick={() => setCircuit(c.id)}
               data-testid={`circuit-${c.id}`}
             >
-              <strong className={styles.trackName}>{c.name}</strong>
+              <strong className={styles.trackName}>
+                {c.name}
+                {dropM > 0 && (
+                  <span className={styles.hillBadge} data-testid={`hills-${c.id}`}>
+                    ⛰ 上下坡
+                  </span>
+                )}
+              </strong>
               {boards[c.id]?.[0] && (
                 <span className={styles.trackBest} data-testid={`best-${c.id}`}>
                   🏆 你的最快圈 {fmtLap(boards[c.id]?.[0]?.lapS ?? null)}
@@ -71,10 +80,17 @@ export function StepCircuit() {
                   <dt>抓地力</dt>
                   <dd>{c.gripG.toFixed(2)} G</dd>
                 </div>
-                <div>
-                  <dt>路寬</dt>
-                  <dd>{c.widthM} m</dd>
-                </div>
+                {dropM > 0 ? (
+                  <div>
+                    <dt>落差</dt>
+                    <dd>{dropM} m</dd>
+                  </div>
+                ) : (
+                  <div>
+                    <dt>路寬</dt>
+                    <dd>{c.widthM} m</dd>
+                  </div>
+                )}
               </dl>
             </button>
           );

@@ -15,11 +15,12 @@ export class GhostBike {
   private manual: boolean | null = null;
   private readonly materials: THREE.Material[] = [];
 
-  update(ghost: CircuitGhostView | null): void {
+  /** `groundAt` gives the road height under the ghost (it records only where it rode). */
+  update(ghost: CircuitGhostView | null, groundAt: (x: number, z: number) => number): void {
     this.group.visible = ghost !== null;
     if (!ghost) return;
     this.ensure(ghost.manual);
-    this.group.position.set(ghost.x, 0, ghost.z);
+    this.group.position.set(ghost.x, groundAt(ghost.x, ghost.z), ghost.z);
     this.group.rotation.y = yawFor(ghost.heading);
     if (this.bike) this.bike.group.rotation.z = ghost.lean;
   }

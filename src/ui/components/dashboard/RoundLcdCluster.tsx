@@ -1,5 +1,5 @@
 import styles from './dashboard.module.css';
-import { labelStepRpm, lcdColors, type LayoutProps } from './lcd';
+import { gearText, labelStepRpm, lcdColors, NEUTRAL_GREEN, type LayoutProps } from './lcd';
 import { arcPath, polar, sevenSegWidth } from './geometry';
 import { Lamps, LcdClock, LcdTrip, SevenSeg } from './parts';
 
@@ -21,7 +21,7 @@ function sector(fromDeg: number, toDeg: number, rIn: number, rOut: number): stri
 
 /**
  * Round retro LCD in a chrome bezel (SYM MMBCU): a ring of tach segments
- * around a big segment speed readout.
+ * around a big segment speed readout, the gear in a window on the left.
  */
 export function RoundLcdCluster({ m, r, lamps }: LayoutProps) {
   const c = lcdColors(m);
@@ -89,6 +89,18 @@ export function RoundLcdCluster({ m, r, lamps }: LayoutProps) {
       <text x={C} y={128} className={styles.label} fill={c.dim} textAnchor="middle">
         km/h
       </text>
+      <text x={60} y={124} className={styles.label} fill={c.dim} textAnchor="middle">
+        GEAR
+      </text>
+      <SevenSeg
+        text={gearText(r)}
+        digits={1}
+        x={53}
+        y={128}
+        size={22}
+        on={r.gearLabel === 'N' ? NEUTRAL_GREEN : c.on}
+        off={c.off}
+      />
       <LcdClock x={92} y={134} size={11} on={c.on} off={c.off} />
       <text x={78} y={162} className={styles.label} fill={c.dim}>
         TRIP

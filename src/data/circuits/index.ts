@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import type { Vec2 } from '@/domain';
+import type { ElevationKey, Vec2 } from '@/domain';
 import { airDensityAt, type Scenery, type SkyTheme } from '../tracks';
+import { HILL_CIRCUITS } from './hillCircuits';
 import { MORE_CIRCUITS } from './moreCircuits';
 
 /**
@@ -25,6 +26,8 @@ export interface CircuitSpec {
   readonly defaultLaps: number;
   readonly sky: SkyTheme;
   readonly scenery: Scenery;
+  /** Hills: `[lapFraction, heightM]` keys (see domain elevation.ts); flat when absent. */
+  readonly elevation?: readonly ElevationKey[];
 }
 
 const pts = (raw: readonly (readonly [number, number])[]): Vec2[] =>
@@ -43,6 +46,13 @@ const CircuitSchema = z.object({
   defaultLaps: z.number().int().min(1).max(10),
   sky: z.enum(['day', 'sunset', 'night', 'overcast']),
   scenery: z.enum(['stadium', 'coast', 'mountain']),
+  elevation: z
+    .array(z.tuple([z.number().min(0).max(1), z.number().min(0).max(80)]))
+    .min(2)
+    .refine((keys) => keys.every((k, i) => i === 0 || k[0] > (keys[i - 1]?.[0] ?? 1)), {
+      message: 'elevation keys must run forward round the lap',
+    })
+    .optional(),
 });
 
 const circuit = (c: Omit<CircuitSpec, 'airDensity'>): CircuitSpec => ({
@@ -115,6 +125,7 @@ const RAW_CIRCUITS: readonly CircuitSpec[] = [
     scenery: 'stadium',
   }),
   ...MORE_CIRCUITS.map(circuit),
+  ...HILL_CIRCUITS.map(circuit),
 ];
 
 export const CIRCUITS: readonly CircuitSpec[] = RAW_CIRCUITS.map((c) => {
