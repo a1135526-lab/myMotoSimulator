@@ -4,7 +4,8 @@ import { onlineText } from '../../../components/online/onlineText';
 import { fmtLap } from '../format';
 import styles from './hud.module.css';
 
-const SHOW_MS = 3500;
+/** Short, so it never sits over the road for long. */
+const SHOW_MS = 2200;
 
 function message(n: LapNotice): { text: string; tone: 'best' | 'ok' | 'void' } {
   if (!n.clean)
@@ -14,7 +15,7 @@ function message(n: LapNotice): { text: string; tone: 'best' | 'ok' | 'void' } {
   return { text: fmtLap(n.lapS), tone: 'ok' };
 }
 
-/** A few seconds after each lap: the time and where it landed on the board. */
+/** Briefly after each lap, under the lap times: the time and where it landed on the board. */
 export function LapNoticeBanner() {
   const notice = useCircuitStore((s) => s.lapNotice);
   const [shown, setShown] = useState<LapNotice | null>(null);

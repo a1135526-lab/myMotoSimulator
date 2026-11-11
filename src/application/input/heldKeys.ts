@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
+import { useFlashStore } from '../stores/flashStore';
 import { useHornStore } from '../stores/hornStore';
 import { useUiStore } from '../stores/uiStore';
 
 const MIRROR_KEY = 'KeyB';
 const HORN_KEY = 'KeyH';
+const FLASH_KEY = 'KeyF';
 
 const isEditable = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
@@ -39,3 +41,16 @@ export const useMirrorKey = () => useHeldKey(MIRROR_KEY, useUiStore.getState().s
 
 /** Hold H to sound the horn. */
 export const useHornKey = () => useHeldKey(HORN_KEY, useHornStore.getState().setHeld);
+
+/** Press F to flash the headlight (night circuits, three a race). */
+export function useFlashKey(): void {
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.code === FLASH_KEY && !e.repeat && !isEditable(e.target)) {
+        useFlashStore.getState().flash();
+      }
+    };
+    window.addEventListener('keydown', down);
+    return () => window.removeEventListener('keydown', down);
+  }, []);
+}

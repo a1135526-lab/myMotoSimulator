@@ -86,7 +86,9 @@ export type RoomMessage =
       readonly preset: HornPreset;
     }
   /** Someone's recorded horn, sent before they first use it in a race. */
-  | { readonly type: 'hornClip'; readonly id: string; readonly clip: string };
+  | { readonly type: 'hornClip'; readonly id: string; readonly clip: string }
+  /** Someone flashed their headlight (night circuits). */
+  | { readonly type: 'flash'; readonly id: string; readonly raceId: number };
 
 /** A recorded horn bigger than this isn't sent (others hear the standard horn). */
 export const ROOM_CLIP_MAX_CHARS = 200_000;
@@ -209,6 +211,11 @@ export function parseMessage(raw: unknown): RoomMessage | null {
       const id = str(o.id, 64);
       const clip = str(o.clip, ROOM_CLIP_MAX_CHARS);
       return id && clip?.startsWith('data:audio/') ? { type: 'hornClip', id, clip } : null;
+    }
+    case 'flash': {
+      const id = str(o.id, 64);
+      const raceId = num(o.raceId, 0, Number.MAX_SAFE_INTEGER);
+      return id && raceId !== null ? { type: 'flash', id, raceId } : null;
     }
     default:
       return null;

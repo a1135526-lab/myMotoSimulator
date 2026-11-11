@@ -1,0 +1,64 @@
+/* Both layers sit over the race picture and let every touch through to the buttons. */
+.dazzle,
+.beam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 5;
+}
+
+/* Someone behind flashed you: see-through white, never a solid wall. */
+.dazzle {
+  background: radial-gradient(
+    ellipse at 50% 60%,
+    rgb(255 255 255 / 0.75),
+    rgb(255 255 255 / 0.45) 60%,
+    rgb(255 255 255 / 0.3)
+  );
+  animation: dazzle 1.4s ease-out forwards;
+}
+
+/* Your own flash: the road ahead lights up for a moment. */
+.beam {
+  background: radial-gradient(ellipse at 50% 85%, rgb(255 250 220 / 0.45), transparent 60%);
+  animation: beam 0.45s ease-out forwards;
+}
+
+@keyframes dazzle {
+  0% {
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  35% {
+    opacity: 0.85;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes beam {
+  0% {
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dazzle {
+    animation-duration: 0.8s;
+  }
+}

@@ -33,11 +33,14 @@ const LOOKAHEAD_S = 0.5;
 export const RUNOFF_GRIP_G = 0.55;
 export const RUNOFF_ROLLING_COEFF = 0.2;
 /**
- * The tyres dig in on grass: above this speed the bike bogs down hard, so
- * cutting across the inside of a corner is always slower than the tarmac.
+ * The tyres dig in on grass: above this speed (≈ 29 km/h) the bike bogs down
+ * hard, and harder the faster it goes in, so cutting across the inside of a
+ * corner always costs far more than it saves.
  */
-export const RUNOFF_TOP_SPEED_MPS = 12;
-export const RUNOFF_BOG_MPS2 = 7;
+export const RUNOFF_TOP_SPEED_MPS = 8;
+export const RUNOFF_BOG_MPS2 = 12;
+/** Extra bog per m/s over RUNOFF_TOP_SPEED_MPS, 1/s. */
+export const RUNOFF_BOG_PER_MPS = 0.4;
 /**
  * Off the tarmac the rider can still haul the bike round — feet out, bars
  * turned, back wheel skating — so steer adds this much turning on top of lean
@@ -146,7 +149,9 @@ export function runoffCurvature(steer: number, speedMps: number): number {
 /** Speed after one step bogging down on grass (only above RUNOFF_TOP_SPEED_MPS). */
 export function runoffBog(speedMps: number, dtS: number): number {
   if (speedMps <= RUNOFF_TOP_SPEED_MPS) return speedMps;
-  return Math.max(RUNOFF_TOP_SPEED_MPS, speedMps - RUNOFF_BOG_MPS2 * dtS);
+  const over = speedMps - RUNOFF_TOP_SPEED_MPS;
+  const decel = RUNOFF_BOG_MPS2 + RUNOFF_BOG_PER_MPS * over;
+  return Math.max(RUNOFF_TOP_SPEED_MPS, speedMps - decel * dtS);
 }
 
 /** Advance position along / across the track for one step. */

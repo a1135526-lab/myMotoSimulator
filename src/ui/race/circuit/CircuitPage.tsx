@@ -1,9 +1,12 @@
+import { useEffect } from 'react';
 import {
   readCircuitSound,
   useActiveCircuit,
   useCircuitController,
   useCircuitStore,
   useCircuits,
+  useFlashKey,
+  useFlashStore,
   useMirrorKey,
   useRaceBike,
   useRaceStore,
@@ -24,6 +27,8 @@ import {
   TiltToggle,
 } from '../../components/controls/StageButtons';
 import { TouchControls } from '../../components/controls/TouchControls';
+import { FlashButton } from '../../components/flash/FlashButton';
+import { FlashOverlay } from '../../components/flash/FlashOverlay';
 import { HornButton } from '../../components/horn/HornButton';
 import { MirrorButton } from '../../components/hud/RearMirrorSlot';
 import { AppLayout } from '../../layouts/AppLayout';
@@ -46,6 +51,7 @@ const CIRCUIT_KEYS: [string, string][] = [
   ['V', '視角'],
   ['B（按住）', '後照鏡'],
   ['H（按住）', '喇叭'],
+  ['F', '閃大燈（夜間）'],
   ['R', '回賽道'],
   ['Space', '起跑'],
 ];
@@ -80,6 +86,12 @@ export function CircuitPage({
   const immersive = useImmersive();
   useMirrorKey();
   useHorn();
+  useFlashKey();
+  const night = circuit.sky === 'night';
+  useEffect(() => {
+    useFlashStore.getState().setNight(night);
+    return () => useFlashStore.getState().setNight(false);
+  }, [night]);
   const showGo = !room && !ranked && !done && (!immersive || !live);
   useEngineAudio(readCircuitSound);
 
@@ -135,6 +147,7 @@ export function CircuitPage({
               {immersive ? '👻' : `👻 幽靈車 ${ghostOn ? '開' : '關'}`}
             </button>
             <HornButton className={styles.garageButton} compact={immersive} />
+            <FlashButton className={styles.garageButton} compact={immersive} />
             <MirrorButton className={styles.garageButton} compact={immersive} />
             <TiltToggle className={styles.garageButton} compact={immersive} />
             {manual && !autoShift && (
@@ -149,6 +162,7 @@ export function CircuitPage({
       <div className={styles.stage}>
         <CircuitScene theme={{ sky: circuit.sky, scenery: circuit.scenery }} />
         {view && !done && <CircuitHud view={view} camera={camera} />}
+        {!done && <FlashOverlay />}
         {view && (
           <CircuitResults
             view={view}

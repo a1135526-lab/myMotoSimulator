@@ -506,6 +506,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .go,
+  .lapNotice,
   .alert[data-tone='danger'],
   .ledsFlash .led[data-on='true'] {
     animation: none;
@@ -548,7 +549,8 @@
 }
 
 [data-immersive] .topRight .laps,
-[data-immersive] .topRight .gapAhead {
+[data-immersive] .topRight .gapAhead,
+[data-immersive] .topRight .lapNotice {
   grid-column: 1;
 }
 
@@ -565,20 +567,18 @@
   transform-origin: bottom center;
 }
 
-/* After each lap: time and board place, mid-screen for a few seconds. */
+/* After each lap: time and board place, briefly, in the corner under the lap times. */
 .lapNotice {
-  position: absolute;
-  top: 38%;
-  left: 50%;
-  transform: translateX(-50%);
+  max-width: min(260px, 40vw);
   margin: 0;
-  padding: 8px 18px;
-  border-radius: 999px;
+  padding: 5px 12px;
+  border-radius: 10px;
   background: var(--glass);
   backdrop-filter: blur(6px);
-  font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+  font-size: clamp(0.72rem, 1.5vw, 0.9rem);
   font-weight: 700;
-  white-space: nowrap;
+  text-align: right;
+  animation: lap-notice-in 0.2s ease-out;
 }
 
 .lapNotice[data-tone='best'] {
@@ -691,4 +691,11 @@
   background: var(--led-y);
   color: #111;
   text-shadow: none;
+}
+
+@keyframes lap-notice-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
 }

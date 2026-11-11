@@ -7,8 +7,11 @@ import {
 } from '@/domain';
 
 const SAMPLE_SLACK_S = 1e-6;
-/** More time than this off the tarmac in a lap is cutting the track: the lap doesn't count, s. */
-export const TRACK_LIMIT_S = 1;
+/**
+ * More time than this off the tarmac in a lap is cutting the track: the lap
+ * doesn't count, s. Just long enough to forgive a wheel brushing the edge.
+ */
+export const TRACK_LIMIT_S = 0.3;
 
 export interface CompletedLap {
   readonly lapS: number;

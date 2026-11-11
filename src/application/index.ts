@@ -49,7 +49,7 @@ export {
 export type { TouchControl } from './input/TouchInputSource';
 export { requestTiltPermission, type TiltPermission } from './input/TiltInputSource';
 export { saveFlickWanted, saveTiltWanted, useDefaultTilt } from './input/defaultTilt';
-export { useHornKey, useMirrorKey } from './input/heldKeys';
+export { useFlashKey, useHornKey, useMirrorKey } from './input/heldKeys';
 export {
   HORN_CLIP_MAX_CHARS,
   HORN_PRESETS,
@@ -219,6 +219,8 @@ export {
   type RoomInvite,
 } from './online/friends/friendsStore';
 export { DEFAULT_LIVERY, LIVERY_PRESETS, useLiveryStore, type Livery } from './stores/liveryStore';
+export { dazzles, FLASH_RANGE_M } from './online/room/roomFlash';
+export { flashesLeft, MAX_FLASHES, useFlashStore } from './stores/flashStore';
 export {
   hornDistanceM,
   hornGain,
