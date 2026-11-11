@@ -85,6 +85,8 @@ const ClusterSchema = z.object({
     'tick-ring',
     'race-strip',
     'retro-chrono',
+    'duke-analog',
+    'k1-sweep',
   ]),
   lcd: z.enum(['positive', 'negative']).optional(),
   accent: z.string().regex(/^#[0-9a-f]{6}$/i, 'accent must be #rrggbb'),

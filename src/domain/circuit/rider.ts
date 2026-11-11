@@ -44,6 +44,8 @@ export interface CircuitRider {
   readonly progressM: number;
   /** Race-clock time of the last hard hit (barrier or another bike); nobody falls off. */
   readonly hitAtS: number | null;
+  /** Race-clock time of the last hard hit on the barrier (spoils the lap for the records). */
+  readonly wallHitAtS: number | null;
   /** Distance from the grid slot to the start line. */
   readonly startGapM: number;
   /** Brake slide, −1…1 (+ = into a left turn); see drift.ts. */
@@ -80,6 +82,7 @@ export function createRider(
     finishedAtS: null,
     progressM: 0,
     hitAtS: null,
+    wallHitAtS: null,
     startGapM: geo.length - wrapS(geo, s),
     drift: 0,
   };
@@ -225,6 +228,7 @@ export function stepRider(
     finishedAtS,
     progressM,
     hitAtS: hard ? ctx.clockS : rider.hitAtS,
+    wallHitAtS: hard ? ctx.clockS : rider.wallHitAtS,
     startGapM: rider.startGapM,
     drift: bounce ? 0 : drift,
   };

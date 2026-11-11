@@ -1,6 +1,8 @@
 import type { ComponentType } from 'react';
 import type { DashboardModel, DashboardReadings } from '@/application';
 import { AnalogLcdCluster } from './AnalogLcdCluster';
+import { DukeCluster } from './DukeCluster';
+import { K1Cluster } from './K1Cluster';
 import styles from './dashboard.module.css';
 import { LcdBarCluster } from './LcdBarCluster';
 import { gearText, lampState, type LayoutProps } from './lcd';
@@ -20,6 +22,8 @@ const LAYOUTS: Readonly<Record<DashboardModel['layout'], ComponentType<LayoutPro
   'tick-ring': TickRingCluster,
   'race-strip': RaceStripCluster,
   'retro-chrono': RetroChronoCluster,
+  'duke-analog': DukeCluster,
+  'k1-sweep': K1Cluster,
 };
 
 interface BikeDashboardProps {

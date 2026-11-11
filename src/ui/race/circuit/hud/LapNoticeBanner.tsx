@@ -8,8 +8,7 @@ import styles from './hud.module.css';
 const SHOW_MS = 2200;
 
 function message(n: LapNotice): { text: string; tone: 'best' | 'ok' | 'void' } {
-  if (!n.clean)
-    return { text: `${fmtLap(n.lapS)} · 碰撞、重置或截彎，這圈不列入紀錄`, tone: 'void' };
+  if (!n.clean) return { text: `${fmtLap(n.lapS)} · 撞牆或重置，這圈不列入紀錄`, tone: 'void' };
   if (n.best) return { text: `🏆 新紀錄！${fmtLap(n.lapS)} · 幽靈車已更新`, tone: 'best' };
   if (n.place !== null) return { text: `${fmtLap(n.lapS)} · 本機排行第 ${n.place} 名`, tone: 'ok' };
   return { text: fmtLap(n.lapS), tone: 'ok' };

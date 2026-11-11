@@ -39,6 +39,8 @@ import { YAMAHA_CYGNUS_X_125 } from './scooters/yamaha-cygnus-x-125';
 import { YAMAHA_FORCE_2_155 } from './scooters/yamaha-force-2-155';
 import { YAMAHA_TMAX_560 } from './scooters/yamaha-tmax-560';
 import { YAMAHA_XMAX_300 } from './scooters/yamaha-xmax-300';
+import { SYM_DUKE_125 } from './scooters/sym-duke-125';
+import { KYMCO_K1_125 } from './scooters/kymco-k1-125';
 import { YAMAHA_YZF_R1 } from './manual/yamaha-yzf-r1';
 import { HONDA_CBR1000RR_R } from './manual/honda-cbr1000rr-r';
 import { APRILIA_RSV4_FACTORY } from './manual/aprilia-rsv4-factory';
@@ -59,6 +61,8 @@ const RAW_BIKES: readonly BikeSpec[] = [
   SYM_JET_SL_125,
   SYM_DRG_158,
   SYM_MMBCU_158,
+  SYM_DUKE_125,
+  KYMCO_K1_125,
   YAMAHA_CYGNUS_X_125,
   YAMAHA_FORCE_2_155,
   KYMCO_KRV_180,

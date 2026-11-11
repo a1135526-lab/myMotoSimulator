@@ -33,14 +33,14 @@ const LOOKAHEAD_S = 0.5;
 export const RUNOFF_GRIP_G = 0.55;
 export const RUNOFF_ROLLING_COEFF = 0.2;
 /**
- * The tyres dig in on grass: above this speed (≈ 29 km/h) the bike bogs down
- * hard, and harder the faster it goes in, so cutting across the inside of a
- * corner always costs far more than it saves.
+ * The tyres dig in on grass: above this speed (≈ 36 km/h) the bike bogs down,
+ * a little harder the faster it goes in, so cutting across the inside of a
+ * corner costs more than it saves without spoiling the ride.
  */
-export const RUNOFF_TOP_SPEED_MPS = 8;
-export const RUNOFF_BOG_MPS2 = 12;
+export const RUNOFF_TOP_SPEED_MPS = 10;
+export const RUNOFF_BOG_MPS2 = 8;
 /** Extra bog per m/s over RUNOFF_TOP_SPEED_MPS, 1/s. */
-export const RUNOFF_BOG_PER_MPS = 0.4;
+export const RUNOFF_BOG_PER_MPS = 0.2;
 /**
  * Off the tarmac the rider can still haul the bike round — feet out, bars
  * turned, back wheel skating — so steer adds this much turning on top of lean

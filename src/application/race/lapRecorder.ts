@@ -7,18 +7,14 @@ import {
 } from '@/domain';
 
 const SAMPLE_SLACK_S = 1e-6;
-/**
- * More time than this off the tarmac in a lap is cutting the track: the lap
- * doesn't count, s. Just long enough to forgive a wheel brushing the edge.
- */
-export const TRACK_LIMIT_S = 0.3;
 
 export interface CompletedLap {
   readonly lapS: number;
   readonly samples: readonly GhostSample[];
   /**
-   * No crash, no reset to the racing line and no cutting across the grass:
-   * fit for the leaderboard and the ghost.
+   * No hard hit on the barrier and no reset to the racing line: fit for the
+   * leaderboard and the ghost. Running onto the grass (it slows you plenty) and
+   * bumping other riders still count.
    */
   readonly clean: boolean;
   /** Race clock when it was completed, s. */
@@ -34,9 +30,7 @@ export class LapRecorder {
   private lapsDone = 0;
   private samples: GhostSample[] = [];
   private clean = true;
-  private seenHitAtS: number | null = null;
-  /** The race's off-track time when this lap started, s. */
-  private offTrackAtStartS = 0;
+  private seenWallHitAtS: number | null = null;
   private lastSampleT = -Infinity;
 
   /** R was pressed: this lap doesn't count. */
@@ -48,13 +42,11 @@ export class LapRecorder {
   observe(geo: CircuitGeometry, race: CircuitRaceState): CompletedLap | null {
     const p = race.riders[0];
     if (!p) return null;
-    // A hard hit (barrier or another bike) spoils the lap, like R does.
-    if (p.hitAtS !== this.seenHitAtS) {
-      this.seenHitAtS = p.hitAtS;
+    // A hard hit on the barrier spoils the lap, like R does.
+    if (p.wallHitAtS !== this.seenWallHitAtS) {
+      this.seenWallHitAtS = p.wallHitAtS;
       this.clean = false;
     }
-
-    if (race.tally.offTrackS - this.offTrackAtStartS > TRACK_LIMIT_S) this.clean = false;
 
     let completed: CompletedLap | null = null;
     if (p.lapTimesS.length > this.lapsDone) {
@@ -77,7 +69,6 @@ export class LapRecorder {
       this.lapStartedAtS = p.lapStartedAtS;
       this.samples = [];
       this.clean = true;
-      this.offTrackAtStartS = race.tally.offTrackS;
       this.lastSampleT = -Infinity;
     }
     if (this.lapStartedAtS !== null) {

@@ -139,6 +139,8 @@ export type BikeSegment = ScooterSegment | ManualSegment;
  *   tick-ring   round black LCD whose tach is a ring of tick segments (SYM JET SL)
  *   race-strip  race dash: shift-light LEDs across the top, huge gear number
  *   retro-chrono cream-faced chrome twin clocks with a gear window between
+ *   duke-analog  grey dotted face, orange needle, amber gear / odometer LCD (SYM DUKE)
+ *   k1-sweep     printed white-to-red speed band, yellow needle, odometer drum (KYMCO K1)
  * Every layout shows the gear (D on a scooter).
  */
 export type ClusterLayout =
@@ -149,7 +151,9 @@ export type ClusterLayout =
   | 'tft'
   | 'tick-ring'
   | 'race-strip'
-  | 'retro-chrono';
+  | 'retro-chrono'
+  | 'duke-analog'
+  | 'k1-sweep';
 
 export interface ClusterSpec {
   readonly layout: ClusterLayout;

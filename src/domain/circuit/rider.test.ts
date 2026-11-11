@@ -72,9 +72,9 @@ describe('rider control', () => {
     const grass = ride(riding(limits.halfWidth + 6, 0, 30), 1.5, { throttle: 1, brake: 0 }, 0).r;
     const tarmac = ride(riding(0, 0, 30), 1.5, { throttle: 1, brake: 0 }, 0).r;
     expect(grass.surface).toBe('runoff');
-    expect(grass.sim.speedMps).toBeLessThan(12);
+    expect(grass.sim.speedMps).toBeLessThan(18);
     expect(tarmac.sim.speedMps).toBeGreaterThan(29);
-    expect(grass.progressM).toBeLessThan(tarmac.progressM - 15);
+    expect(grass.progressM).toBeLessThan(tarmac.progressM - 8);
   });
 
   it('braking into a turn slides and turns tighter than leaning alone (assist off)', () => {

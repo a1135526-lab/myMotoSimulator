@@ -38,8 +38,7 @@ function alertFor(view: CircuitView): Alert | null {
         : '紅燈熄滅前起步';
     return { text: `偷跑！${why} · 罰停 ${penaltyLeftS.toFixed(1)} 秒`, tone: 'danger' };
   }
-  if (view.player.offTrack)
-    return { text: '衝出賽道 · 草地大幅減速，這圈不列入紀錄', tone: 'danger' };
+  if (view.player.offTrack) return { text: '衝出賽道 · 草地會減速', tone: 'danger' };
   if (view.phase === 'racing' && !jumpStart && reactionS !== null) {
     if (view.raceTimeS < reactionS + REACTION_SHOW_S) {
       return { text: `起步反應 ${reactionS.toFixed(3)} 秒`, tone: 'info' };

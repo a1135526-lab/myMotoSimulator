@@ -34,6 +34,8 @@ describe('BikeDashboard', () => {
     'tick-ring',
     'race-strip',
     'retro-chrono',
+    'duke-analog',
+    'k1-sweep',
   ] as const)('%s shows speed and gear', (layout) => {
     render(
       <BikeDashboard
