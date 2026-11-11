@@ -62,6 +62,8 @@ interface RaceStoreState {
   readonly autoClutch: boolean;
   /** Circuit start: staggered rows or all abreast. */
   readonly gridLayout: GridLayout;
+  /** An item race (boxes on the track) instead of a plain circuit race. */
+  readonly items: boolean;
   readonly trackId: string;
   /** Distance for the custom track; fixed tracks use their own. */
   readonly customDistanceM: number;
@@ -83,6 +85,7 @@ interface RaceStoreState {
   setAutoShift(on: boolean): void;
   setAutoClutch(on: boolean): void;
   setGridLayout(layout: GridLayout): void;
+  setItems(on: boolean): void;
   setTrack(id: string): void;
   setCustomDistance(m: number): void;
   setTreeMode(mode: TreeMode): void;
@@ -102,6 +105,7 @@ export const useRaceStore = create<RaceStoreState>()((set) => ({
   autoShift: false,
   autoClutch: false,
   gridLayout: 'staggered',
+  items: false,
   trackId: DEFAULT_TRACK_ID,
   customDistanceM: 402,
   treeMode: 'sportsman',
@@ -121,6 +125,13 @@ export const useRaceStore = create<RaceStoreState>()((set) => ({
   setAutoShift: (autoShift) => set({ autoShift }),
   setAutoClutch: (autoClutch) => set({ autoClutch }),
   setGridLayout: (gridLayout) => set({ gridLayout }),
+  // A plain race can't be on an item-race circuit.
+  setItems: (items) =>
+    set((s) =>
+      !items && getCircuit(s.circuitId).itemsOnly
+        ? { items, circuitId: DEFAULT_CIRCUIT_ID, laps: getCircuit(DEFAULT_CIRCUIT_ID).defaultLaps }
+        : { items },
+    ),
   setCustomDistance: (m) =>
     set({ customDistanceM: Math.round(clamp(m, MIN_RACE_DISTANCE_M, MAX_RACE_DISTANCE_M)) }),
   setTreeMode: (treeMode) => set({ treeMode }),

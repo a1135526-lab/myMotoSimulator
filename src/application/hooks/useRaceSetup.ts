@@ -35,6 +35,12 @@ export function useActiveTrack(): ActiveTrack {
 export const useTracks = (): readonly TrackSpec[] => TRACKS;
 export const useCircuits = (): readonly CircuitSpec[] => CIRCUITS;
 
+/** Circuits to pick from: item races put their own circuits first; plain races leave them out. */
+export const circuitChoices = (items: boolean): readonly CircuitSpec[] =>
+  items
+    ? [...CIRCUITS.filter((c) => c.itemsOnly), ...CIRCUITS.filter((c) => !c.itemsOnly)]
+    : CIRCUITS.filter((c) => !c.itemsOnly);
+
 export function useActiveCircuit(): CircuitSpec {
   const id = useRaceStore((s) => s.circuitId);
   return useMemo(() => getCircuit(id), [id]);

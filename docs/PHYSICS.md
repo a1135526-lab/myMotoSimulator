@@ -161,6 +161,15 @@ AI 讀取前方 0.6 秒處的目標速度（預留壓車所需的時間），並
 
 **單圈估算**（[lapEstimate.ts](../src/domain/circuit/lapEstimate.ts)）：用準靜態方法，彎道限速取速度曲線，出彎加速度 a = (min(P/v, μmg) − 風阻 − 滾阻) / m，用來給車庫卡片顯示預估單圈。和完整模擬的誤差在 15% 以內。
 
+## 8b. 道具賽（[src/domain/items/](../src/domain/items/)）
+
+道具不改騎乘物理本身，而是在每個固定步長前後加上去：
+
+- **步長前**：被打中期間引擎輸出 ×0.3、滑板車期間 ×0.35（`modelWithEffects`，乘在進排氣增益曲線上）。
+- **步長後**（`effectSpeed`）：加速類每秒多加 `boostAccel`（氮氣 5 m/s²、三段加速 3.5 m/s²）；被打中時速度上限從被打中當下線性降到 50%（1.5 秒），之後 0.8 秒內不會再被打中；圖釘帶 2 秒內上限為踩到時的 70%；滑板車 10 秒內上限 12.5 m/s（45 km/h）。
+- 被打中的搖晃只畫在畫面上（`wobble`），不影響走線。
+- 三角錐當成速度 0 的車，走一般車與車的碰撞。水球和紙飛機在 (s, d) 座標裡推進，所以每台裝置用同樣的發射參數就能算出同樣的軌跡。
+
 ## 9. 街景模式（[src/domain/street/](../src/domain/street/)）
 
 **地圖**：高雄市楠梓區的 OpenStreetMap 資料，由 [scripts/osm/import_nanzih.py](../scripts/osm/import_nanzih.py) 轉成精簡 JSON（[src/data/cities/nanzih/](../src/data/cities/nanzih/)）。

@@ -64,7 +64,29 @@ insert into public.circuits (id, length_m, min_lap_ms) values
   ('dragon-ridge', 2727, 2727 * 1000 / 90),
   ('roller-hills', 2455, 2455 * 1000 / 90),
   ('cliff-coast', 2308, 2308 * 1000 / 90),
-  ('midnight-pass', 1661, 1661 * 1000 / 90);
+  ('midnight-pass', 1661, 1661 * 1000 / 90),
+  -- 008_item_race.sql adds these to a live database: item-race boards
+  -- ("items:<circuit>"), the whole lap at 100 m/s average (boosts included).
+  ('items:south-bay', 3446, 3446 * 1000 / 100),
+  ('items:hill-town', 1670, 1670 * 1000 / 100),
+  ('items:practice-park', 1433, 1433 * 1000 / 100),
+  ('items:harbor-night', 2231, 2231 * 1000 / 100),
+  ('items:sugar-mill', 1940, 1940 * 1000 / 100),
+  ('items:lotus-lake', 1920, 1920 * 1000 / 100),
+  ('items:cloud-peak', 2417, 2417 * 1000 / 100),
+  ('items:gorge-run', 2084, 2084 * 1000 / 100),
+  ('items:cape-coast', 3636, 3636 * 1000 / 100),
+  ('items:lake-ridge', 1731, 1731 * 1000 / 100),
+  ('items:kart-oval', 1211, 1211 * 1000 / 100),
+  ('items:neon-streets', 1988, 1988 * 1000 / 100),
+  ('items:rift-valley', 3645, 3645 * 1000 / 100),
+  ('items:dragon-ridge', 2727, 2727 * 1000 / 100),
+  ('items:roller-hills', 2455, 2455 * 1000 / 100),
+  ('items:cliff-coast', 2308, 2308 * 1000 / 100),
+  ('items:midnight-pass', 1661, 1661 * 1000 / 100),
+  ('items:pinball-park', 1358, 1358 * 1000 / 100),
+  ('items:rainbow-pier', 1430, 1430 * 1000 / 100),
+  ('items:night-market', 1079, 1079 * 1000 / 100);
 
 create table public.drag_tracks (
   id text primary key,

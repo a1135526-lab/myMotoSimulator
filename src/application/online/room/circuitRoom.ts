@@ -62,11 +62,13 @@ function roomBikes(): RemoteBike[] {
   if (room.status !== 'racing' || !room.me) return [];
   const myId = room.me.id;
   const others = room.players.filter((p) => p.id !== myId);
-  return remoteRiders.sample(others, performance.now()).map(({ pose }) => ({
+  return remoteRiders.sample(others, performance.now()).map(({ player, pose }) => ({
     x: pose.x,
     z: pose.z,
     heading: pose.heading,
     speedMps: kmhToMps(pose.speedKmh),
+    id: player.id,
+    progressM: pose.progressM,
   }));
 }
 

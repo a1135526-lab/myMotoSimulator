@@ -1,5 +1,5 @@
 import { getBike } from '@/data';
-import { RANKED_BIKES, RANKED_CIRCUITS, type RankedGroup } from '@/domain';
+import { RANKED_BIKES, RANKED_CIRCUITS, RANKED_ITEM_CIRCUITS, type RankedGroup } from '@/domain';
 import type { RoomProfile } from '../room/roomStore';
 
 export type RankedPhase = 'idle' | 'queue' | 'joining' | 'room' | 'ai';
@@ -15,6 +15,8 @@ export interface RankedMatch {
   readonly size: number;
   /** Against the AI: your tier when it started (sets how good the AI is, for the whole race). */
   readonly aiTier?: number;
+  /** Item ranked: an item race, on its own ladder. */
+  readonly items?: boolean;
 }
 
 export interface RankedRecord {
@@ -47,5 +49,7 @@ export function rankedProfile(group: RankedGroup, name: string): RoomProfile {
   };
 }
 
-export const randomCircuit = () =>
-  RANKED_CIRCUITS[Math.floor(Math.random() * RANKED_CIRCUITS.length)] ?? 'practice-park';
+export function randomCircuit(items = false): string {
+  const pool: readonly string[] = items ? RANKED_ITEM_CIRCUITS : RANKED_CIRCUITS;
+  return pool[Math.floor(Math.random() * pool.length)] ?? 'practice-park';
+}

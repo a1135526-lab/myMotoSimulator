@@ -30,7 +30,8 @@ export function MatchDetailDialog({ match, onClose }: { match: MatchRecord; onCl
     <div className={friends.backdrop} role="dialog" aria-label="比賽紀錄">
       <section className={friends.dialog} data-testid="match-detail">
         <h2>
-          {resultLabel(match)} · {match.trackName}
+          {resultLabel(match)} · {match.items ? '🎁 道具賽 · ' : ''}
+          {match.trackName}
         </h2>
         <dl className={styles.matchFacts}>
           <dt>模式</dt>

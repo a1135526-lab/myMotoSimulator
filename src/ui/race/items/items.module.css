@@ -1,0 +1,151 @@
+/* Item race HUD: the slot sits under the corner call, clear of the road ahead. */
+.hud {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.slot {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 6px;
+  border: 2px solid rgb(255 176 32 / 0.9);
+  border-radius: 12px;
+  background: rgb(8 10 14 / 0.62);
+  backdrop-filter: blur(6px);
+}
+
+.slot[data-empty] {
+  border-color: rgb(255 255 255 / 0.18);
+  opacity: 0.75;
+}
+
+.slot[data-spinning] {
+  animation: spin-glow 0.35s ease-in-out infinite alternate;
+}
+
+.icon {
+  font-size: clamp(1.4rem, 3.2vw, 2rem);
+  line-height: 1;
+}
+
+.name {
+  font-size: clamp(0.75rem, 1.6vw, 0.95rem);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.key {
+  padding: 1px 6px;
+  border: 1px solid rgb(255 255 255 / 0.4);
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.effects {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.chip,
+.chipBad {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgb(46 140 255 / 0.75);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.chipBad {
+  background: rgb(200 40 40 / 0.85);
+}
+
+.warn {
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(220 30 30 / 0.85);
+  font-size: 0.8rem;
+  font-weight: 800;
+  animation: warn-blink 0.4s steps(2) infinite;
+}
+
+.toast {
+  margin: 0;
+  padding: 3px 12px;
+  border-radius: 10px;
+  background: rgb(8 10 14 / 0.62);
+  font-size: clamp(0.75rem, 1.6vw, 0.95rem);
+  font-weight: 700;
+}
+
+.toast[data-tone='bad'] {
+  background: rgb(150 30 30 / 0.85);
+}
+
+.toast[data-tone='good'] {
+  background: rgb(30 130 70 / 0.85);
+}
+
+/* Someone's smoke screen: a grey haze, see-through, never blocking a tap. */
+.haze {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 55%, rgb(120 124 130 / 0.75), rgb(80 84 90 / 0.55));
+}
+
+@keyframes spin-glow {
+  to {
+    border-color: #fff;
+    box-shadow: 0 0 14px rgb(255 176 32 / 0.8);
+  }
+}
+
+@keyframes warn-blink {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot[data-spinning],
+  .warn {
+    animation: none;
+  }
+}
+
+/* Results: item numbers in a small grid. */
+.stats {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-2, rgb(255 255 255 / 0.06));
+}
+
+.stats h3 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+
+.stats dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.stats dt {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.stats dd {
+  margin: 0;
+  font-weight: 700;
+}

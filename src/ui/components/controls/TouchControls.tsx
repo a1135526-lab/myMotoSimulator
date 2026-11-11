@@ -16,6 +16,8 @@ interface TouchControlsProps {
   onReset: () => void;
   onShift: (direction: 1 | -1) => void;
   onStart: () => void;
+  /** Item races: a big button to use the item you hold. */
+  onItem?: () => void;
 }
 
 /** A click this soon after a finger press is the browser's echo of that press. */
@@ -40,6 +42,7 @@ export function TouchControls({
   onReset,
   onShift,
   onStart,
+  onItem,
 }: TouchControlsProps) {
   const panel = useRef<HTMLDivElement>(null);
   /** Fingers / mouse buttons holding each control. */
@@ -153,6 +156,17 @@ export function TouchControls({
       重置
     </button>
   );
+  const item = onItem && (
+    <button
+      type="button"
+      className={styles.item}
+      {...tap(onItem)}
+      aria-label="使用道具"
+      data-testid="item-touch"
+    >
+      🎁{overlay ? '' : ' 道具'}
+    </button>
+  );
   const throttle = (
     <button type="button" className={styles.throttle} {...bind('throttle')}>
       油門
@@ -173,6 +187,7 @@ export function TouchControls({
               throttle,
               ...(manual && { clutch, shiftDown: down, shiftUp: up, start }),
               ...(reverse && { reverse: back || undefined }),
+              ...(item && { item }),
               reset,
             }}
           />
@@ -192,6 +207,7 @@ export function TouchControls({
           {start}
         </div>
       )}
+      {item && <div className={styles.itemRow}>{item}</div>}
       {steering && (
         <div className={styles.steerRow} data-reverse={reverse || undefined}>
           {left}

@@ -147,6 +147,7 @@ export function RecentMatches({ matches }: { matches: readonly MatchRecord[] }) 
                 <span className={styles.matchDate}>{dateTime(m.at)} ›</span>
               </span>
               <span className={styles.matchBody}>
+                {m.items ? '🎁 道具賽 · ' : ''}
                 {m.trackName}
                 {m.kind === 'drag' ? '' : ` · ${m.laps} 圈`} · {m.bike} ·{' '}
                 {fmtRaceTime(m.kind, m.timeS)}

@@ -1,21 +1,27 @@
 import {
   advanceCircuitRace,
+  advanceItemRace,
+  applyRemoteUse,
   buildCircuit,
+  createItemRace,
+  fireItem,
+  removeObject,
+  remoteItemBodies,
   buildModel,
-  CIRCUIT_SKILLS,
   createCircuitRace,
   resetPlayer,
   retireCircuitPlayer,
-  riderSkill,
   shiftCircuitPlayer,
   startCircuitPlayerEngine,
   startLights,
   type CircuitGeometry,
   type CircuitRaceState,
-  type CircuitSettings,
   type CircuitSkill,
   type GhostLap,
   type GridLayout,
+  type ItemEvent,
+  type ItemRaceState,
+  type ItemUse,
   type RemoteBike,
   type RiderSkill,
   type SimConfig,
@@ -24,6 +30,8 @@ import {
 import type { CircuitSpec } from '@/data';
 import { CompositeInputSource, type InputAction } from '../input/InputSource';
 import { TouchInputSource } from '../input/TouchInputSource';
+import { circuitSetup } from './circuitSetup';
+import { ItemChannel } from './itemChannel';
 import { LapRecorder, type CompletedLap } from './lapRecorder';
 
 export interface CircuitConfig {
@@ -43,6 +51,8 @@ export interface CircuitConfig {
   readonly aiSkill?: CircuitSkill;
   /** How the grid lines up (staggered unless set). */
   readonly grid?: GridLayout;
+  /** An item race: boxes on the track, items to use. */
+  readonly items?: boolean;
 }
 
 export interface CircuitSnapshot {
@@ -51,13 +61,14 @@ export interface CircuitSnapshot {
   readonly models: readonly SimModel[];
   readonly names: readonly string[];
   readonly ghost: GhostLap | null;
+  /** The items in play (item races only). */
+  readonly items: ItemRaceState | null;
 }
 
 /** Every lap the player completes, with whether it was clean and its line. */
 export type LapListener = (lap: CompletedLap) => void;
 
-/** Random hold after the fifth red light, s (MotoGP: 0.2–3 s). */
-export const LIGHTS_HOLD_RANGE_S: readonly [number, number] = [0.4, 2.5];
+export { LIGHTS_HOLD_RANGE_S } from './circuitSetup';
 
 /** Owns a running circuit race outside React; mirrors RaceController. */
 export class CircuitController {
@@ -78,6 +89,9 @@ export class CircuitController {
   private ghost: GhostLap | null = null;
   /** Your grid slot and the field size in a friend room (each player rides their own race). */
   private roomGrid: { readonly slot: number; readonly field: number } | null = null;
+  /** The item race around `race` (item races only); `race` is always its circuit race. */
+  private items: ItemRaceState | null = null;
+  private readonly itemChannel = new ItemChannel();
 
   constructor(
     config: CircuitConfig,
@@ -116,6 +130,36 @@ export class CircuitController {
     this.remoteBikes = source;
   }
 
+  /** Item races in a room: your uses go out, and your id names what you put on the track. */
+  setItemLink(owner: string, send: (use: ItemUse) => void): void {
+    this.itemChannel.link(owner, send);
+  }
+
+  /** Hear about items being picked, used and landing (HUD, sounds, the other players). */
+  onItemEvents(listener: (events: readonly ItemEvent[]) => void): () => void {
+    return this.itemChannel.listen(listener);
+  }
+
+  /** Z: use the item you hold. */
+  fireItem(): void {
+    if (!this.items) return;
+    const remote = remoteItemBodies(this.geo, this.items, this.remoteBikes());
+    const { state, used } = fireItem(this.geo, this.items, 0, remote);
+    if (!used) return;
+    this.setItems(state);
+    this.itemChannel.sent(used);
+  }
+
+  /** Another player used an item. `me` is your id, for a paper plane or skateboard aimed at you. */
+  applyRemoteItem(owner: string, use: ItemUse, me: string | null): void {
+    if (this.items) this.setItems(applyRemoteUse(this.geo, this.items, owner, use, me));
+  }
+
+  /** Someone ran into this trap or shot: it's gone. */
+  removeItemObject(id: string): void {
+    if (this.items) this.setItems(removeObject(this.items, id));
+  }
+
   /** A friend-room start: fresh grid, lights on, the same hold as everyone else. */
   startRoomRace(holdS: number, slot = 0, field = 1): void {
     this.roomGrid = { slot, field };
@@ -131,8 +175,7 @@ export class CircuitController {
 
   /** Back to the grid; `holdS` fixes the hold after the fifth red (else random). */
   restage(holdS?: number): void {
-    const { circuit, player, opponents, skill, laps, assist, brakeAssist, autoShift, autoClutch } =
-      this.config;
+    const { circuit, player, opponents } = this.config;
     this.geo = buildCircuit(
       circuit.controlPoints,
       circuit.widthM / 2,
@@ -140,41 +183,30 @@ export class CircuitController {
       circuit.elevation,
     );
     this.models = [player, ...opponents].map(buildModel);
-    const settings: CircuitSettings = {
-      laps,
-      assist,
-      brakeAssist,
-      autoShift,
-      autoClutch,
-      limits: { halfWidth: circuit.widthM / 2, runoffM: circuit.runoffM, gripG: circuit.gripG },
-    };
-    const [lo, hi] = LIGHTS_HOLD_RANGE_S;
-    this.race = createCircuitRace(this.geo, this.models, {
-      settings,
-      aiSkills: opponents.map((_, i) =>
-        riderSkill(this.config.aiSkill ?? CIRCUIT_SKILLS[skill], i),
-      ),
-      holdS: holdS ?? lo + this.random() * (hi - lo),
-      grid: this.config.grid ?? 'staggered',
-      ...(this.roomMode &&
-        this.roomGrid && { playerSlot: this.roomGrid.slot, field: this.roomGrid.field }),
-    });
+    const room = this.roomMode ? this.roomGrid : null;
+    const setup = circuitSetup(this.config, this.random, holdS, room);
+    const seed = Math.floor(this.random() * 2 ** 31);
+    this.items = this.config.items
+      ? createItemRace(this.geo, this.models, setup, seed, `${this.itemChannel.owner}:`)
+      : null;
+    this.race = this.items?.race ?? createCircuitRace(this.geo, this.models, setup);
+    this.itemChannel.restart();
     // A rematch keeps the ghost, including a best set in the last race.
     this.recorder = new LapRecorder();
     this.emit();
   }
 
   tick(elapsedS: number): void {
-    this.race = advanceCircuitRace(
-      this.geo,
-      this.models,
-      this.race,
-      this.input.read(),
-      elapsedS,
-      this.remoteBikes(),
-    );
+    const [command, remote] = [this.input.read(), this.remoteBikes()];
+    const { geo, models } = this;
+    if (this.items) {
+      this.items = advanceItemRace(geo, models, this.items, command, elapsedS, remote);
+      this.race = this.items.race;
+    } else {
+      this.race = advanceCircuitRace(geo, models, this.race, command, elapsedS, remote);
+    }
     if (this.race.phase === 'racing' && this.outOfTime(this.race)) {
-      this.race = retireCircuitPlayer(this.race);
+      this.setRace(retireCircuitPlayer(this.race));
     }
     const lap = this.recorder.observe(this.geo, this.race);
     if (lap) this.lapCompleted(lap);
@@ -213,6 +245,8 @@ export class CircuitController {
         return this.update(startCircuitPlayerEngine(this.models, this.race));
       case 'toggleCamera':
         return this.onToggleCamera();
+      case 'useItem':
+        return this.fireItem();
     }
   };
 
@@ -223,6 +257,7 @@ export class CircuitController {
       models: this.models,
       names: this.config.names,
       ghost: this.ghost,
+      items: this.items,
     };
   }
 
@@ -232,11 +267,25 @@ export class CircuitController {
 
   private update(race: CircuitRaceState): void {
     if (race === this.race) return;
+    this.setRace(race);
+    this.emit();
+  }
+
+  /** The circuit race changed outside a tick: the item race wraps the same one. */
+  private setRace(race: CircuitRaceState): void {
     this.race = race;
+    if (this.items) this.items = { ...this.items, race };
+  }
+
+  private setItems(items: ItemRaceState): void {
+    if (items === this.items) return;
+    this.items = items;
+    this.race = items.race;
     this.emit();
   }
 
   private emit(): void {
     this.publish(this.snapshot());
+    this.itemChannel.flush(this.items);
   }
 }

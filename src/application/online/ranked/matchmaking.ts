@@ -47,3 +47,34 @@ export function formMatch(queue: readonly QueuedPlayer[], now: number): QueuedPl
   if (picked.length > 0 && waited(leader, now) >= FILL_WAIT_S) return [leader, ...picked];
   return null;
 }
+
+/** The queue from the channel's presence, keeping only well-formed entries. */
+export function queuedFrom(state: Record<string, readonly unknown[]>): QueuedPlayer[] {
+  return Object.values(state).flatMap((entries) =>
+    entries.flatMap((e) => {
+      const q = e as Partial<QueuedPlayer>;
+      return typeof q.id === 'string' &&
+        typeof q.points === 'number' &&
+        typeof q.joinedAt === 'number'
+        ? [{ id: q.id, points: q.points, joinedAt: q.joinedAt }]
+        : [];
+    }),
+  );
+}
+
+/** A leader's "you're in this race" broadcast, if it's well-formed and includes `me`. */
+export function matchFor(
+  payload: unknown,
+  me: string,
+): { matchId: string; code: string; circuitId: string; size: number } | null {
+  const m = payload as {
+    members?: unknown;
+    code?: unknown;
+    matchId?: unknown;
+    circuitId?: unknown;
+  };
+  if (!Array.isArray(m.members) || !m.members.includes(me)) return null;
+  if (typeof m.code !== 'string' || typeof m.matchId !== 'string') return null;
+  if (typeof m.circuitId !== 'string') return null;
+  return { matchId: m.matchId, code: m.code, circuitId: m.circuitId, size: m.members.length };
+}

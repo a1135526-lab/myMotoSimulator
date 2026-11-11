@@ -53,6 +53,12 @@ interface RecordsState {
 const KEY = 'scooter-dyno:records';
 const ghostKey = (circuitId: string) => `scooter-dyno:ghost:${circuitId}`;
 
+/** Item races keep their own boards and ghosts, under this key for the circuit. */
+export const itemBoardKey = (circuitId: string): string => `items:${circuitId}`;
+/** The board / ghost key for a circuit, item race or not. */
+export const boardKey = (circuitId: string, items: boolean): string =>
+  items ? itemBoardKey(circuitId) : circuitId;
+
 /**
  * Circuits redrawn with gentler corners (layout 2): laps and ghosts set on
  * the old layout don't belong on the new one, so they're dropped once.

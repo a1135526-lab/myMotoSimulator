@@ -14,7 +14,7 @@ import { selectionForLevel } from '../race/opponentSetup';
 import { circuitEnvironment } from '../services/lapService';
 import { useConfigStore } from '../stores/configStore';
 import { useRaceStore } from '../stores/raceStore';
-import { loadGhost } from '../stores/recordsStore';
+import { boardKey, loadGhost } from '../stores/recordsStore';
 import { useUiStore } from '../stores/uiStore';
 import { createStockSelection } from '../tuning/selection';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
@@ -39,6 +39,7 @@ export function useCircuitConfig(): CircuitConfig {
   const autoShift = useRaceStore((s) => s.autoShift);
   const autoClutch = useRaceStore((s) => s.autoClutch);
   const gridLayout = useRaceStore((s) => s.gridLayout);
+  const garageItems = useRaceStore((s) => s.items);
   const opponent = useRaceStore((s) => s.opponent);
   const rival = useUiStore((s) => s.rivalGhost);
 
@@ -53,6 +54,11 @@ export function useCircuitConfig(): CircuitConfig {
     const laps = ranked ? ranked.laps : discipline === 'room' ? roomSettings.laps : garageLaps;
     const circuit = getCircuit(circuitId);
     const env = circuitEnvironment(circuit);
+    const items = ranked
+      ? ranked.items === true
+      : discipline === 'room'
+        ? roomSettings.items === true
+        : garageItems;
 
     // Ranked: the group's stock bike, for you and any AI alike.
     const rankedBike =
@@ -92,8 +98,12 @@ export function useCircuitConfig(): CircuitConfig {
       autoShift,
       autoClutch,
       grid: inRoom ? (roomSettings.grid ?? 'staggered') : ranked ? 'staggered' : gridLayout,
+      items,
       // Racing someone from the global board, else your own best.
-      ghost: rival?.circuitId === circuit.id ? rival.ghost : loadGhost(circuit.id),
+      ghost:
+        rival?.circuitId === boardKey(circuit.id, items)
+          ? rival.ghost
+          : loadGhost(boardKey(circuit.id, items)),
     };
   }, [
     bike,
@@ -109,6 +119,7 @@ export function useCircuitConfig(): CircuitConfig {
     autoShift,
     autoClutch,
     gridLayout,
+    garageItems,
     opponent,
     rival,
   ]);

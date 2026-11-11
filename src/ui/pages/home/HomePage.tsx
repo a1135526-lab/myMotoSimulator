@@ -12,7 +12,13 @@ import styles from './home.module.css';
 
 type Entry =
   | { readonly id: string; readonly mode: 'simulator' | 'street' }
-  | { readonly id: string; readonly mode: 'race'; readonly discipline: Discipline };
+  | {
+      readonly id: string;
+      readonly mode: 'race';
+      readonly discipline: Discipline;
+      /** An item race. */
+      readonly items?: true;
+    };
 
 const ENTRIES: readonly (Entry & {
   readonly icon: string;
@@ -46,6 +52,16 @@ const ENTRIES: readonly (Entry & {
     art: 'circuit',
     title: '賽道繞圈',
     blurb: '和 AI 跑多圈，壓車過彎、晚煞車，還有自己的幽靈車。',
+  },
+  {
+    id: 'items',
+    mode: 'race',
+    discipline: 'circuit',
+    items: true,
+    icon: '🎁',
+    art: 'circuit',
+    title: '道具賽',
+    blurb: '撿路上的道具箱，用氮氣、機油、水球、滑板車…干擾對手搶第一。',
   },
   {
     id: 'drag',
@@ -83,6 +99,7 @@ export function HomePage() {
     if (e.mode === 'race') {
       const race = useRaceStore.getState();
       race.setDiscipline(e.discipline);
+      race.setItems(e.items === true);
       // Rooms and ranked have their own screens; the others start at choosing the track.
       race.setStep(e.discipline === 'room' || e.discipline === 'ranked' ? 'mode' : 'track');
     }

@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { MAX_ROOM_PLAYERS, useCircuits, useRoomStore, type RoomSettings } from '@/application';
+import {
+  circuitChoices,
+  MAX_ROOM_PLAYERS,
+  useCircuits,
+  useRoomStore,
+  type RoomSettings,
+} from '@/application';
 import { BikeSelector } from '../../components/config/BikeSelector';
 import { AddFriendButton, RoomFriends } from './RoomFriends';
 import styles from './room.module.css';
@@ -9,9 +15,31 @@ const LAP_CHOICES = [1, 2, 3, 5] as const;
 const GRID_LABELS = { staggered: '交錯起步', parallel: '平行起步' } as const;
 
 const withGrid = (s: RoomSettings, grid: keyof typeof GRID_LABELS): RoomSettings => {
-  const { circuitId, laps, ranked } = s;
-  return { circuitId, laps, ...(ranked && { ranked }), ...(grid === 'parallel' && { grid }) };
+  const { circuitId, laps, ranked, items } = s;
+  return {
+    circuitId,
+    laps,
+    ...(ranked && { ranked }),
+    ...(grid === 'parallel' && { grid }),
+    ...(items && { items }),
+  };
 };
+
+/** Item race on or off; a plain race can't stay on an item-race circuit. */
+function withItems(s: RoomSettings, on: boolean): RoomSettings {
+  const choices = circuitChoices(on);
+  const circuitId = choices.some((c) => c.id === s.circuitId)
+    ? s.circuitId
+    : (choices[0]?.id ?? s.circuitId);
+  const { laps, ranked, grid } = s;
+  return {
+    circuitId,
+    laps,
+    ...(ranked && { ranked }),
+    ...(grid && { grid }),
+    ...(on && { items: true as const }),
+  };
+}
 
 /** Waiting room: the code to share, who's in, the host's circuit and laps, your bike. */
 export function RoomLobby() {
@@ -23,11 +51,12 @@ export function RoomLobby() {
   const setSettings = useRoomStore((s) => s.setSettings);
   const startRace = useRoomStore((s) => s.startRace);
   const leave = useRoomStore((s) => s.leave);
-  const circuits = useCircuits();
+  const all = useCircuits();
+  const circuits = circuitChoices(settings.items === true);
   const [copied, setCopied] = useState(false);
   const host = players[0];
   const iAmHost = !!me && host?.id === me.id;
-  const circuit = circuits.find((c) => c.id === settings.circuitId);
+  const circuit = all.find((c) => c.id === settings.circuitId);
 
   const invite = `來揍灰來尬掐跟我比賽！好友對戰的房號：${code ?? ''}\n${window.location.origin}${import.meta.env.BASE_URL}`;
   const copy = async () => {
@@ -69,6 +98,19 @@ export function RoomLobby() {
       {iAmHost ? (
         <>
           <div className={styles.chips}>
+            {[false, true].map((on) => (
+              <button
+                key={String(on)}
+                type="button"
+                aria-pressed={(settings.items === true) === on}
+                onClick={() => setSettings(withItems(settings, on))}
+                data-testid={on ? 'room-items-on' : 'room-items-off'}
+              >
+                {on ? '🎁 道具賽' : '一般賽'}
+              </button>
+            ))}
+          </div>
+          <div className={styles.chips}>
             {circuits.map((c) => (
               <button
                 key={c.id}
@@ -109,6 +151,7 @@ export function RoomLobby() {
         </>
       ) : (
         <p className={styles.settings} data-testid="room-settings">
+          {settings.items ? '🎁 道具賽 · ' : ''}
           {circuit?.name ?? settings.circuitId} · {settings.laps} 圈 ·{' '}
           {GRID_LABELS[settings.grid ?? 'staggered']}
         </p>

@@ -1,4 +1,4 @@
-import type { RankedGroup } from '@/domain';
+import type { RankedGroup, RankedLadder } from '@/domain';
 import type { Outcome } from '../leaderboard';
 import { errorText, supabase } from '../supabase';
 import type { RankedRecord } from './rankedTypes';
@@ -13,7 +13,7 @@ export interface RankedBoardRow {
 }
 
 /** The top of a group's ladder, plus your own row. */
-export async function fetchRankedBoard(group: RankedGroup): Promise<Outcome<RankedBoardRow[]>> {
+export async function fetchRankedBoard(group: RankedLadder): Promise<Outcome<RankedBoardRow[]>> {
   if (!supabase) return { ok: false, error: '這個版本沒有連線功能' };
   const { data, error } = await supabase.rpc('get_ranked_board', { p_group: group, p_limit: 50 });
   if (error) return { ok: false, error: errorText(error) };

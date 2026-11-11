@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { fetchRankedBoard, type RankedBoardRow, type RankedGroup, tierOf } from '@/application';
+import { fetchRankedBoard, type RankedBoardRow, type RankedLadder, tierOf } from '@/application';
 import styles from './ranked.module.css';
 
 /** A group's ladder: tier, points, games and wins. */
-export function RankedBoard({ group }: { group: RankedGroup }) {
+export function RankedBoard({ group }: { group: RankedLadder }) {
   const [rows, setRows] = useState<RankedBoardRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {

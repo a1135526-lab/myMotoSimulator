@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   fetchDragBoard,
+  boardKey,
+  circuitChoices,
   fetchLapBoard,
   fetchLapGhost,
   fetchMissionBoard,
@@ -20,7 +22,7 @@ import { fmtLap } from '../../race/circuit/format';
 import { fmtRunTime, starText } from '../../street/missions/format';
 import styles from './online.module.css';
 
-type Tab = 'ranked' | 'laps' | 'drag' | 'missions';
+type Tab = 'ranked' | 'laps' | 'items' | 'drag' | 'missions';
 
 type Board =
   | { kind: 'loading' }
@@ -36,19 +38,24 @@ const date = (ms: number) => {
 
 /** Everyone's best: ranked ladders, circuits (with and without assists), drag strips, missions. */
 export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
-  const circuits = useCircuits();
+  const all = useCircuits();
   const tracks = useTracks().filter((t) => t.distanceM !== null);
   const missions = missionCatalog();
   const signedIn = useAuthStore((s) => s.status === 'signedIn');
   const setRival = useUiStore((s) => s.setRivalGhost);
   const [tab, setTab] = useState<Tab>('laps');
-  const [circuitId, setCircuitId] = useState(circuits[0]?.id ?? '');
+  const [picked, setCircuitId] = useState(all[0]?.id ?? '');
   const [assisted, setAssisted] = useState(false);
   const [trackId, setTrackId] = useState(tracks[0]?.id ?? '');
   const [missionId, setMissionId] = useState(missions[0]?.id ?? '');
   const [group, setGroup] = useState<RankedGroup>('scooter');
   const [board, setBoard] = useState<Board>({ kind: 'loading' });
   const [note, setNote] = useState<string | null>(null);
+  // Item races have their own boards (and their own circuits).
+  const items = tab === 'items';
+  const circuits = circuitChoices(items);
+  const circuitId = circuits.some((c) => c.id === picked) ? picked : (circuits[0]?.id ?? '');
+  const key = boardKey(circuitId, items);
 
   useEffect(() => {
     // The ranked ladder loads itself (RankedBoard).
@@ -56,8 +63,8 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
     let live = true;
     setBoard({ kind: 'loading' });
     const load = async (): Promise<Board> => {
-      if (tab === 'laps') {
-        const res = await fetchLapBoard(circuitId, assisted);
+      if (tab === 'laps' || tab === 'items') {
+        const res = await fetchLapBoard(key, assisted);
         return res.ok ? { kind: 'laps', rows: res.value } : { kind: 'error', error: res.error };
       }
       if (tab === 'drag') {
@@ -71,13 +78,13 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
     return () => {
       live = false;
     };
-  }, [tab, circuitId, assisted, trackId, missionId]);
+  }, [tab, key, assisted, trackId, missionId]);
 
   const race = async (row: LapBoardRow) => {
     setNote('下載幽靈車中…');
-    const res = await fetchLapGhost(circuitId, assisted, row.nickname);
+    const res = await fetchLapGhost(key, assisted, row.nickname);
     if (!res.ok) return setNote(res.error);
-    setRival({ circuitId, ghost: res.value });
+    setRival({ circuitId: key, ghost: res.value });
     const name = circuits.find((c) => c.id === circuitId)?.name ?? '';
     setNote(`已設定：下次跑「${name}」，幽靈車就是 ${row.nickname} 的 ${fmtLap(row.lapS)}`);
   };
@@ -105,11 +112,12 @@ export function LeaderboardDialog({ onClose }: { onClose: () => void }) {
         <div className={styles.tabs}>
           {pick<Tab>('ranked', tab, setTab, '🏆 排位')}
           {pick<Tab>('laps', tab, setTab, '賽道繞圈')}
+          {pick<Tab>('items', tab, setTab, '🎁 道具賽')}
           {pick<Tab>('drag', tab, setTab, '直線加速')}
           {pick<Tab>('missions', tab, setTab, '街景任務')}
         </div>
 
-        {tab === 'laps' && (
+        {(tab === 'laps' || tab === 'items') && (
           <>
             <div className={styles.chips}>
               {circuits.map((c) => pick(c.id, circuitId, setCircuitId, c.name))}

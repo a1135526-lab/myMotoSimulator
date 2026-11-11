@@ -199,6 +199,31 @@ test.describe('circuit race', () => {
   });
 });
 
+test.describe('item race', () => {
+  test.skip(({ isMobile }) => isMobile, 'keyboard flow');
+  test.use({ viewport: { width: 900, height: 700 } });
+
+  test('from the lobby onto an item circuit: boxes, the item slot and Z', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.goto('/');
+    await page.getByTestId('home-items').click();
+    await expect(page.getByTestId('item-track-night-market')).toBeVisible();
+    await page.getByTestId('circuit-night-market').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('wizard-next').click();
+    await expect(page.getByTestId('circuit-canvas')).toBeVisible();
+    await expect(page.getByTestId('item-slot')).toContainText('騎過道具箱');
+    await page.locator('h1').click();
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('circuit-hint')).toHaveCount(0, { timeout: 12_000 });
+    await page.keyboard.down('ArrowUp');
+    await page.keyboard.press('KeyZ');
+    await page.waitForTimeout(500);
+    await page.keyboard.up('ArrowUp');
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('street mode', () => {
   test.skip(({ isMobile }) => isMobile, 'keyboard flow');
   test.use({ viewport: { width: 900, height: 700 } });

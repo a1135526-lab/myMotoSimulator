@@ -50,6 +50,8 @@ export interface MatchRecord {
   readonly riders: readonly MatchRider[];
   /** Overall riding grade (circuit races), S–E, and its score. */
   readonly grade?: { readonly letter: string; readonly score: number };
+  /** An item race. */
+  readonly items?: true;
 }
 
 // ---- Checking stored / synced records ----
@@ -102,6 +104,7 @@ export function parseMatch(raw: unknown): MatchRecord | null {
     bestLapS: numOrNull(m.bestLapS),
     riders,
     ...(parseGrade(m.grade) && { grade: parseGrade(m.grade) }),
+    ...(m.items === true && { items: true as const }),
   };
 }
 

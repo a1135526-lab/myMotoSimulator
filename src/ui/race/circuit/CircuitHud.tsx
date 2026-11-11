@@ -10,6 +10,7 @@ import { LapNoticeBanner } from './hud/LapNoticeBanner';
 import { LeanDrift } from './hud/LeanDrift';
 import { GO_FLASH_S, StartGantry } from './hud/StartGantry';
 import { TimingTower } from './hud/TimingTower';
+import { ItemHud, SmokeHaze } from '../items/ItemHud';
 import styles from './hud/hud.module.css';
 
 /** Speed at which the edge vignette is fully on, km/h. */
@@ -88,6 +89,7 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
 
   return (
     <div className={styles.hud}>
+      <SmokeHaze on={view.items?.smoked === true} />
       <div
         className={styles.vignette}
         style={{ opacity: vignette, '--drift': player.driftPct / PERCENT } as CSSProperties}
@@ -107,6 +109,7 @@ export function CircuitHud({ view, camera }: { view: CircuitView; camera: Camera
         <RearMirrorSlot />
         <FinishCountdown view={view} />
         {view.phase === 'racing' && <CornerCallout corner={player.corner} />}
+        {view.items && <ItemHud items={view.items} />}
         {view.ghost?.owner && (
           <p className={styles.rivalTag} data-testid="rival-tag">
             👻 挑戰 {view.ghost.owner} · {fmtLap(view.ghost.lapS)}

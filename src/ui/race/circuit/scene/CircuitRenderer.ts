@@ -6,6 +6,8 @@ import { mirrorSlot, RearMirror } from '../../scene/rearMirror';
 import { SKY_PRESETS, type SceneTheme } from '../../scene/theme';
 import { buildCircuitTrack, type CircuitTrack } from './circuitTrack';
 import { GhostBike } from './ghostBike';
+import { ItemProps } from './itemProps';
+import { createRiderExtras, type RiderExtras } from './riderExtras';
 import type { TrackHeight } from './terrain';
 import { TyreSmoke } from './tyreSmoke';
 
@@ -34,6 +36,8 @@ const ONBOARD_SLIP_SHARE = 0.6;
 interface RiderObject {
   readonly yaw: THREE.Group;
   readonly bike: BikeModel;
+  /** Shield, boost flame and skateboard (item races). */
+  readonly extras: RiderExtras;
 }
 
 /** Yaw that turns a model facing −Z to travel along heading h (forward = cos h, sin h). */
@@ -51,6 +55,7 @@ export class CircuitRenderer {
   private readonly cockpit = createCockpit();
   private readonly smoke = new TyreSmoke();
   private readonly ghost = new GhostBike();
+  private readonly props = new ItemProps();
   private readonly mirror: RearMirror;
   private track: CircuitTrack | null = null;
   private riders: RiderObject[] = [];
@@ -78,7 +83,7 @@ export class CircuitRenderer {
     this.camera.rotation.order = 'YXZ';
     this.camera.add(this.cockpit);
     this.scene.add(this.camera);
-    this.scene.add(this.smoke.group, this.ghost.group);
+    this.scene.add(this.smoke.group, this.ghost.group, this.props.group);
     this.resize();
   }
 
@@ -107,6 +112,7 @@ export class CircuitRenderer {
       obj.yaw.rotation.set(Math.atan(ground.grade), yawFor(r.heading - r.slip), 0);
       obj.bike.group.rotation.z = r.lean;
       obj.bike.update(r.progressM, r.speedKmh / KMH_PER_MPS);
+      obj.extras.update(r, obj.bike.group);
       if (r.drift > SMOKE_MIN_DRIFT) {
         const h = r.heading - r.slip;
         const rx = r.x - Math.cos(h) * REAR_WHEEL_M;
@@ -116,6 +122,7 @@ export class CircuitRenderer {
     });
     this.smoke.update(dt);
     this.ghost.update(view.ghost, (x, z) => this.ground(x, z).y);
+    this.props.update(view.items, (x, z) => this.ground(x, z).y, dt);
 
     const lit = view.lightsLit;
     this.track?.startLights.forEach((m, i) => (m.emissiveIntensity = i < lit ? 3 : 0));
@@ -138,6 +145,8 @@ export class CircuitRenderer {
     this.track?.dispose();
     this.smoke.dispose();
     this.ghost.dispose();
+    this.props.dispose();
+    for (const r of this.riders) r.extras.dispose();
     this.mirror.dispose();
     this.renderer.dispose();
   }
@@ -209,7 +218,10 @@ export class CircuitRenderer {
       .join(';');
     if (key === this.ridersKey) return;
     this.ridersKey = key;
-    for (const r of this.riders) this.scene.remove(r.yaw);
+    for (const r of this.riders) {
+      this.scene.remove(r.yaw);
+      r.extras.dispose();
+    }
     this.riders = view.riders.map((r, i) => {
       const colors = r.livery ?? RIDER_COLORS[i % RIDER_COLORS.length] ?? '#ffffff';
       const bike = createBikeModel(colors, !r.manual);
@@ -222,8 +234,10 @@ export class CircuitRenderer {
         ? null
         : createNameTag(r.name, typeof colors === 'string' ? colors : colors.body);
       if (tag) yaw.add(tag);
+      const extras = createRiderExtras(typeof colors === 'string' ? colors : colors.body);
+      yaw.add(extras.group);
       this.scene.add(yaw);
-      return { yaw, bike };
+      return { yaw, bike, extras };
     });
   }
 }

@@ -17,9 +17,12 @@ export interface RemoteBike {
   readonly z: number;
   readonly heading: number;
   readonly speedMps: number;
+  /** Who it is and how far they've gone (item races aim at the leader and the next one ahead). */
+  readonly id?: string;
+  readonly progressM?: number;
 }
 
-const approach = (value: number, target: number, dt: number) => {
+export const approach = (value: number, target: number, dt: number) => {
   const rate = Math.abs(target) > Math.abs(value) ? STEER_RATE_PER_S : STEER_RETURN_PER_S;
   return value + clamp(target - value, -rate * dt, rate * dt);
 };
@@ -38,7 +41,7 @@ export function steerTarget(command: CircuitCommand): number {
 }
 
 /** Remote bikes placed on the track near the player, to bump into. */
-function remoteBodies(
+export function remoteBodies(
   geo: CircuitGeometry,
   race: CircuitRaceState,
   remotes: readonly RemoteBike[],

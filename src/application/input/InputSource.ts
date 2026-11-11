@@ -8,7 +8,15 @@ export type InputCommand = StreetCommand;
 
 /** One-shot actions triggered by the rider (not held). */
 export type InputAction =
-  'reset' | 'toggleTimer' | 'shiftUp' | 'shiftDown' | 'startEngine' | 'toggleCamera' | 'toggleMap';
+  | 'reset'
+  | 'toggleTimer'
+  | 'shiftUp'
+  | 'shiftDown'
+  | 'startEngine'
+  | 'toggleCamera'
+  | 'toggleMap'
+  /** Item races: use what you hold (Z). */
+  | 'useItem';
 export type ActionListener = (action: InputAction) => void;
 
 /**

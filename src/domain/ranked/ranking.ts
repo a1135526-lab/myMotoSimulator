@@ -111,5 +111,27 @@ export const RANKED_CIRCUITS = [
   'cliff-coast',
   'midnight-pass',
 ] as const;
+/** Item ranked: the item circuits and a few short, wide ones. */
+export const RANKED_ITEM_CIRCUITS = [
+  'pinball-park',
+  'rainbow-pier',
+  'night-market',
+  'practice-park',
+  'kart-oval',
+  'sugar-mill',
+  'harbor-night',
+] as const;
+
+/** A points ladder: plain ranked per group, and item ranked kept apart. */
+export type RankedLadder = RankedGroup | 'items-scooter' | 'items-manual';
+export const RANKED_LADDERS: readonly RankedLadder[] = [
+  'scooter',
+  'manual',
+  'items-scooter',
+  'items-manual',
+];
+export const ladderOf = (group: RankedGroup, items: boolean): RankedLadder =>
+  items ? `items-${group}` : group;
+
 /** Opponents in a race against the AI (a full grid of four). */
 export const RANKED_AI_OPPONENTS = 3;

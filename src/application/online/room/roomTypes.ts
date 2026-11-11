@@ -1,3 +1,5 @@
+import { isItemId } from '@/domain/items/itemTypes';
+import type { ItemUse } from '@/domain';
 import { HORN_PRESETS, type HornPreset } from '../../stores/hornStore';
 import { parseLivery, type Livery } from '../../stores/liveryStore';
 
@@ -33,6 +35,8 @@ export interface RoomSettings {
   readonly ranked?: 'scooter' | 'manual';
   /** Parallel start (all abreast); staggered when not set. */
   readonly grid?: 'parallel';
+  /** An item race. */
+  readonly items?: true;
 }
 
 /** Where a rider is, ~10 times a second while racing. */
@@ -88,7 +92,21 @@ export type RoomMessage =
   /** Someone's recorded horn, sent before they first use it in a race. */
   | { readonly type: 'hornClip'; readonly id: string; readonly clip: string }
   /** Someone flashed their headlight (night circuits). */
-  | { readonly type: 'flash'; readonly id: string; readonly raceId: number };
+  | { readonly type: 'flash'; readonly id: string; readonly raceId: number }
+  /** Item races: someone used an item (enough to make the same trap / shot here). */
+  | {
+      readonly type: 'itemUse';
+      readonly id: string;
+      readonly raceId: number;
+      readonly use: ItemUse;
+    }
+  /** Item races: someone ran into this trap or shot, so it's gone. */
+  | {
+      readonly type: 'itemHit';
+      readonly id: string;
+      readonly raceId: number;
+      readonly objectId: string;
+    };
 
 /** A recorded horn bigger than this isn't sent (others hear the standard horn). */
 export const ROOM_CLIP_MAX_CHARS = 200_000;
@@ -134,7 +152,33 @@ function parseSettings(raw: unknown): RoomSettings | null {
   if (!circuitId || laps === null) return null;
   const ranked = o?.ranked === 'scooter' || o?.ranked === 'manual' ? o.ranked : undefined;
   const grid = o?.grid === 'parallel' ? o.grid : undefined;
-  return { circuitId, laps: Math.round(laps), ...(ranked && { ranked }), ...(grid && { grid }) };
+  const items = o?.items === true ? (true as const) : undefined;
+  return {
+    circuitId,
+    laps: Math.round(laps),
+    ...(ranked && { ranked }),
+    ...(grid && { grid }),
+    ...(items && { items }),
+  };
+}
+
+const TRACK_MAX_M = 100_000;
+
+function parseItemUse(raw: unknown): ItemUse | null {
+  const o = obj(raw);
+  if (!o || !isItemId(o.item)) return null;
+  const s = num(o.s, 0, TRACK_MAX_M);
+  const d = num(o.d, -100, 100);
+  const speedMps = num(o.speedMps, 0, 150);
+  if (s === null || d === null || speedMps === null) return null;
+  return {
+    item: o.item,
+    objectId: str(o.objectId, 80),
+    s,
+    d,
+    speedMps,
+    target: str(o.target, 64),
+  };
 }
 
 function parsePose(raw: unknown): PosePayload | null {
@@ -211,6 +255,18 @@ export function parseMessage(raw: unknown): RoomMessage | null {
       const id = str(o.id, 64);
       const clip = str(o.clip, ROOM_CLIP_MAX_CHARS);
       return id && clip?.startsWith('data:audio/') ? { type: 'hornClip', id, clip } : null;
+    }
+    case 'itemUse': {
+      const id = str(o.id, 64);
+      const raceId = num(o.raceId, 0, Number.MAX_SAFE_INTEGER);
+      const use = parseItemUse(o.use);
+      return id && raceId !== null && use ? { type: 'itemUse', id, raceId, use } : null;
+    }
+    case 'itemHit': {
+      const id = str(o.id, 64);
+      const raceId = num(o.raceId, 0, Number.MAX_SAFE_INTEGER);
+      const objectId = str(o.objectId, 80);
+      return id && raceId !== null && objectId ? { type: 'itemHit', id, raceId, objectId } : null;
     }
     case 'flash': {
       const id = str(o.id, 64);

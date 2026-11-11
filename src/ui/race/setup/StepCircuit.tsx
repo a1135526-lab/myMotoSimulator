@@ -1,9 +1,10 @@
 import {
+  boardKey,
+  circuitChoices,
   circuitGeometry,
   MAX_CIRCUIT_OPPONENTS,
   MAX_LAPS,
   useActiveCircuit,
-  useCircuits,
   useRaceStore,
   useRecordsStore,
 } from '@/application';
@@ -19,7 +20,8 @@ const SKY_CLASS: Record<string, string | undefined> = {
 };
 
 export function StepCircuit() {
-  const circuits = useCircuits();
+  const items = useRaceStore((s) => s.items);
+  const circuits = circuitChoices(items);
   const boards = useRecordsStore((s) => s.laps);
   const active = useActiveCircuit();
   const laps = useRaceStore((s) => s.laps);
@@ -52,15 +54,20 @@ export function StepCircuit() {
             >
               <strong className={styles.trackName}>
                 {c.name}
+                {c.itemsOnly && (
+                  <span className={styles.hillBadge} data-testid={`item-track-${c.id}`}>
+                    🎁 道具賽道
+                  </span>
+                )}
                 {dropM > 0 && (
                   <span className={styles.hillBadge} data-testid={`hills-${c.id}`}>
                     ⛰ 上下坡
                   </span>
                 )}
               </strong>
-              {boards[c.id]?.[0] && (
+              {boards[boardKey(c.id, items)]?.[0] && (
                 <span className={styles.trackBest} data-testid={`best-${c.id}`}>
-                  🏆 你的最快圈 {fmtLap(boards[c.id]?.[0]?.lapS ?? null)}
+                  🏆 你的最快圈 {fmtLap(boards[boardKey(c.id, items)]?.[0]?.lapS ?? null)}
                 </span>
               )}
               <span className={styles.trackTagline}>{c.tagline}</span>

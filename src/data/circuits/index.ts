@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { ElevationKey, Vec2 } from '@/domain';
 import { airDensityAt, type Scenery, type SkyTheme } from '../tracks';
 import { HILL_CIRCUITS } from './hillCircuits';
+import { ITEM_CIRCUITS } from './itemCircuits';
 import { MORE_CIRCUITS } from './moreCircuits';
 
 /**
@@ -28,6 +29,8 @@ export interface CircuitSpec {
   readonly scenery: Scenery;
   /** Hills: `[lapFraction, heightM]` keys (see domain elevation.ts); flat when absent. */
   readonly elevation?: readonly ElevationKey[];
+  /** Built for item races: only offered there. */
+  readonly itemsOnly?: boolean;
 }
 
 const pts = (raw: readonly (readonly [number, number])[]): Vec2[] =>
@@ -53,6 +56,7 @@ const CircuitSchema = z.object({
       message: 'elevation keys must run forward round the lap',
     })
     .optional(),
+  itemsOnly: z.boolean().optional(),
 });
 
 const circuit = (c: Omit<CircuitSpec, 'airDensity'>): CircuitSpec => ({
@@ -126,6 +130,7 @@ const RAW_CIRCUITS: readonly CircuitSpec[] = [
   }),
   ...MORE_CIRCUITS.map(circuit),
   ...HILL_CIRCUITS.map(circuit),
+  ...ITEM_CIRCUITS.map(circuit),
 ];
 
 export const CIRCUITS: readonly CircuitSpec[] = RAW_CIRCUITS.map((c) => {

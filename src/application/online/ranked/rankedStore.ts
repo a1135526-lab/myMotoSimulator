@@ -1,13 +1,20 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { create } from 'zustand';
-import { RANKED_LAPS, tierOf, type RankedGroup } from '@/domain';
+import {
+  ladderOf,
+  RANKED_LADDERS,
+  RANKED_LAPS,
+  tierOf,
+  type RankedGroup,
+  type RankedLadder,
+} from '@/domain';
 import { newMatchId } from '../../stats/matchTypes';
 import { useUiStore } from '../../stores/uiStore';
 import { useAuthStore } from '../authStore';
 import { useRoomStore } from '../room/roomStore';
 import { newRoomCode } from '../room/roomTypes';
 import { errorText, supabase } from '../supabase';
-import { formMatch, QUEUE_GIVE_UP_S, type QueuedPlayer } from './matchmaking';
+import { formMatch, matchFor, QUEUE_GIVE_UP_S, queuedFrom, type QueuedPlayer } from './matchmaking';
 import {
   randomCircuit,
   rankedProfile,
@@ -25,15 +32,17 @@ import {
 interface RankedState {
   readonly phase: RankedPhase;
   readonly group: RankedGroup;
+  /** Queued for item ranked (its own ladder). */
+  readonly items: boolean;
   readonly queuedAt: number | null;
   /** Others in the queue for your group right now. */
   readonly inQueue: number;
   readonly match: RankedMatch | null;
-  readonly mine: Partial<Record<RankedGroup, RankedRecord>>;
+  readonly mine: Partial<Record<RankedLadder, RankedRecord>>;
   readonly result: RankedResult | null;
   readonly error: string | null;
   loadMine(): Promise<void>;
-  queue(group: RankedGroup, name: string): Promise<void>;
+  queue(group: RankedGroup, name: string, items?: boolean): Promise<void>;
   /** Out of the queue / match, back to the ranked menu. */
   cancel(): void;
   /** Your place in the race just finished. */
@@ -71,7 +80,7 @@ export const useRankedStore = create<RankedState>()((set, get) => {
     clearTimers();
     leaveQueue();
     if (useRoomStore.getState().status !== 'idle') useRoomStore.getState().leave();
-    const { group } = get();
+    const { group, items } = get();
     set({
       phase: 'ai',
       result: null,
@@ -79,10 +88,11 @@ export const useRankedStore = create<RankedState>()((set, get) => {
         id: newMatchId(),
         kind: 'ai',
         group,
-        circuitId: randomCircuit(),
+        circuitId: randomCircuit(items),
         laps: RANKED_LAPS,
         size: 1,
-        aiTier: tierOf(get().mine[group]?.points ?? 0).index,
+        aiTier: tierOf(get().mine[ladderOf(group, items)]?.points ?? 0).index,
+        ...(items && { items }),
       },
     });
   };
@@ -93,7 +103,12 @@ export const useRankedStore = create<RankedState>()((set, get) => {
     leaveQueue();
     set({ phase: 'joining', match, result: null });
     const profile = rankedProfile(match.group, name);
-    const settings = { circuitId: match.circuitId, laps: match.laps, ranked: match.group };
+    const settings = {
+      circuitId: match.circuitId,
+      laps: match.laps,
+      ranked: match.group,
+      ...(match.items && { items: true as const }),
+    };
     const room = useRoomStore.getState();
     if (host) {
       await room.create(profile, settings, code);
@@ -131,6 +146,7 @@ export const useRankedStore = create<RankedState>()((set, get) => {
   return {
     phase: 'idle',
     group: 'scooter',
+    items: false,
     queuedAt: null,
     inQueue: 0,
     match: null,
@@ -145,57 +161,52 @@ export const useRankedStore = create<RankedState>()((set, get) => {
         set({ error: errorText(error) });
         return;
       }
-      const mine: Partial<Record<RankedGroup, RankedRecord>> = {};
-      for (const r of (data as (RankedRecord & { grp: RankedGroup })[]) ?? []) {
-        mine[r.grp] = { points: r.points, games: r.games, wins: r.wins, best: r.best };
+      const mine: Partial<Record<RankedLadder, RankedRecord>> = {};
+      for (const r of (data as (RankedRecord & { grp: string })[]) ?? []) {
+        const ladder = RANKED_LADDERS.find((l) => l === r.grp);
+        if (ladder) mine[ladder] = { points: r.points, games: r.games, wins: r.wins, best: r.best };
       }
       set({ mine, error: null });
     },
 
-    queue: async (group, name) => {
+    queue: async (group, name, items = false) => {
       const client = supabase;
       const { userId } = useAuthStore.getState();
       if (!client || !userId) return;
       get().cancel();
-      const points = get().mine[group]?.points ?? 0;
+      const ladder = ladderOf(group, items);
+      const points = get().mine[ladder]?.points ?? 0;
       const me: QueuedPlayer = { id: userId, points, joinedAt: Date.now() };
-      set({ phase: 'queue', group, queuedAt: me.joinedAt, inQueue: 0, error: null, result: null });
-      const ch = client.channel(`mm:${group}`, {
+      set({
+        phase: 'queue',
+        group,
+        items,
+        queuedAt: me.joinedAt,
+        inQueue: 0,
+        error: null,
+        result: null,
+      });
+      const ch = client.channel(`mm:${ladder}`, {
         config: { broadcast: { self: false }, presence: { key: userId } },
       });
       channel = ch;
       let queueList: QueuedPlayer[] = [me];
 
       ch.on('presence', { event: 'sync' }, () => {
-        queueList = Object.values(ch.presenceState()).flatMap((entries) =>
-          entries.flatMap((e) => {
-            const q = e as unknown as Partial<QueuedPlayer>;
-            return typeof q.id === 'string' &&
-              typeof q.points === 'number' &&
-              typeof q.joinedAt === 'number'
-              ? [{ id: q.id, points: q.points, joinedAt: q.joinedAt }]
-              : [];
-          }),
-        );
+        queueList = queuedFrom(ch.presenceState());
         set({ inQueue: Math.max(0, queueList.length - 1) });
       });
       ch.on('broadcast', { event: 'match' }, ({ payload }) => {
-        const m = payload as {
-          members?: unknown;
-          code?: unknown;
-          matchId?: unknown;
-          circuitId?: unknown;
-        };
-        if (!Array.isArray(m.members) || !m.members.includes(userId)) return;
-        if (typeof m.code !== 'string' || typeof m.matchId !== 'string') return;
-        if (typeof m.circuitId !== 'string' || get().phase !== 'queue') return;
+        const m = matchFor(payload, userId);
+        if (!m || get().phase !== 'queue') return;
         const match: RankedMatch = {
           id: m.matchId,
           kind: 'room',
           group,
           circuitId: m.circuitId,
           laps: RANKED_LAPS,
-          size: m.members.length,
+          size: m.size,
+          ...(items && { items }),
         };
         void enterMatch(match, m.code, false, name);
       });
@@ -213,9 +224,10 @@ export const useRankedStore = create<RankedState>()((set, get) => {
             id: newMatchId(),
             kind: 'room',
             group,
-            circuitId: randomCircuit(),
+            circuitId: randomCircuit(items),
             laps: RANKED_LAPS,
             size: members.length,
+            ...(items && { items }),
           };
           const code = newRoomCode();
           void ch.send({
@@ -245,14 +257,15 @@ export const useRankedStore = create<RankedState>()((set, get) => {
     },
 
     report: async (position, field) => {
-      const { match, group } = get();
+      const { match } = get();
       if (!supabase || !match) return;
       const vsAi = match.kind === 'ai';
-      const before = get().mine[group]?.points ?? 0;
+      const ladder = ladderOf(match.group, match.items === true);
+      const before = get().mine[ladder]?.points ?? 0;
       set({ result: { state: 'sending' } });
       const { data, error } = await supabase.rpc('report_ranked', {
         p_match: match.id,
-        p_group: group,
+        p_group: ladder,
         p_vs_ai: vsAi,
         p_position: Math.min(position, field),
         p_field: Math.min(4, Math.max(2, field)),
@@ -262,12 +275,12 @@ export const useRankedStore = create<RankedState>()((set, get) => {
         return;
       }
       const r = data as { points: number; delta: number; games: number; wins: number };
-      const prev = get().mine[group];
+      const prev = get().mine[ladder];
       set({
         result: { state: 'done', before, points: r.points, delta: r.delta, vsAi },
         mine: {
           ...get().mine,
-          [group]: {
+          [ladder]: {
             points: r.points,
             games: r.games,
             wins: r.wins,

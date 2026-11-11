@@ -57,7 +57,8 @@ const LAYOUTS: Readonly<Record<KeyLayout, LayoutSpec>> = {
     held: new Map(COMMON_HELD),
     actions: new Map([...COMMON_ACTIONS, ['ArrowRight', 'shiftUp'], ['ArrowLeft', 'shiftDown']]),
   },
-  circuit: { held: CIRCUIT_HELD, actions: new Map(CIRCUIT_ACTIONS) },
+  // Z uses the item you hold in an item race (nothing otherwise).
+  circuit: { held: CIRCUIT_HELD, actions: new Map([...CIRCUIT_ACTIONS, ['KeyZ', 'useItem']]) },
   // The city adds X to paddle backwards and M for the big map.
   street: {
     held: new Map([...CIRCUIT_HELD, ['KeyX', 'reversePressed']]),

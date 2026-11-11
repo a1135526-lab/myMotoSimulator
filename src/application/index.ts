@@ -113,7 +113,13 @@ export {
 } from './stores/recordsStore';
 export type { LapNotice } from './stores/circuitStore';
 export { MAX_CIRCUIT_OPPONENTS, MAX_LAPS, type Discipline } from './stores/raceStore';
-export { useActiveCircuit, useCircuits, useVenue, type Estimate } from './hooks/useRaceSetup';
+export {
+  circuitChoices,
+  useActiveCircuit,
+  useCircuits,
+  useVenue,
+  type Estimate,
+} from './hooks/useRaceSetup';
 export { circuitGeometry } from './services/lapService';
 /** Fastest believable reaction to a start light, s (shown in race rules). */
 export { MIN_HUMAN_REACTION_S } from '@/domain';
@@ -192,6 +198,8 @@ export { ROOM_FINISH_WINDOW_S } from './online/room/circuitRoom';
 export { useRankedStore } from './online/ranked/rankedStore';
 // Tiers and rules for the ranked screens (the UI can't reach into domain).
 export {
+  ladderOf,
+  type RankedLadder,
   RANKED_GROUP_LABELS,
   RANKED_LAPS,
   TIERS,
@@ -234,3 +242,13 @@ export {
   type RoomPlayer,
   type RoomSettings,
 } from './online/room/roomTypes';
+export {
+  mostPicked,
+  useItemStore,
+  type ItemCue,
+  type ItemStats,
+  type ItemToast,
+} from './stores/itemStore';
+export type { ItemView } from './viewModels/items';
+export { boardKey, itemBoardKey } from './stores/recordsStore';
+export { ITEM_IDS, ITEM_INFO, ITEM_TUNING } from '@/domain';

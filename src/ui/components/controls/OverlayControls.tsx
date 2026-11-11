@@ -52,6 +52,8 @@ function defaultAnchor(id: OverlayButton, kind: ControlLayoutKind, manual: boole
       return right(174, 150);
     case 'reset':
       return manual ? right(234, 150) : right(40, 146);
+    case 'item':
+      return right(150, 128);
   }
 }
 

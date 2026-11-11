@@ -97,6 +97,16 @@
   color: #fff;
 }
 
+.itemRow {
+  display: grid;
+}
+
+.item {
+  background: linear-gradient(180deg, #ffb020, #e07800);
+  color: #1b1200;
+  font-weight: 800;
+}
+
 .reset {
   background: var(--surface-2);
   color: var(--text-muted);

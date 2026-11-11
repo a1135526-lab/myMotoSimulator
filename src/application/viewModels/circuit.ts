@@ -20,6 +20,7 @@ import {
   type SimModel,
 } from '@/domain';
 import type { Livery } from '../stores/liveryStore';
+import type { ItemView } from './items';
 import { dashboardModel, type DashboardModel } from './dashboard';
 import { gearLabelOf } from './telemetry';
 
@@ -85,6 +86,10 @@ export interface CircuitRiderView {
   readonly accountName?: string;
   /** Bike and rider colours (you, and other players); AI riders get the default palette. */
   readonly livery?: Livery;
+  /** Item races: turned into a skateboard, behind a shield, on a boost. */
+  readonly skate?: boolean;
+  readonly shield?: boolean;
+  readonly boost?: boolean;
 }
 
 export interface CircuitPlayerView {
@@ -136,6 +141,8 @@ export interface CircuitView {
   readonly ghost: CircuitGhostView | null;
   /** Your grades, once you've taken the flag (or the race is over). */
   readonly grades: RideGrades | null;
+  /** Item races: what you hold and what's on the track. */
+  readonly items?: ItemView | null;
   /** Friend room: seconds left to take the flag after the winner did; null before. */
   readonly finishCountdownS?: number | null;
   /** Friend room: you finished or retired, and so has everyone else. */

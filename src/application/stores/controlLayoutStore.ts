@@ -12,6 +12,7 @@ export const OVERLAY_BUTTONS = [
   'start',
   'shiftDown',
   'shiftUp',
+  'item',
 ] as const;
 export type OverlayButton = (typeof OVERLAY_BUTTONS)[number];
 

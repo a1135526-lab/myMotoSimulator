@@ -16,6 +16,7 @@ import {
 } from '@/application';
 import { useEngineAudio } from '../../audio/useEngineAudio';
 import { useHorn } from '../../audio/useHorn';
+import { useItemSounds } from '../../audio/useItemSounds';
 import { HomeButton } from '../../components/common/HomeButton';
 import { SoundToggle } from '../../components/common/SoundToggle';
 import { KeyHints } from '../../components/controls/KeyHints';
@@ -56,6 +57,8 @@ const CIRCUIT_KEYS: [string, string][] = [
   ['Space', '起跑'],
 ];
 
+const ITEM_KEYS: [string, string][] = [...CIRCUIT_KEYS, ['Z', '使用道具']];
+
 /** `room`: a friend-room race (the host starts it; results go back to the room). */
 export function CircuitPage({
   room = false,
@@ -83,9 +86,11 @@ export function CircuitPage({
   const live = view?.phase === 'lights' || view?.phase === 'racing';
   // From your flag on, the results are up: no riding controls or HUD behind them.
   const done = view?.phase === 'finished' || view?.riders[0]?.finishTimeS != null;
+  const itemRace = useCircuitStore((s) => s.view?.items != null);
   const immersive = useImmersive();
   useMirrorKey();
   useHorn();
+  useItemSounds();
   useFlashKey();
   const night = circuit.sky === 'night';
   useEffect(() => {
@@ -102,7 +107,7 @@ export function CircuitPage({
         <>
           <HomeButton />
           <SoundToggle />
-          <KeyHints manual={manual} hints={CIRCUIT_KEYS} />
+          <KeyHints manual={manual} hints={itemRace ? ITEM_KEYS : CIRCUIT_KEYS} />
         </>
       }
     >
@@ -123,6 +128,7 @@ export function CircuitPage({
           {immersive ? '←' : ranked ? '← 離開排位' : room ? '← 離開房間' : '← 返回車庫'}
         </button>
         <p className={styles.raceTitle}>
+          {itemRace ? '🎁 道具賽 · ' : ''}
           {circuit.name} · {view?.laps ?? '-'} 圈 · {bike.brand} {bike.model}
         </p>
         {!done && (
@@ -196,6 +202,7 @@ export function CircuitPage({
             onReset={() => controller.handleAction('reset')}
             onShift={(d) => controller.handleAction(d > 0 ? 'shiftUp' : 'shiftDown')}
             onStart={() => controller.handleAction('startEngine')}
+            onItem={itemRace ? () => controller.fireItem() : undefined}
           />
         )}
       </div>
