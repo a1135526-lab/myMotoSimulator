@@ -5,6 +5,7 @@ import {
   TILT_DEADZONE_DEG,
   TILT_FULL_DEG,
   tiltAxis,
+  STEADY_READINGS,
   TiltInputSource,
 } from './TiltInputSource';
 import { TouchInputSource } from './TouchInputSource';
@@ -26,6 +27,11 @@ function upright(twistDeg: number, baseDeg = 0) {
 
 const orientation = (angles: { beta: number; gamma: number }) =>
   Object.assign(new Event('deviceorientation'), angles);
+
+/** Hold the phone still long enough for it to count as steady. */
+function hold(target: EventTarget, angles: { beta: number; gamma: number }) {
+  for (let i = 0; i < STEADY_READINGS; i++) target.dispatchEvent(orientation(angles));
+}
 
 describe('screenTwistDeg', () => {
   it('reads the twist of an upright phone, anticlockwise positive', () => {
@@ -50,10 +56,10 @@ describe('tiltAxis', () => {
 });
 
 describe('TiltInputSource', () => {
-  it('centres on the first reading, then turning left steers left', () => {
+  it('centres on a steady hold, then turning left steers left', () => {
     const target = new EventTarget();
     const tilt = new TiltInputSource(target);
-    target.dispatchEvent(orientation(upright(7, 90))); // held slightly off in landscape
+    hold(target, upright(7, 90)); // held slightly off in landscape
     expect(tilt.read().steerAxis).toBeUndefined();
     target.dispatchEvent(orientation(upright(7 + 15, 90)));
     expect(tilt.read().steerAxis).toBeGreaterThan(0.4);
@@ -64,9 +70,9 @@ describe('TiltInputSource', () => {
   it('re-centres when the screen rotates, and stops when disposed', () => {
     const target = new EventTarget();
     const tilt = new TiltInputSource(target);
-    target.dispatchEvent(orientation(upright(0)));
+    hold(target, upright(0));
     target.dispatchEvent(new Event('orientationchange'));
-    target.dispatchEvent(orientation(upright(0, 90)));
+    hold(target, upright(0, 90));
     expect(tilt.read().steerAxis).toBeUndefined();
     target.dispatchEvent(orientation(upright(20, 90)));
     tilt.dispose();
@@ -79,10 +85,33 @@ describe('TiltInputSource', () => {
     const touch = new TouchInputSource();
     input.add(touch);
     input.add(new TiltInputSource(target));
-    target.dispatchEvent(orientation(upright(0)));
+    hold(target, upright(0));
     target.dispatchEvent(orientation(upright(-12)));
     expect(input.read().steerAxis).toBeLessThan(0);
     touch.press('throttle');
     expect(input.read()).toMatchObject({ throttlePressed: true, steerLeftPressed: false });
+  });
+
+  it('ignores the readings taken while the phone is still being picked up', () => {
+    const target = new EventTarget();
+    const tilt = new TiltInputSource(target);
+    for (const twist of [40, 25, 12, 4]) target.dispatchEvent(orientation(upright(twist, 90)));
+    expect(tilt.read().steerAxis).toBeUndefined();
+    hold(target, upright(0, 90));
+    expect(tilt.read().steerAxis).toBeUndefined();
+    target.dispatchEvent(orientation(upright(15, 90)));
+    expect(tilt.read().steerAxis).toBeGreaterThan(0.4);
+  });
+
+  it('follows the steady hold while told to, then keeps it', () => {
+    const target = new EventTarget();
+    let grid = true;
+    const tilt = new TiltInputSource(target, () => grid);
+    hold(target, upright(0, 90));
+    hold(target, upright(18, 90)); // shifted grip on the grid
+    expect(tilt.read().steerAxis).toBeUndefined();
+    grid = false;
+    hold(target, upright(18 + 15, 90));
+    expect(tilt.read().steerAxis).toBeGreaterThan(0.4);
   });
 });

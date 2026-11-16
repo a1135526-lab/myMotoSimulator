@@ -23,6 +23,12 @@ import { useCircuitConfig } from './useCircuitConfig';
 import { useTiltSteering } from './useTiltSteering';
 import { useSimulationLoop } from './useSimulationLoop';
 
+/** Before the lights go out the bike can't move: the phone's hold is straight ahead. */
+const onGrid = () => {
+  const phase = useCircuitStore.getState().view?.phase;
+  return phase === undefined || phase === 'grid' || phase === 'lights';
+};
+
 /**
  * Clean laps go on this circuit's board; a new best also becomes its ghost.
  * Every lap gets a short notice.
@@ -133,7 +139,7 @@ export function CircuitProvider({ children }: { children: ReactNode }) {
   useSimulationLoop(controller);
   useInputSources(controller, 'circuit');
   useFlickShift(controller);
-  useTiltSteering(controller);
+  useTiltSteering(controller, onGrid);
   // Before the room starts a race: what you put on the track is named by your id.
   useRoomItems(controller, inRoom);
   useCircuitRoom(controller, inRoom, rankedAi ? finishWindowClosed : noWindow);

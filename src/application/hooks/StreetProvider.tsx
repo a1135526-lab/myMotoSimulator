@@ -17,6 +17,12 @@ import { useSimulationLoop } from './useSimulationLoop';
 /** Seed for where the traffic starts; the city itself has its own. */
 const TRAFFIC_SEED = 42;
 
+/** Until the bike first rolls off, the phone's steady hold is straight ahead. */
+const notYetRiding = () => {
+  const view = useStreetStore.getState().view;
+  return view === null || (view.tripKm < 0.005 && view.rider.speedKmh < 1);
+};
+
 /** Garage bike and tune, loose in the city. */
 function useStreetConfig(map: CityMap): StreetConfig {
   const bike = useCurrentBike();
@@ -118,7 +124,7 @@ export function StreetProvider({ map, children }: { map: CityMap; children: Reac
   useSimulationLoop(controller);
   useInputSources(controller, 'street');
   useFlickShift(controller);
-  useTiltSteering(controller);
+  useTiltSteering(controller, notYetRiding);
 
   return <StreetContext.Provider value={controller}>{children}</StreetContext.Provider>;
 }

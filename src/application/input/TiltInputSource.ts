@@ -6,6 +6,10 @@ export const TILT_FULL_DEG = 25;
 export const TILT_DEADZONE_DEG = 2;
 /** Lying near flat, the twist angle is mostly noise; keep the last steer instead. */
 const MIN_UPRIGHT = 0.3;
+/** Straight ahead is only taken from a steady hold: this many readings… */
+export const STEADY_READINGS = 8;
+/** …all within this many degrees of each other. */
+export const STEADY_SPREAD_DEG = 3;
 const DEG = Math.PI / 180;
 
 /**
@@ -52,22 +56,29 @@ export function tiltAxis(offsetDeg: number): number {
 type OrientationTarget = Pick<Window, 'addEventListener' | 'removeEventListener'>;
 
 /**
- * Steering by turning the phone like a wheel. However it's held when the
- * first reading arrives is straight ahead; rotating the screen between
- * portrait and landscape re-centres.
+ * Steering by turning the phone like a wheel. Straight ahead is how the phone
+ * is held once it is held steady (the first readings, taken while it is still
+ * being picked up or turned, are often far off); rotating the screen between
+ * portrait and landscape re-centres. While `following()` holds (on the grid,
+ * before the bike first moves) straight ahead keeps following the steady hold.
  */
 export class TiltInputSource implements InputSource {
   private axis = 0;
   private centreDeg: number | null = null;
+  private recent: number[] = [];
 
-  constructor(private readonly target: OrientationTarget) {
+  constructor(
+    private readonly target: OrientationTarget,
+    private readonly following: () => boolean = () => false,
+  ) {
     target.addEventListener('deviceorientation', this.handleOrientation);
     target.addEventListener('orientationchange', this.recentre);
   }
 
-  /** The way the phone is held now becomes straight ahead. */
+  /** The next steady hold becomes straight ahead. */
   readonly recentre = (): void => {
     this.centreDeg = null;
+    this.recent = [];
     this.axis = 0;
   };
 
@@ -86,9 +97,24 @@ export class TiltInputSource implements InputSource {
     if (beta === null || gamma === null || beta === undefined || gamma === undefined) return;
     const twist = screenTwistDeg(beta, gamma);
     if (twist === null) return;
-    this.centreDeg ??= twist;
-    this.axis = tiltAxis(wrapDeg(twist - this.centreDeg));
+    const steady = this.steadyAt(twist);
+    if (steady !== null && (this.centreDeg === null || this.following())) {
+      this.centreDeg = steady;
+    }
+    this.axis = this.centreDeg === null ? 0 : tiltAxis(wrapDeg(twist - this.centreDeg));
   };
+
+  /** The middle of the last few readings if they agree, else null. */
+  private steadyAt(twist: number): number | null {
+    this.recent.push(twist);
+    if (this.recent.length > STEADY_READINGS) this.recent.shift();
+    if (this.recent.length < STEADY_READINGS) return null;
+    const first = this.recent[0] ?? twist;
+    const offsets = this.recent.map((t) => wrapDeg(t - first));
+    const lo = Math.min(...offsets);
+    const hi = Math.max(...offsets);
+    return hi - lo <= STEADY_SPREAD_DEG ? wrapDeg(first + (lo + hi) / 2) : null;
+  }
 }
 
 export type TiltPermission = 'granted' | 'denied' | 'unsupported';
