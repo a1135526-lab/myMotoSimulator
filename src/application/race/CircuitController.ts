@@ -49,6 +49,8 @@ export interface CircuitConfig {
   readonly ghost: GhostLap | null;
   /** Exact AI pace (ranked races), instead of the `skill` presets. */
   readonly aiSkill?: CircuitSkill;
+  /** Every AI rider at exactly `aiSkill`, without the slower grid personalities. */
+  readonly aiAllOut?: boolean;
   /** How the grid lines up (staggered unless set). */
   readonly grid?: GridLayout;
   /** An item race: boxes on the track, items to use. */

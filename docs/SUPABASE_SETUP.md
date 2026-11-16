@@ -27,20 +27,23 @@
 
 ## 資料庫檔案（依序執行）
 
-| 檔案                             | 內容                                 | 可以重複執行嗎                                    |
-| -------------------------------- | ------------------------------------ | ------------------------------------------------- |
-| `supabase/schema.sql`            | 排行榜、暱稱、規則表                 | ⚠️ 會**清空**排行榜，正式上線後不要整份重跑       |
-| `supabase/002_matches.sql`       | 對戰紀錄（個人資訊頁的雲端同步）     | ✅ 只新增，不會動到排行榜                         |
-| `supabase/003_friends.sql`       | 好友（邀請、接受、移除、看好友戰績） | ✅ 只新增                                         |
-| `supabase/004_ranked.sql`        | 排位賽積分、排位排行榜               | ✅ 只新增（`add_matches` 會更新成接受排位賽）     |
-| `supabase/005_player_card.sql`   | 結算畫面「查看」對手：對方的排位段位 | ✅ 只新增                                         |
-| `supabase/006_more_circuits.sql` | 十條新賽道的圈速規則                 | ✅ 只新增                                         |
-| `supabase/007_hill_circuits.sql` | 四條上下坡賽道的圈速規則             | ✅ 只新增                                         |
-| `supabase/008_item_race.sql`     | 道具賽榜（`items:<賽道>`）、道具排位 | ✅ 只新增（`report_ranked` 會更新成接受道具排位） |
+| 檔案                                 | 內容                                 | 可以重複執行嗎                                                    |
+| ------------------------------------ | ------------------------------------ | ----------------------------------------------------------------- |
+| `supabase/schema.sql`                | 排行榜、暱稱、規則表                 | ⚠️ 會**清空**排行榜，正式上線後不要整份重跑                       |
+| `supabase/002_matches.sql`           | 對戰紀錄（個人資訊頁的雲端同步）     | ✅ 只新增，不會動到排行榜                                         |
+| `supabase/003_friends.sql`           | 好友（邀請、接受、移除、看好友戰績） | ✅ 只新增                                                         |
+| `supabase/004_ranked.sql`            | 排位賽積分、排位排行榜               | ✅ 只新增（`add_matches` 會更新成接受排位賽）                     |
+| `supabase/005_player_card.sql`       | 結算畫面「查看」對手：對方的排位段位 | ✅ 只新增                                                         |
+| `supabase/006_more_circuits.sql`     | 十條新賽道的圈速規則                 | ✅ 只新增                                                         |
+| `supabase/007_hill_circuits.sql`     | 四條上下坡賽道的圈速規則             | ✅ 只新增                                                         |
+| `supabase/008_item_race.sql`         | 道具賽榜（`items:<賽道>`）、道具排位 | ✅ 只新增（`report_ranked` 會更新成接受道具排位）                 |
+| `supabase/009_ranked_difficulty.sql` | 排位對電腦的難度（加分依難度）       | ✅ 可重跑（`report_ranked` 多一個難度參數；跑過之後不要再跑 008） |
 
 `002_matches.sql`：每位玩家自己的比賽紀錄（`matches` 表），只能透過 `add_matches`（一次最多 100 場、每人上限 5000 場）和 `get_my_matches`（只回傳自己的）存取。
 
 `004_ranked.sql`：`ranked` 表存每人每組的積分，`ranked_reports` 防止同一場回報兩次。只能透過 `report_ranked`（伺服器依名次算分、30 秒最多一場）、`get_my_ranked`、`get_ranked_board` 存取。配對本身走 Realtime presence 頻道 `mm:scooter`／`mm:manual`，不碰資料庫。新增排位賽道時，改 `src/domain/ranked/ranking.ts` 的 `RANKED_CIRCUITS` 即可；改加減分表要同時改 `ranking.ts` 和 SQL 的 `ranked_delta()`。
+
+`009_ranked_difficulty.sql`：對電腦的排位賽多一個難度（`easy`／`normal`／`hard`／`max`），加分是真人積分表的 25／50／75／100%，扣分一律 50%（`ranked_ai_delta()`，和 `src/domain/ranked/difficulty.ts` 一致）。舊的五個參數的 `report_ranked` 會被刪掉，新的第六個參數 `p_difficulty` 預設 `normal`，所以沒帶難度的舊版前端照舊算分。
 
 ## 安全設計（schema.sql）
 

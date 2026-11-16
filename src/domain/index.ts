@@ -42,6 +42,7 @@ export * from './circuit/corners';
 export * from './circuit/rideTally';
 export * from './circuit/rideGrades';
 export * from './ranked/ranking';
+export * from './ranked/difficulty';
 export * from './street/city';
 export {
   boundsOf,

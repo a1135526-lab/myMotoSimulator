@@ -4,10 +4,13 @@ import {
   RANKED_GROUP_LABELS,
   RANKED_LAPS,
   onlineEnabled,
+  RANKED_DIFFICULTIES,
+  rankedDelta,
   type RankedGroup,
   tierOf,
   TIERS,
   useAuthStore,
+  useRankedPrefs,
   useRankedStore,
 } from '@/application';
 import { TierBadge } from './TierBadge';
@@ -32,6 +35,9 @@ export function RankedMenu() {
   const [board, setBoard] = useState<RankedGroup>('scooter');
   // Item ranked: item races, on their own ladders.
   const [items, setItems] = useState(false);
+  const difficulty = useRankedPrefs((s) => s.difficulty);
+  const setDifficulty = useRankedPrefs((s) => s.setDifficulty);
+  const picked = RANKED_DIFFICULTIES.find((d) => d.id === difficulty);
   const ready = status === 'signedIn' && nickname !== null;
 
   useEffect(() => {
@@ -67,7 +73,8 @@ export function RankedMenu() {
     <section className={styles.panel} data-testid="ranked-menu">
       <h2>🏆 排位賽</h2>
       <p className={styles.note}>
-        配對線上段位接近的玩家（最多 4 人），20 秒內沒配到就改跟電腦比；電腦會隨你的段位稍微變強。
+        配對線上段位接近的玩家（最多 4 人），20
+        秒內沒配到就改跟電腦比。電腦的難度在下面選，越難贏的分越多。
       </p>
       {error && <p className={styles.error}>{error}</p>}
       <div className={styles.tabs}>
@@ -83,6 +90,28 @@ export function RankedMenu() {
           </button>
         ))}
       </div>
+      <h3>電腦難度</h3>
+      <div className={styles.tabs} role="group" aria-label="電腦難度">
+        {RANKED_DIFFICULTIES.map((d) => (
+          <button
+            key={d.id}
+            type="button"
+            aria-pressed={difficulty === d.id}
+            onClick={() => setDifficulty(d.id)}
+            data-testid={`ranked-difficulty-${d.id}`}
+          >
+            {d.label} · 第 1 名 +{rankedDelta(1, 4, true, d.id)}
+          </button>
+        ))}
+      </div>
+      {picked && (
+        <p className={styles.note}>
+          {picked.label}：{picked.blurb}。對電腦拿第 1 名 +{rankedDelta(1, 4, true, picked.id)}、第
+          2 名 +{rankedDelta(2, 4, true, picked.id)}，第 3、4 名{' '}
+          {rankedDelta(3, 4, true, picked.id)}、{rankedDelta(4, 4, true, picked.id)}
+          （扣分每種難度都一樣）。
+        </p>
+      )}
       <div className={styles.groups}>
         {GROUPS.map((g) => {
           const r = mine[ladderOf(g.id, items)];
@@ -124,7 +153,11 @@ export function RankedMenu() {
           </li>
           <li>第一名過線後其他人只剩 15 秒，沒過線算未完賽（最後一名）。</li>
           <li>4 人：第 1 名 +30、第 2 名 +12、第 3 名 −6、第 4 名 −18；2 人：贏 +24、輸 −18。</li>
-          <li>和電腦比的加減分減半，積分不會低於 0。</li>
+          <li>
+            和電腦比：加分依難度是跟真人比的
+            25%（簡單）、50%（普通）、75%（困難）、100%（極限），扣分一律減半；積分不會低於 0。
+          </li>
+          <li>極限難度完全不放水：每台電腦都用到抓地力極限、反應最快，沒有比較慢的對手。</li>
           <li>
             道具排位：道具賽，賽道從道具專用賽道和幾條短賽道裡挑；段位和積分跟一般排位分開算。
           </li>

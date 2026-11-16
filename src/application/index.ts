@@ -196,9 +196,14 @@ export {
 } from './stats/matchTypes';
 export { ROOM_FINISH_WINDOW_S } from './online/room/circuitRoom';
 export { useRankedStore } from './online/ranked/rankedStore';
+export { useRankedPrefs } from './online/ranked/rankedPrefs';
 // Tiers and rules for the ranked screens (the UI can't reach into domain).
 export {
   ladderOf,
+  difficultyInfo,
+  RANKED_DIFFICULTIES,
+  rankedDelta,
+  type RankedDifficulty,
   type RankedLadder,
   RANKED_GROUP_LABELS,
   RANKED_LAPS,

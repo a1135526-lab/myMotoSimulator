@@ -1,5 +1,6 @@
 import type { CircuitSkill } from '../circuit/circuitAi';
 import { humanReaction } from '../race/reaction';
+import { aiPoints, type RankedDifficulty } from './difficulty';
 
 /**
  * Ranked racing: points, the tiers they buy, and how hard the AI rides at
@@ -43,8 +44,8 @@ export function tierOf(points: number) {
 
 /**
  * Points for a finishing place in a field of `field` riders. A DNF counts as
- * last. Races against the AI count half, so the ladder is climbed by racing
- * people.
+ * last. Against the AI a good place is worth less the easier the AI was
+ * (difficulty.ts); a bad place costs half.
  */
 const TABLE: Readonly<Record<number, readonly number[]>> = {
   2: [24, -18],
@@ -52,11 +53,16 @@ const TABLE: Readonly<Record<number, readonly number[]>> = {
   4: [30, 12, -6, -18],
 };
 
-export function rankedDelta(position: number, field: number, vsAi: boolean): number {
+export function rankedDelta(
+  position: number,
+  field: number,
+  vsAi: boolean,
+  difficulty: RankedDifficulty = 'normal',
+): number {
   const row = TABLE[Math.min(4, Math.max(2, field))] ?? TABLE[4];
   const place = Math.min(Math.max(1, position), row?.length ?? 1);
   const full = row?.[place - 1] ?? 0;
-  return vsAi ? Math.trunc(full / 2) : full;
+  return vsAi ? aiPoints(full, difficulty) : full;
 }
 
 /** Points never drop below zero. */

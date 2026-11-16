@@ -3,7 +3,8 @@ import { getBike, getCircuit } from '@/data';
 import {
   RANKED_AI_OPPONENTS,
   RANKED_BIKES,
-  rankedAiSkill,
+  rankedAi,
+  type RankedDifficulty,
   type BikeSpec,
   type RankedGroup,
 } from '@/domain';
@@ -18,6 +19,12 @@ import { boardKey, loadGhost } from '../stores/recordsStore';
 import { useUiStore } from '../stores/uiStore';
 import { createStockSelection } from '../tuning/selection';
 import { buildSimConfig, useCurrentBike } from './useSimConfig';
+
+/** The AI's pace in a ranked race against it, fixed for the whole race. */
+function aiPace(difficulty: RankedDifficulty, tier: number) {
+  const { skill, allOut } = rankedAi(difficulty, tier);
+  return { aiSkill: skill, aiAllOut: allOut };
+}
 
 /**
  * The race to run: the garage one (your bike and tune, the chosen circuit
@@ -91,7 +98,7 @@ export function useCircuitConfig(): CircuitConfig {
       names,
       skill: opponent.skill,
       // Fixed at the start: points arriving after the flag mustn't restage the race.
-      ...(ranked?.kind === 'ai' && { aiSkill: rankedAiSkill(ranked.aiTier ?? 0) }),
+      ...(ranked?.kind === 'ai' && aiPace(ranked.aiDifficulty ?? 'normal', ranked.aiTier ?? 0)),
       laps,
       assist: noAssists ? false : assist,
       brakeAssist: noAssists ? false : brakeAssist,

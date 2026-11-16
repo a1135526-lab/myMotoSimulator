@@ -4,7 +4,6 @@ import {
   ladderOf,
   RANKED_LADDERS,
   RANKED_LAPS,
-  tierOf,
   type RankedGroup,
   type RankedLadder,
 } from '@/domain';
@@ -15,7 +14,9 @@ import { useRoomStore } from '../room/roomStore';
 import { newRoomCode } from '../room/roomTypes';
 import { errorText, supabase } from '../supabase';
 import { formMatch, matchFor, QUEUE_GIVE_UP_S, queuedFrom, type QueuedPlayer } from './matchmaking';
+import { useRankedPrefs } from './rankedPrefs';
 import {
+  aiMatch,
   randomCircuit,
   rankedProfile,
   type RankedMatch,
@@ -80,21 +81,10 @@ export const useRankedStore = create<RankedState>()((set, get) => {
     clearTimers();
     leaveQueue();
     if (useRoomStore.getState().status !== 'idle') useRoomStore.getState().leave();
-    const { group, items } = get();
-    set({
-      phase: 'ai',
-      result: null,
-      match: {
-        id: newMatchId(),
-        kind: 'ai',
-        group,
-        circuitId: randomCircuit(items),
-        laps: RANKED_LAPS,
-        size: 1,
-        aiTier: tierOf(get().mine[ladderOf(group, items)]?.points ?? 0).index,
-        ...(items && { items }),
-      },
-    });
+    const { group, items, mine } = get();
+    const points = mine[ladderOf(group, items)]?.points ?? 0;
+    const match = aiMatch(group, items, points, useRankedPrefs.getState().difficulty);
+    set({ phase: 'ai', result: null, match });
   };
 
   /** Matched: into the room (opening it if you lead), then racing once it fills. */
@@ -260,6 +250,7 @@ export const useRankedStore = create<RankedState>()((set, get) => {
       const { match } = get();
       if (!supabase || !match) return;
       const vsAi = match.kind === 'ai';
+      const difficulty = vsAi ? (match.aiDifficulty ?? 'normal') : undefined;
       const ladder = ladderOf(match.group, match.items === true);
       const before = get().mine[ladder]?.points ?? 0;
       set({ result: { state: 'sending' } });
@@ -269,6 +260,7 @@ export const useRankedStore = create<RankedState>()((set, get) => {
         p_vs_ai: vsAi,
         p_position: Math.min(position, field),
         p_field: Math.min(4, Math.max(2, field)),
+        p_difficulty: difficulty ?? 'normal',
       });
       if (error) {
         set({ result: { state: 'error', error: errorText(error) } });
@@ -277,7 +269,14 @@ export const useRankedStore = create<RankedState>()((set, get) => {
       const r = data as { points: number; delta: number; games: number; wins: number };
       const prev = get().mine[ladder];
       set({
-        result: { state: 'done', before, points: r.points, delta: r.delta, vsAi },
+        result: {
+          state: 'done',
+          before,
+          points: r.points,
+          delta: r.delta,
+          vsAi,
+          ...(difficulty && { difficulty }),
+        },
         mine: {
           ...get().mine,
           [ladder]: {

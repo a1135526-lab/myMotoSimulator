@@ -1,4 +1,4 @@
-import { tierOf, useAuthStore, useRankedStore, useUiStore } from '@/application';
+import { difficultyInfo, tierOf, useAuthStore, useRankedStore, useUiStore } from '@/application';
 import resultStyles from '../circuit/results.module.css';
 import { TierBadge } from './TierBadge';
 import styles from './ranked.module.css';
@@ -7,6 +7,7 @@ import styles from './ranked.module.css';
 export function RankedResultActions() {
   const result = useRankedStore((s) => s.result);
   const group = useRankedStore((s) => s.group);
+  const items = useRankedStore((s) => s.items);
   const queue = useRankedStore((s) => s.queue);
   const cancel = useRankedStore((s) => s.cancel);
   const nickname = useAuthStore((s) => s.nickname);
@@ -24,7 +25,12 @@ export function RankedResultActions() {
           {result.delta >= 0 ? '+' : ''}
           {result.delta} 分
         </strong>
-        {result.vsAi && <small>（對電腦，積分減半）</small>}
+        {result.vsAi && (
+          <small>
+            （對電腦 · {difficultyInfo(result.difficulty ?? 'normal').label}，加分{' '}
+            {difficultyInfo(result.difficulty ?? 'normal').gainPct}%、扣分減半）
+          </small>
+        )}
         {up && <span className={styles.promo}>🎉 升段！</span>}
         {down && <span className={styles.demo}>降段了</span>}
         <TierBadge points={result.points} />
@@ -50,7 +56,7 @@ export function RankedResultActions() {
         <button
           type="button"
           className={resultStyles.primary}
-          onClick={() => void queue(group, nickname ?? '玩家')}
+          onClick={() => void queue(group, nickname ?? '玩家', items)}
           disabled={result === null || result.state === 'sending'}
           autoFocus
           data-testid="ranked-again"

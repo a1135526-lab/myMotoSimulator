@@ -23,7 +23,11 @@ export function circuitSetup(
   const [lo, hi] = LIGHTS_HOLD_RANGE_S;
   return {
     settings,
-    aiSkills: opponents.map((_, i) => riderSkill(config.aiSkill ?? CIRCUIT_SKILLS[skill], i)),
+    aiSkills: opponents.map((_, i) =>
+      config.aiAllOut && config.aiSkill
+        ? config.aiSkill
+        : riderSkill(config.aiSkill ?? CIRCUIT_SKILLS[skill], i),
+    ),
     holdS: holdS ?? lo + random() * (hi - lo),
     grid: config.grid ?? 'staggered',
     ...(roomGrid && { playerSlot: roomGrid.slot, field: roomGrid.field }),

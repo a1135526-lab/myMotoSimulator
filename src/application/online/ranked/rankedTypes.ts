@@ -1,5 +1,14 @@
 import { getBike } from '@/data';
-import { RANKED_BIKES, RANKED_CIRCUITS, RANKED_ITEM_CIRCUITS, type RankedGroup } from '@/domain';
+import {
+  RANKED_BIKES,
+  RANKED_CIRCUITS,
+  RANKED_ITEM_CIRCUITS,
+  RANKED_LAPS,
+  tierOf,
+  type RankedDifficulty,
+  type RankedGroup,
+} from '@/domain';
+import { newMatchId } from '../../stats/matchTypes';
 import type { RoomProfile } from '../room/roomStore';
 
 export type RankedPhase = 'idle' | 'queue' | 'joining' | 'room' | 'ai';
@@ -15,6 +24,8 @@ export interface RankedMatch {
   readonly size: number;
   /** Against the AI: your tier when it started (sets how good the AI is, for the whole race). */
   readonly aiTier?: number;
+  /** Against the AI: how hard it rides, and so what a good place is worth. */
+  readonly aiDifficulty?: RankedDifficulty;
   /** Item ranked: an item race, on its own ladder. */
   readonly items?: boolean;
 }
@@ -34,6 +45,7 @@ export type RankedResult =
       readonly points: number;
       readonly delta: number;
       readonly vsAi: boolean;
+      readonly difficulty?: RankedDifficulty;
     }
   | { readonly state: 'error'; readonly error: string };
 
@@ -46,6 +58,26 @@ export function rankedProfile(group: RankedGroup, name: string): RoomProfile {
     manual: bike.kind === 'manual',
     cylinders: bike.engine.cylinders,
     accountName: name,
+  };
+}
+
+/** A race against the AI, for someone with `points` on this ladder. */
+export function aiMatch(
+  group: RankedGroup,
+  items: boolean,
+  points: number,
+  difficulty: RankedDifficulty,
+): RankedMatch {
+  return {
+    id: newMatchId(),
+    kind: 'ai',
+    group,
+    circuitId: randomCircuit(items),
+    laps: RANKED_LAPS,
+    size: 1,
+    aiTier: tierOf(points).index,
+    aiDifficulty: difficulty,
+    ...(items && { items }),
   };
 }
 
